@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+loop = {editable = true, path = "./api.common/"}
+boto3 = "==1.26.125"
+chalice = "==1.23.0"
+pony = "==0.7.14"
+pymysql = "==1.0.2"
+pyjwt = "==2.8.0"
+
+[dev-packages]
+loop = {editable = true, path = "api.common/"}
+
+[requires]
+python_version = "3.8"
