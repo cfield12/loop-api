@@ -43,10 +43,12 @@ lint-api-common:
     - docker
   image:
     name: $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
+  before_script:
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
   script:
-  - cd api.common
-  - python -m pip install pycodestyle==2.8.0
-  - pycodestyle --config=.pycodestyle qi
+    - cd api.common
+    - python -m pip install pycodestyle==2.8.0
+    - pycodestyle --config=.pycodestyle qi
   rules:
     - changes:
       - api.common/**/*
