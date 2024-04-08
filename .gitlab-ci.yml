@@ -1,0 +1,36 @@
+variables:
+  DOCKER_REGISTRY: 152370457480.dkr.ecr.eu-west-2.amazonaws.com
+  AWS_DEFAULT_REGION: eu-west-2
+  API_COMMON_REPOSITORY: loop-api-common
+  API_REST_REPOSITORY: loop-api-rest
+  DOCKER_HOST: tcp://docker:2375
+
+stages:
+  - Ci_Setup
+  - Lint
+  - Test
+  - Build_Deploy
+
+# Stage: "CI Setup"
+# ----------------------------------------------------------------------------------------------------------------------
+build-api-common-ci-image:
+  stage: Ci_Setup
+  image:
+    name: amazon/aws-cli
+    entrypoint: [""]
+  services:
+    - docker:dind
+  before_script:
+    - amazon-linux-extras install docker
+    - aws --version
+    - docker --version
+  script:
+    - docker build -t $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID .
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+    - docker push $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
+  rules:
+    - changes:
+      - docker/**/*
+      - .gitlab-ci.yml
+      - api.common/requirements.txt
+      - api.common/**/*
