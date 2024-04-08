@@ -8,6 +8,14 @@ variables:
 default:
   services:
     - docker:dind
+  image:
+    name: amazon/aws-cli
+    entrypoint: [""]
+  before_script:
+    - amazon-linux-extras install docker
+    - aws --version
+    - docker --version
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
 
 stages:
   - Ci_Setup
@@ -19,14 +27,6 @@ stages:
 # ----------------------------------------------------------------------------------------------------------------------
 build-api-common-ci-image:
   stage: Ci_Setup
-  image:
-    name: amazon/aws-cli
-    entrypoint: [""]
-  before_script:
-    - amazon-linux-extras install docker
-    - aws --version
-    - docker --version
-    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
   script:
     - docker build -t $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID -f docker/api_common/Dockerfile -t $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID .
     - docker push $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
@@ -41,13 +41,9 @@ build-api-common-ci-image:
 # ----------------------------------------------------------------------------------------------------------------------
 lint-api-common:
   stage: Lint
-  tags:
-    - docker
   image: docker
-  before_script:
-    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
-    - docker run -d -p 3000:3000 $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
   script:
+    - docker run -d -p 3000:3000 $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
     - cd api.common
     - python -m pip install pycodestyle==2.8.0
     - pycodestyle --config=.pycodestyle qi
