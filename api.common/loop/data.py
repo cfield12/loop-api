@@ -16,6 +16,7 @@ from pony.orm import (
 from pony.orm import InternalError as PonyOrmDbInternalError
 
 
+from loop.constants import RDS_WRITE
 from loop.db_entities import define_entities
 from loop import exceptions
 from loop import secrets
@@ -30,7 +31,6 @@ LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 5
 
-RDS_WRITE = 'write'
 DB_SESSION_RETRYABLE = db_session(
     retry=5,
     retry_exceptions=(
@@ -70,7 +70,7 @@ def init_db(db_dict=None, check_tables=False, create_tables=False):
                     )
 
 
-DB_TYPE = {'write': None}
+DB_TYPE = {RDS_WRITE: None}
 
 
 def init_write_db(check_tables=False, create_tables=False):
@@ -80,7 +80,7 @@ def init_write_db(check_tables=False, create_tables=False):
     )
     db_dict = secrets.get_db_dict(instance)
     write_db = init_db(db_dict, check_tables, create_tables)
-    DB_TYPE['write'] = write_db
+    DB_TYPE[RDS_WRITE] = write_db
 
 
 def disconnect_db():
