@@ -24,8 +24,9 @@ from loop import secrets
 ENVIRONMENT = os.environ.get('ENVIRONMENT', 'develop')
 PROJECT = os.environ.get('PROJECT', 'loop')
 
-logging.getLogger().handlers = []
+logger = logging.getLogger()
 LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
+logger.setLevel(LOGLEVEL)
 
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 5

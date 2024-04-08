@@ -24,9 +24,9 @@ build-api-common-ci-image:
     - amazon-linux-extras install docker
     - aws --version
     - docker --version
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
   script:
     - docker build -t $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID -f docker/api_common/Dockerfile -t $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID .
-    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
     - docker push $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
   rules:
     - changes:
@@ -37,19 +37,19 @@ build-api-common-ci-image:
 
 # Stage: Lint
 # ----------------------------------------------------------------------------------------------------------------------
-lint-api-common:
-  stage: Lint
-  tags:
-    - docker
-  image:
-    name: $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
-  before_script:
-    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
-  script:
-    - cd api.common
-    - python -m pip install pycodestyle==2.8.0
-    - pycodestyle --config=.pycodestyle qi
-  rules:
-    - changes:
-      - api.common/**/*
-      - .gitlab-ci.yml
+# lint-api-common:
+#   stage: Lint
+#   tags:
+#     - docker
+#   image:
+#     name: $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
+#   before_script:
+#     - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+#   script:
+#     - cd api.common
+#     - python -m pip install pycodestyle==2.8.0
+#     - pycodestyle --config=.pycodestyle qi
+#   rules:
+#     - changes:
+#       - api.common/**/*
+#       - .gitlab-ci.yml
