@@ -1,8 +1,6 @@
 variables:
   DOCKER_REGISTRY: 152370457480.dkr.ecr.eu-west-2.amazonaws.com
   AWS_DEFAULT_REGION: eu-west-2
-  AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
-  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
   API_COMMON_REPOSITORY: loop-api-common
   API_REST_REPOSITORY: loop-api-rest
   DOCKER_HOST: tcp://docker:2375
@@ -39,19 +37,19 @@ build-api-common-ci-image:
 
 # Stage: Lint
 # ----------------------------------------------------------------------------------------------------------------------
-# lint-api-common:
-#   stage: Lint
-#   tags:
-#     - docker
-#   image:
-#     name: $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
-#   before_script:
-#     - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
-#   script:
-#     - cd api.common
-#     - python -m pip install pycodestyle==2.8.0
-#     - pycodestyle --config=.pycodestyle qi
-#   rules:
-#     - changes:
-#       - api.common/**/*
-#       - .gitlab-ci.yml
+lint-api-common:
+  stage: Lint
+  tags:
+    - docker
+  image:
+    name: $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
+  before_script:
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+  script:
+    - cd api.common
+    - python -m pip install pycodestyle==2.8.0
+    - pycodestyle --config=.pycodestyle qi
+  rules:
+    - changes:
+      - api.common/**/*
+      - .gitlab-ci.yml
