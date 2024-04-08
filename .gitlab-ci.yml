@@ -5,6 +5,10 @@ variables:
   API_REST_REPOSITORY: loop-api-rest
   DOCKER_HOST: tcp://docker:2375
 
+default:
+  services:
+    - docker:dind
+
 stages:
   - Ci_Setup
   - Lint
@@ -18,8 +22,6 @@ build-api-common-ci-image:
   image:
     name: amazon/aws-cli
     entrypoint: [""]
-  services:
-    - docker:dind
   before_script:
     - amazon-linux-extras install docker
     - aws --version
@@ -41,10 +43,10 @@ lint-api-common:
   stage: Lint
   tags:
     - docker
-  image:
-    name: $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
+  image: docker
   before_script:
     - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+    - docker run -d -p 3000:3000 $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
   script:
     - cd api.common
     - python -m pip install pycodestyle==2.8.0
