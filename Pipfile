@@ -10,6 +10,7 @@ chalice = "==1.23.0"
 pony = "==0.7.14"
 pymysql = "==1.0.2"
 pyjwt = "==2.8.0"
+pycodestyle = "==2.8.0"
 
 [dev-packages]
 loop = {editable = true, path = "api.common/"}

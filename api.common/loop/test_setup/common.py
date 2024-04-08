@@ -31,6 +31,7 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 name='qi_admin'
             )
 
+
 def unbind_rds():
     for db_instance_type in DB_INSTANCE_TYPES:
         data.DB_TYPE[db_instance_type].provider = None

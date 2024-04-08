@@ -26,7 +26,6 @@ PROJECT = os.environ.get('PROJECT', 'loop')
 
 logging.getLogger().handlers = []
 LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
-# logger = config.set_up_root_logger(level=LOGLEVEL)
 
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 5

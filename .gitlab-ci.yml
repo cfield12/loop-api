@@ -34,3 +34,20 @@ build-api-common-ci-image:
       - .gitlab-ci.yml
       - api.common/requirements.txt
       - api.common/**/*
+
+# Stage: Lint
+# ----------------------------------------------------------------------------------------------------------------------
+lint-api-common:
+  stage: Lint
+  tags:
+    - docker
+  image:
+    name: $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
+  script:
+  - cd api.common
+  - python -m pip install pycodestyle==2.8.0
+  - pycodestyle --config=.pycodestyle qi
+  rules:
+    - changes:
+      - api.common/**/*
+      - .gitlab-ci.yml

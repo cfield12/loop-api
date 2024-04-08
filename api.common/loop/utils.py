@@ -1,5 +1,6 @@
 from loop.constants import LOOP_ADMIN_ID, LOOP_ADMIN_COGNITO_USERNAME
 
+
 class UserObject(object):
     cognito_user_name = None
     groups = {}
