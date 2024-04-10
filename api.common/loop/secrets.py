@@ -55,13 +55,9 @@ def get_db_dict(secret_name="rds_qi_root"):
         'user': 'admin',
         'password': 'v5IK9wGrOyqjX4esI6Vi',
         'port': '3306',
-        'host': 'rds-loop-develop.c3ucksma8huu.eu-west-2.rds.amazonaws.com'
+        'host': 'rds-loop-develop.c3ucksma8huu.eu-west-2.rds.amazonaws.com',
     }
     db_dict.update(
-        {
-            "database": "loop",
-            "provider": "mysql",
-            "port": int(db_dict['port'])
-        }
+        {"database": "loop", "provider": "mysql", "port": int(db_dict['port'])}
     )
     return db_dict

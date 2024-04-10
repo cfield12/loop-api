@@ -1,7 +1,6 @@
 import mock
-
-from loop.constants import DB_INSTANCE_TYPES
 from loop import data
+from loop.constants import DB_INSTANCE_TYPES
 from pony.orm import db_session
 from pony.orm.core import BindingError
 

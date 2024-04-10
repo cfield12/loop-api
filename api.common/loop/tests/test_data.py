@@ -9,6 +9,7 @@ class LoopTestGetUserRatings(unittest.TestCase):
     """
     Test getting user ratings.
     """
+
     @classmethod
     def setUpClass(cls):
         setup_rds()
