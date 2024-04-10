@@ -3,23 +3,20 @@ import os
 from time import sleep
 from typing import Dict, List, Union
 
-from loop.utils import UserObject
-from pony.orm import (
-    commit,
-    Database,
-    db_session,
-    MultipleObjectsFoundError,
-    OperationalError,
-    select,
-    TransactionError
-)
-from pony.orm import InternalError as PonyOrmDbInternalError
-
-
+from loop import exceptions, secrets
 from loop.constants import RDS_WRITE
 from loop.db_entities import define_entities
-from loop import exceptions
-from loop import secrets
+from loop.utils import UserObject
+from pony.orm import Database
+from pony.orm import InternalError as PonyOrmDbInternalError
+from pony.orm import (
+    MultipleObjectsFoundError,
+    OperationalError,
+    TransactionError,
+    commit,
+    db_session,
+    select,
+)
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', 'develop')
 PROJECT = os.environ.get('PROJECT', 'loop')
@@ -102,8 +99,7 @@ def disconnect_db():
 
 @DB_SESSION_RETRYABLE
 def get_user_ratings(
-    user: UserObject,
-    db_instance_type=RDS_WRITE
+    user: UserObject, db_instance_type=RDS_WRITE
 ) -> List[Dict[str, int]]:
     ratings = []
     ratings_query = select(
@@ -113,7 +109,7 @@ def get_user_ratings(
             rating.vibe,
             rating.location.display_name,
             rating.location.address,
-            rating.location.google_id
+            rating.location.google_id,
         )
         for rating in DB_TYPE[db_instance_type].Rating
         if rating.user.id == user.id
@@ -141,8 +137,7 @@ def get_user_ratings(
 
 @DB_SESSION_RETRYABLE
 def get_user_from_cognito_username(
-    cognito_user_name: str,
-    db_instance_type=RDS_WRITE
+    cognito_user_name: str, db_instance_type=RDS_WRITE
 ) -> UserObject:
     user = DB_TYPE[db_instance_type].User.get(
         cognito_user_name=cognito_user_name

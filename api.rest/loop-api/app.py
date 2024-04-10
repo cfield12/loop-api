@@ -1,13 +1,12 @@
-from functools import wraps
-import jwt
 import os
+from functools import wraps
 from typing import Union
 
+import jwt
 from chalice import Chalice, Response
-
 from loop import data
 from loop.exceptions import LoopException, UnauthorizedError
-from loop.utils import get_admin_user, UserObject
+from loop.utils import UserObject, get_admin_user
 
 LOOP_AUTH_DISABLED = os.environ.get('LOOP_AUTH_DISABLED', False)
 
@@ -35,8 +34,7 @@ def get_current_user(func):
                 if not auth_token:
                     raise UnauthorizedError("Authorization header is expected")
                 cognito_user = jwt.decode(
-                    auth_token,
-                    options={'verify_signature': False}
+                    auth_token, options={'verify_signature': False}
                 )
                 if not cognito_user:
                     raise UnauthorizedError("Could not find cognito user")

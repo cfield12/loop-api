@@ -15,6 +15,7 @@ def define_entities(db: Database):
         """
         List of all users.
         """
+
         id = PrimaryKey(int, auto=True)
         created = Required(datetime)
         last_updated = Required(datetime)
@@ -25,6 +26,7 @@ def define_entities(db: Database):
         """
         List of all locations.
         """
+
         id = PrimaryKey(int, auto=True)
         google_id = Required(str)
         address = Required(str)

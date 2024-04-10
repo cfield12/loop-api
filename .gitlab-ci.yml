@@ -37,7 +37,7 @@ lint-api-common:
   script:
   - cd api.common
   - python -m pip install pycodestyle==2.8.0
-  - pycodestyle --config=.pycodestyle qi
+  - pycodestyle --config=.pycodestyle loop
   rules:
     - changes:
       - api.common/**/*
