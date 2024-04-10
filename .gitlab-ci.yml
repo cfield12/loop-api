@@ -21,8 +21,10 @@ build-api-common-ci-image:
   services:
     - docker:dind
   script:
+    # - docker build -t $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID -f docker/api_common/Dockerfile -t $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID .
+    # - docker push $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
-    - docker build -t $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID .
+    - docker build -t $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID -f docker/api_common/Dockerfile -t $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID .
     - docker push $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID
   rules:
     - changes:
