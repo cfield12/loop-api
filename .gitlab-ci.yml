@@ -1,11 +1,6 @@
 variables:
-  DOCKER_REGISTRY: 152370457480.dkr.ecr.eu-west-2.amazonaws.com
   CI_IMAGE_PATH: registry.gitlab.com/charlie.field98/back-end
   API_COMMON_CI_IMAGE_NAME: $CI_IMAGE_PATH/api-common-ci-image
-  AWS_DEFAULT_REGION: eu-west-2
-  API_COMMON_REPOSITORY: loop-api-common
-  API_REST_REPOSITORY: loop-api-rest
-  DOCKER_HOST: tcp://docker:2375
 
 stages:
   - Ci_Setup
@@ -21,8 +16,6 @@ build-api-common-ci-image:
   services:
     - docker:dind
   script:
-    # - docker build -t $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID -f docker/api_common/Dockerfile -t $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID .
-    # - docker push $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
     - docker build -t $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID -f docker/api_common/Dockerfile -t $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID .
     - docker push $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID
@@ -35,15 +28,17 @@ build-api-common-ci-image:
 
 # Stage: Lint
 # ----------------------------------------------------------------------------------------------------------------------
-# lint-api-common:
-#   stage: Lint
-#   image: docker
-#   script:
-#     - docker run -d -p 3000:3000 $DOCKER_REGISTRY/$API_COMMON_REPOSITORY:$CI_PIPELINE_IID
-#     - cd api.common
-#     - python -m pip install pycodestyle==2.8.0
-#     - pycodestyle --config=.pycodestyle qi
-#   rules:
-#     - changes:
-#       - api.common/**/*
-#       - .gitlab-ci.yml
+lint-api-common:
+  stage: Lint
+  tags:
+    - docker
+  image:
+    name: $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID
+  script:
+  - cd api.common
+  - python -m pip install pycodestyle==2.8.0
+  - pycodestyle --config=.pycodestyle qi
+  rules:
+    - changes:
+      - api.common/**/*
+      - .gitlab-ci.yml
