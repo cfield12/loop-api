@@ -133,3 +133,34 @@ test-api-rest:
       when: always
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
       when: always
+
+# Stage: "Build/Deploy"
+# ======================================================================================================================
+# Develop
+# ----------------------------------------------------------------------------------------------------------------------
+deploy-api-rest-develop:
+  stage: Build_Deploy
+  tags:
+    - docker
+  image:
+    name: $API_REST_CI_IMAGE_NAME:$CI_PIPELINE_IID
+  script:
+   # Install package and dependencies (e.g. boto) for api.common
+   - cd api.common
+   - python setup.py install
+   # Generate artifact
+   - python setup.py sdist bdist_wheel
+   # Build the chalice app
+   - cd ../api.rest
+   - make clean
+   - make build STAGE=develop
+   # Deploy to AWS
+   - make deploy STAGE=develop
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+      - docker/**/*
+      - api.rest/**/*
+      - api.common/**/*
+      - .gitlab-ci.yml
+      when: manual
