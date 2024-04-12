@@ -153,6 +153,7 @@ deploy-api-rest-develop:
    # Build the chalice app
    - cd ../api.rest
    - make clean
+   - python -m pip install pyopenssl --upgrade
    - make build STAGE=develop
    # Deploy to AWS
    - make deploy STAGE=develop
