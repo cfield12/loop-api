@@ -91,7 +91,7 @@ test-api-common:
   script:
    - cd api.common
    - python setup.py sdist bdist_wheel
-   - python -m pip install pytest==8.1.1 pytest-cov==5.0.0
+   - python -m pip install pytest==8.1.1 pytest-cov==5.0.0 pyOpenSSL==22.0.0
    - python -m pytest --cov=loop --cov-fail-under=80
   rules:
     - changes:
@@ -117,7 +117,7 @@ test-api-rest:
   image:
     name: $API_REST_CI_IMAGE_NAME:$CI_PIPELINE_IID
   script:
-    - python -m pip install pytest==8.1.1 pytest-cov==5.0.0
+    - python -m pip install pytest==8.1.1 pytest-cov==5.0.0 pyOpenSSL==22.0.0
     - python -m pytest tests/ --cov=loop-api/
   rules:
     - changes:
