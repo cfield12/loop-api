@@ -62,7 +62,7 @@ def init_db(db_dict=None, check_tables=False, create_tables=False):
                     )
                     sleep(RETRY_DELAY_SECONDS)
                 else:
-                    raise ValueError(
+                    raise exceptions.DbInitFailedError(
                         'Failed to initialise database in data.py.'
                     )
 
@@ -101,6 +101,8 @@ def disconnect_db():
 def get_user_ratings(
     user: UserObject, db_instance_type=RDS_WRITE
 ) -> List[Dict[str, int]]:
+    if not isinstance(user, UserObject):
+        raise TypeError('User must be an instance of UserObject.')
     ratings = []
     ratings_query = select(
         (

@@ -13,5 +13,6 @@ RUN apt-get install -y gcc zlib1g-dev libssl-dev musl-dev libffi-dev
 RUN python -m pip install --upgrade pip
 RUN python -m pip install importlib-resources setuptools wheel pyOpenSSL==23.2.0
 
+COPY ./api.common ../api.common
 COPY ./api.rest/requirements.txt ./requirements.txt
 RUN python -m pip install --no-cache-dir -r requirements.txt

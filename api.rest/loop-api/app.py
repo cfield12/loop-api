@@ -33,9 +33,14 @@ def get_current_user(func):
                 auth_token = app.current_request.headers.get('auth-token')
                 if not auth_token:
                     raise UnauthorizedError("Authorization header is expected")
-                cognito_user = jwt.decode(
-                    auth_token, options={'verify_signature': False}
-                )
+                try:
+                    cognito_user = jwt.decode(
+                        auth_token, options={'verify_signature': False}
+                    )
+                except jwt.DecodeError as e:
+                    raise UnauthorizedError(f'Jwt decode error: {e}')
+                except Exception as e:
+                    raise UnauthorizedError(f'Unexpected error: {e}')
                 if not cognito_user:
                     raise UnauthorizedError("Could not find cognito user")
                 cognito_user_name = cognito_user.get('username')

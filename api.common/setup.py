@@ -13,4 +13,12 @@ setup(
     package_data={
         'loop': ['data'],
     },
+    install_requires=[
+        'pony',
+        'marshmallow',
+        'python-dateutil',
+        'cachetools',
+        'requests',
+        'boto3',
+    ],
 )

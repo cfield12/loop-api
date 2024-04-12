@@ -72,3 +72,21 @@ class UnprocessableEntityError(LoopException):
 
 class TooManyRequestsError(LoopException):
     STATUS_CODE = 429
+
+
+class Error(Exception):
+    '''Base class for other exceptions'''
+
+
+class DbInitFailedError(Error):
+    '''Raised when db initialisation fails'''
+
+    def __init__(self, message):
+        self.message = message
+
+
+class DbDisconnectFailedError(Error):
+    '''Raised when db disconnect fails'''
+
+    def __init__(self, message):
+        self.message = message
