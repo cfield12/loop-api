@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import mock
 from loop import data
 from loop.constants import DB_INSTANCE_TYPES
@@ -26,8 +28,72 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
 
     with db_session:
         for db_instance_type in DB_INSTANCE_TYPES:
-            read_group_admin = data.DB_TYPE[db_instance_type].User(
-                name='qi_admin'
+            user = data.DB_TYPE[db_instance_type].User(
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
+                cognito_user_name='test_cognito_user_name',
+            )
+            admin_user = data.DB_TYPE[db_instance_type].User(
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
+                cognito_user_name='test_cognito_user_name_admin',
+            )
+            location_1 = data.DB_TYPE[db_instance_type].Location(
+                google_id='test_google_id_1',
+                address='14 Lambert Street, London, N1 1JE',
+                display_name='Home',
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
+            )
+            location_2 = data.DB_TYPE[db_instance_type].Location(
+                google_id='test_google_id_2',
+                address='15 Noel Road, London, N1 8HQ',
+                display_name="Baggins'",
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
+            )
+            location_3 = data.DB_TYPE[db_instance_type].Location(
+                google_id='test_google_id_3',
+                address='38 Huntingdon Street, London, N1 1BP',
+                display_name='JFs',
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
+            )
+            rating_1 = data.DB_TYPE[db_instance_type].Rating(
+                price=4,
+                vibe=5,
+                food=3,
+                location=location_1,
+                user=admin_user,
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
+            )
+            rating_2 = data.DB_TYPE[db_instance_type].Rating(
+                price=5,
+                vibe=5,
+                food=5,
+                location=location_3,
+                user=admin_user,
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
+            )
+            rating_1 = data.DB_TYPE[db_instance_type].Rating(
+                price=4,
+                vibe=4,
+                food=3,
+                location=location_1,
+                user=user,
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
+            )
+            rating_1 = data.DB_TYPE[db_instance_type].Rating(
+                price=4,
+                vibe=5,
+                food=5,
+                location=location_2,
+                user=user,
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
             )
 
 
