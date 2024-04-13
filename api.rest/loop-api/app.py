@@ -16,8 +16,15 @@ APP_NAME = 'loop-api'
 def setup_app():
     global app
     app = None
-    data.init_write_db()
-    app = Chalice(app_name=APP_NAME)
+    # Set up database connection (only if not in CI build).
+    if "NO_DB" in os.environ:
+        app = Chalice(app_name=APP_NAME)
+        app.log.info(
+            "CI environment; skipping database and Datadog link setup."
+        )
+    else:
+        data.init_write_db()
+        app = Chalice(app_name=APP_NAME)
 
 
 setup_app()
@@ -79,6 +86,8 @@ def get_user_ratings(user: UserObject = None):
                     type: object
     """
     try:
-        return data.get_user_ratings(user)
+        user_ratings = data.get_user_ratings(user)
+        app.log.info(f"Successfully returned user ratings for user {user.id}")
+        return user_ratings
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
