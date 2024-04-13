@@ -21,13 +21,12 @@ build-api-common-ci-image:
     - docker:dind
   script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
-    - docker build -t $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID -f docker/api_common/Dockerfile -t $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID .
-    - docker push $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID
+    - docker build -t $API_COMMON_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG -f docker/api_common/Dockerfile -t $API_COMMON_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG .
+    - docker push $API_COMMON_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   rules:
     - changes:
       - docker/**/*
       - .gitlab-ci.yml
-      - api.common/requirements.txt
       - api.common/**/*
 
 build-api-rest-ci-image:
@@ -37,8 +36,8 @@ build-api-rest-ci-image:
     - docker:dind
   script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
-    - docker build -t $API_REST_CI_IMAGE_NAME:$CI_PIPELINE_IID -f docker/api_rest/Dockerfile -t $API_REST_CI_IMAGE_NAME:$CI_PIPELINE_IID .
-    - docker push $API_REST_CI_IMAGE_NAME:$CI_PIPELINE_IID
+    - docker build -t $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG -f docker/api_rest/Dockerfile -t $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG .
+    - docker push $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   rules:
     - changes:
       - docker/**/*
@@ -53,7 +52,7 @@ lint-api-common:
   tags:
     - docker
   image:
-    name: $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID
+    name: $API_COMMON_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
   - cd api.common
   - python -m pip install pycodestyle==2.8.0
@@ -68,7 +67,7 @@ lint-api-rest:
   tags:
     - docker
   image:
-    name: $API_REST_CI_IMAGE_NAME:$CI_PIPELINE_IID
+    name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
   - cd api.rest
   - python -m pip install pycodestyle==2.8.0
@@ -87,7 +86,7 @@ test-api-common:
   variables:
     ENVIRONMENT: test
   image:
-    name: $API_COMMON_CI_IMAGE_NAME:$CI_PIPELINE_IID
+    name: $API_COMMON_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
    - cd api.common
    - python setup.py sdist bdist_wheel
@@ -116,7 +115,7 @@ test-api-rest:
   before_script:
     - cd api.rest
   image:
-    name: $API_REST_CI_IMAGE_NAME:$CI_PIPELINE_IID
+    name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
     - python -m pip install pytest==8.1.1 pytest-cov==5.0.0
     - python -m pip install pyopenssl --upgrade
@@ -143,7 +142,7 @@ deploy-api-rest-develop:
   tags:
     - docker
   image:
-    name: $API_REST_CI_IMAGE_NAME:$CI_PIPELINE_IID
+    name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
    # Install package and dependencies (e.g. boto) for api.common
    - cd api.common
