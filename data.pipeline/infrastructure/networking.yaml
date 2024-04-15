@@ -1,0 +1,332 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: >-
+  AWS CloudFormation template to provide a dual availability zone VPC, with public and private subnets and internet
+  gateway.
+
+# Parameters
+# ======================================================================================================================
+# No strict value checking here as we assume this is a template used by other templates, so:
+# - top level templates will limit the value ranges
+# - we don't want to have to update all the nested templates each time we add a new project
+Parameters:
+  Project:
+    Description: Name of project.
+    Type:        String
+    Default:     loop
+    AllowedValues:
+    - loop
+
+  Environment:
+    Description: >-
+      Type of environment: develop[ment], staging, prod[uction].
+    Type:        String
+    Default:     develop
+    AllowedValues:
+    - develop
+    - staging
+    - prod
+
+  AvailabilityZoneAIreland:
+    Description: First Availability Zone for the subnets instance.
+    Type:        String
+    Default:     eu-west-1a
+
+  AvailabilityZoneBIreland:
+    Description: Second Availability Zone for the subnets instance.
+    Type:        String
+    Default:     eu-west-1b
+
+  AvailabilityZoneALondon:
+    Description: First Availability Zone for the subnets instance.
+    Type:        String
+    Default:     eu-west-2a
+
+  AvailabilityZoneBLondon:
+    Description: Second Availability Zone for the subnets instance.
+    Type:        String
+    Default:     eu-west-2b
+
+# Conditions
+# ======================================================================================================================
+Conditions:
+  CreateRedundancy: !Or [!Equals [!Ref Environment, prod], !Equals [!Ref Environment, staging]]
+  DeployToLondon: !Equals [!Ref Environment, develop]
+
+# Mappings
+# ======================================================================================================================
+Mappings:
+  CidrBlocks:
+    VPC:
+      develop: 172.31.0.0/16
+      staging: 173.31.0.0/16
+      prod:    174.31.0.0/16
+    PublicSubnetA:
+      develop: 172.34.16.0/20
+      staging: 173.34.16.0/20
+      prod:    174.34.16.0/20
+    PublicSubnetB:
+      develop: 172.34.32.0/20
+      staging: 173.34.32.0/20
+      prod:    174.34.32.0/20
+    PrivateSubnetA:
+      develop: 172.34.48.0/20
+      staging: 173.34.48.0/20
+      prod:    174.34.48.0/20
+    PrivateSubnetB:
+      develop: 172.34.64.0/20
+      staging: 173.34.64.0/20
+      prod:    174.34.64.0/20
+
+# Outputs
+# ======================================================================================================================
+Outputs:
+  PublicSubnets:
+    Description: Public subnet list.
+    Value:
+      !If
+        - CreateRedundancy
+        - !Join [',', [!Ref PublicSubnetA, !Ref PublicSubnetB]]
+        - !Ref PublicSubnetA
+    Export:
+      Name: !Join ['-', [!Ref Project, export, subnet, list, public, !Ref Environment]]
+
+  PrivateSubnets:
+    Description: Private subnet list.
+    Value:
+      !If
+        - CreateRedundancy
+        - !Join [',', [!Ref PrivateSubnetA, !Ref PrivateSubnetB]]
+        - !Ref PrivateSubnetA
+    Export:
+      Name: !Join ['-', [!Ref Project, export, subnet, list, private, !Ref Environment]]
+
+  PrivateSubnetSecurityGroups:
+    Description: Private subnet security group list.
+    Value: !Join [',', [!GetAtt VPC.DefaultSecurityGroup, !Ref TestSecurityGroup]]
+    Export:
+      Name: !Join ['-', [!Ref Project, export, security-group, list, private, !Ref Environment]]
+
+  VPC:
+    Description: VPC for the deployment.
+    Value: !Ref VPC
+    Export:
+      Name: !Join ['-', [!Ref Project, export, vpc, !Ref Environment]]
+
+# Resources
+# ======================================================================================================================
+Resources:
+# VPC
+# ----------------------------------------------------------------------------------------------------------------------
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock:          !FindInMap [CidrBlocks, VPC, !Ref Environment]
+      EnableDnsSupport:   true
+      EnableDnsHostnames: true
+      InstanceTenancy:    default
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, vpc, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+# Internet Gateway(s)
+# ----------------------------------------------------------------------------------------------------------------------
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, internet-gateway, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+# Gateway Attachment(s) - Required to actually use the internet gateway with the VPC
+# ----------------------------------------------------------------------------------------------------------------------
+  InternetGatewayAttachement:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+# Route Table(s)
+# ----------------------------------------------------------------------------------------------------------------------
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, route-table, public, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+  PrivateRouteTableA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, route-table, private, a, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+  PrivateRouteTableB:
+    Type: AWS::EC2::RouteTable
+    Condition: CreateRedundancy
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, route-table, private, b, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+# Route(s)
+# ----------------------------------------------------------------------------------------------------------------------
+  InternetGatewayRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachement
+    Properties:
+      RouteTableId:         !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:            !Ref InternetGateway
+
+  NatRouteA:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:         !Ref PrivateRouteTableA
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:         !Ref NatGatewayA
+
+  NatRouteB:
+    Type: AWS::EC2::Route
+    Condition: CreateRedundancy
+    Properties:
+      RouteTableId:         !Ref PrivateRouteTableB
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:         !Ref NatGatewayB
+
+# Subnets
+# ----------------------------------------------------------------------------------------------------------------------
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:    !If [DeployToLondon, !Ref AvailabilityZoneALondon, !Ref AvailabilityZoneAIreland]
+      CidrBlock:           !FindInMap [CidrBlocks, PublicSubnetA, !Ref Environment]
+      MapPublicIpOnLaunch: false
+      VpcId:               !Ref VPC
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet, public, a, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Condition: CreateRedundancy
+    Properties:
+      AvailabilityZone:    !If [DeployToLondon, !Ref AvailabilityZoneBLondon, !Ref AvailabilityZoneBIreland]
+      CidrBlock:           !FindInMap [CidrBlocks, PublicSubnetB, !Ref Environment]
+      MapPublicIpOnLaunch: false
+      VpcId:               !Ref VPC
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet, public, b, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:    !If [DeployToLondon, !Ref AvailabilityZoneALondon, !Ref AvailabilityZoneAIreland]
+      CidrBlock:           !FindInMap [CidrBlocks, PrivateSubnetA, !Ref Environment]
+      MapPublicIpOnLaunch: false
+      VpcId:               !Ref VPC
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet, private, a, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Condition: CreateRedundancy
+    Properties:
+      AvailabilityZone:    !If [DeployToLondon, !Ref AvailabilityZoneBLondon, !Ref AvailabilityZoneBIreland]
+      CidrBlock:           !FindInMap [CidrBlocks, PrivateSubnetB, !Ref Environment]
+      MapPublicIpOnLaunch: false
+      VpcId:               !Ref VPC
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet, private, b, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+# RouteTableAssociation(s) - To link a route table to a subnet
+# ----------------------------------------------------------------------------------------------------------------------
+  PublicSubnetARouteTableAssociation:
+    Type:      AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: InternetGateway
+    Properties:
+      SubnetId:     !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetBRouteTableAssociation:
+    Type:      AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateRedundancy
+    DependsOn: InternetGateway
+    Properties:
+      SubnetId:     !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateSubnetARouteTableAssociation:
+    Type:      AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: InternetGateway
+    Properties:
+      SubnetId:     !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTableA
+
+  PrivateSubnetBRouteTableAssociation:
+    Type:      AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateRedundancy
+    DependsOn: InternetGateway
+    Properties:
+      SubnetId:     !Ref PrivateSubnetB
+      RouteTableId: !Ref PrivateRouteTableB
+
+# NAT Gateways
+# ----------------------------------------------------------------------------------------------------------------------
+  NatGatewayA:
+    DependsOn: InternetGatewayAttachement
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::ImportValue: !Join ['-', [!Ref Project, export, elastic-ip, a, !Ref Environment]]
+      SubnetId: !Ref PublicSubnetA
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, nat-gateway, a, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+  NatGatewayB:
+    DependsOn: InternetGatewayAttachement
+    Condition: CreateRedundancy
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::ImportValue: !Join ['-', [!Ref Project, export, elastic-ip, b, !Ref Environment]]
+      SubnetId:     !Ref PublicSubnetB
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, nat-gateway, b, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+
+# Security Groups
+# ----------------------------------------------------------------------------------------------------------------------
+  TestSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: >-
+        Dummy security group as we need to export something for the lambdas to use. Will be replaced when security is
+        tightened up.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - {IpProtocol: TCP, FromPort:   80, ToPort:   80, CidrIp: 54.171.14.166/32} # HTTP
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, security-group, test, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
