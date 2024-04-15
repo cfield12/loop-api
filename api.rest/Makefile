@@ -31,3 +31,4 @@ clean:
 deploy: build
 	cd $(SRC);\
 	NO_DB=1 $(CHALICE) deploy --stage $(STAGE) --no-autogen-policy
+	STAGE=$(STAGE) python fix_network.py

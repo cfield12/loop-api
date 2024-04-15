@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: >-
+  AWS CloudFormation template to for Loop data ingestion pipeline
+
+# Parameters
+# ----------------------------------------------------------------------------------------------------------------------
+Parameters:
+
+  Project:
+    Description: Name of project.
+    Type:        String
+    Default:     loop
+    AllowedValues:
+    - loop
+
+  Environment:
+    Description: >-
+      Type of environment: develop[ment], staging, prod[uction] or d[isaster]r[ecovery].
+    Type:        String
+    Default:     develop
+    AllowedValues:
+    - develop
+    - staging
+    - prod
+    - dr
+
+  # Note this is effectively read only and includes the project name to avoid unsupported nested Join later
+  LambdaLogGroupPrefix:
+    Description: Cloudwatch log group string to prepend to the lambda name to form the full log group name.
+    Type:        String
+    Default:     /aws/lambda/loop
+    AllowedValues:
+    - /aws/lambda/loop
+
+# Globals
+# ----------------------------------------------------------------------------------------------------------------------
+Globals:
+  Function:
+    Runtime:          python3.8
+    Handler:          main.lambda_handler
+    MemorySize:       1024
+    Timeout:          900
+    VpcConfig:
+      SubnetIds:
+        Fn::Split:
+        - ','
+        - Fn::ImportValue: !Join ['-', [!Ref Project, export, subnet, list, private, !Ref Environment]]
+      SecurityGroupIds:
+        Fn::Split:
+        - ','
+        - Fn::ImportValue: !Join ['-', [!Ref Project, export, security-group, list, private, !Ref Environment]]
+    Environment:
+      Variables:
+        ENVIRONMENT:        !Ref Environment
+        LOGLEVEL:           "INFO"
+        PROJECT:            !Ref Project
+    Tags:
+      Environment:  !Ref Environment
+      Project:      !Ref Project
