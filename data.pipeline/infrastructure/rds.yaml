@@ -32,6 +32,11 @@ Parameters:
     Type:        AWS::EC2::AvailabilityZone::Name
     Default:     eu-west-2b
 
+  DBAvailabilityZoneC:
+    Description: Third Availability Zone for the RDS instance.
+    Type:        AWS::EC2::AvailabilityZone::Name
+    Default:     eu-west-2c
+
   DBEngine:
     Description:  >-
       The DB engine to use.
@@ -39,6 +44,14 @@ Parameters:
     Default:      mysql
     AllowedValues:
     - mysql
+
+  DBStorage:
+    Description:  >-
+      The DB storage.
+    Type:         Number
+    Default:      20
+    AllowedValues:
+    - 20
 
   DBMasterPassword:
     Description:           Password for RDS Instance.
@@ -80,6 +93,10 @@ Mappings:
       develop: 172.31.97.0/24
       staging: 173.31.97.0/24
       prod:    174.31.97.0/24
+    SubnetC:
+      develop: 172.31.98.0/24
+      staging: 173.31.98.0/24
+      prod:    174.31.98.0/24
 
 # Outputs ==============================================================================================================
 Outputs:
@@ -125,6 +142,19 @@ Resources:
       - {Key: Environment, Value: !Ref Environment}
       - {Key: Project,     Value: !Ref Project}
 
+  SubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:    !Ref DBAvailabilityZoneC
+      CidrBlock:           !FindInMap [CidrBlocks, SubnetC , !Ref Environment]
+      MapPublicIpOnLaunch: false
+      VpcId:
+        Fn::ImportValue: !Join ['-', [!Ref Project, export, vpc, !Ref Environment]]
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet, rds, c, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
   RDSSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
@@ -132,6 +162,7 @@ Resources:
       SubnetIds:
       - !Ref SubnetA
       - !Ref SubnetB
+      - !Ref SubnetC
       Tags:
       - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet-group, rds, !Ref Environment]]}
       - {Key: Environment, Value: !Ref Environment}
@@ -144,12 +175,14 @@ Resources:
       BackupRetentionPeriod:       !FindInMap [Database, BackupRetentionPeriod, !Ref Environment]
       DatabaseName:                !Ref Project
       DBClusterIdentifier:         !Join ['-', [!Ref Project, rds-cluster, !Ref Environment]]
+      DBInstanceClass:             !FindInMap [Database, InstanceClass, !Ref Environment]
       DBSubnetGroupName:           !Ref RDSSubnetGroup
       Engine:                      !Ref DBEngine
       MasterUsername:              !Join ['_', [!Ref Project, root]]
       MasterUserPassword:          !Ref DBMasterPassword
       PreferredBackupWindow:       !Ref DBPreferredBackupWindow
       PreferredMaintenanceWindow:  !Ref DBPreferredMaintenanceWindow
+      AllocatedStorage:            !Ref DBStorage
       # ScalingConfiguration: Leaving here as a reminder it probably needs to be set to optimise serverless
       StorageEncrypted:            true
 #      VpcSecurityGroupIds:
