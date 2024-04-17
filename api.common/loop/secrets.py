@@ -49,7 +49,7 @@ def get_secret(secret_name, add_environment=False, region=REGION):
             pass
 
 
-def get_db_dict(secret_name="rds_qi_root"):
+def get_db_dict(secret_name="rds_loop_root"):
     # db_dict = get_secret(secret_name)
     db_dict = {
         'user': 'admin',

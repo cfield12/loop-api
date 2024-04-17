@@ -8,6 +8,7 @@ ENVIRONMENT_UC                  = $(shell echo $(Environment) | tr '[:lower:]' '
 EIP_STACK_NAME                      = loop-stack-elastic-ips-$(Environment)
 LAMBDA_STACK_NAME                   = loop-stack-lambdas-$(Environment)
 NETWORKING_STACK_NAME               = loop-stack-networking-$(Environment)
+RDS_STACK_NAME                      = loop-stack-rds-$(Environment)
 
 # Set bucket for template upload.
 TEMPLATES_BUCKET = loop-s3-cloudformation-templates-$(Environment)
@@ -59,6 +60,20 @@ deploy-networking: validate-networking
 				Environment=$(Environment) \
 		--stack-name $(NETWORKING_STACK_NAME) \
 		--template-file infrastructure/networking.yaml
+
+validate-rds:
+	@sam validate -t infrastructure/rds.yaml
+
+deploy-rds: validate-rds
+	@sam deploy \
+		--capabilities CAPABILITY_IAM \
+		--no-fail-on-empty-changeset \
+		--parameter-overrides \
+				Environment=$(Environment) \
+				DBMasterPassword=$(DBMasterPassword) \
+				VPC=loop-export-vpc-$(Environment) \
+		--stack-name $(RDS_STACK_NAME) \
+		--template-file infrastructure/rds.yaml
 
 validate:
 	@sam validate

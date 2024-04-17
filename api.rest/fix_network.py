@@ -66,20 +66,20 @@ class FunctionConfigurator:
         self.function_to_patch = self.all_lambdas.get(FUNCTION_NAME)
 
     def update_function(self):
-        qi_subnets = [
+        loop_subnets = [
             export['Value'].split(',')
             for export in self.exports
-            if export['Name'] == f'qi-export-subnet-list-private-{STAGE}'
+            if export['Name'] == f'loop-export-subnet-list-private-{STAGE}'
         ][0]
-        pprint(qi_subnets)
+        pprint(loop_subnets)
 
-        qi_security_groups = [
+        loop_security_groups = [
             export['Value'].split(',')
             for export in self.exports
             if export['Name']
-            == f'qi-export-security-group-list-private-{STAGE}'
+            == f'loop-export-security-group-list-private-{STAGE}'
         ][0]
-        pprint(qi_security_groups)
+        pprint(loop_security_groups)
 
         function_name = self.function_to_patch['FunctionName']
         print(
@@ -89,8 +89,8 @@ class FunctionConfigurator:
         configuration = {
             'FunctionName': function_name,
             'VpcConfig': {
-                'SubnetIds': qi_subnets,
-                'SecurityGroupIds': qi_security_groups,
+                'SubnetIds': loop_subnets,
+                'SecurityGroupIds': loop_security_groups,
             },
             'Environment': {'Variables': VARIABLES},
         }
