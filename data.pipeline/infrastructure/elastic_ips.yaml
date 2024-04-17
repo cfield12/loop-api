@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Create three elastic IPs and output the AllocationIds for use in other stacks.
+
+# Parameters ===========================================================================================================
+Parameters:
+  Project:
+    Description: Name of project.
+    Type:        String
+    Default:     loop
+    AllowedValues:
+    - loop
+
+  Environment:
+    Description: >-
+      Type of environment: develop[ment], staging, prod[uction] or d[isaster]r[ecovery].
+    Type:        String
+    Default:     develop
+    AllowedValues:
+    - develop
+    - staging
+    - prod
+    - dr
+
+# Outputs ==============================================================================================================
+Outputs:
+  ElasticIpA:
+    Description: Static IP A to be imported by other stacks.
+    Value: !GetAtt ElasticIpA.AllocationId
+    Export:
+      Name: !Join ['-', [!Ref Project, export, elastic-ip, a, !Ref Environment]]
+
+  ElasticIpB:
+    Description: Static IP B to be imported by other stacks.
+    Value: !GetAtt ElasticIpB.AllocationId
+    Export:
+      Name: !Join ['-', [!Ref Project, export, elastic-ip, b, !Ref Environment]]
+
+  ElasticIpC:
+    Description: Static IP C to be imported by other stacks.
+    Value: !GetAtt ElasticIpC.AllocationId
+    Export:
+      Name: !Join ['-', [!Ref Project, export, elastic-ip, c, !Ref Environment]]
+
+# Resources ============================================================================================================
+Resources:
+# Elastic IPs ----------------------------------------------------------------------------------------------------------
+  ElasticIpA:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  ElasticIpB:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  ElasticIpC:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc

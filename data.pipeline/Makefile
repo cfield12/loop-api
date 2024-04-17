@@ -5,11 +5,15 @@ Environment                     = develop
 ENVIRONMENT_UC                  = $(shell echo $(Environment) | tr '[:lower:]' '[:upper:]')
 
 # Reasonably stable variable names for this Makefile
+EIP_STACK_NAME                      = loop-stack-elastic-ips-$(Environment)
 LAMBDA_STACK_NAME                   = loop-stack-lambdas-$(Environment)
 NETWORKING_STACK_NAME               = loop-stack-networking-$(Environment)
 
 # Set bucket for template upload.
 TEMPLATES_BUCKET = loop-s3-cloudformation-templates-$(Environment)
+
+# Confirmation string for destructive operations
+CONFIRMATION_STRING             = "I_accept_responsibility_for_the_death_of_$(Environment)"
 
 # Only set these for CI runs
 ifneq ($(CI),)
@@ -26,6 +30,23 @@ else
     export ARTEFACTS_BUCKET      := loop-s3-artefacts-develop
   endif
 endif
+
+validate-elastic-ips:
+	@sam validate -t infrastructure/elastic_ips.yaml
+
+# Elastic IPs are shared once created and export names are deterministic.
+# Once this has been run once for an Environment, it should never be run
+# again.
+deploy-elastic-ips: validate-elastic-ips
+	@echo "!! DANGER !! Enter $(CONFIRMATION_STRING) to continue..."
+	@read c && test "$${c}" = $(CONFIRMATION_STRING) || exit 1
+	@sam deploy \
+		--capabilities CAPABILITY_IAM \
+		--no-fail-on-empty-changeset \
+		--parameter-overrides \
+				Environment=$(Environment) \
+		--stack-name $(EIP_STACK_NAME) \
+		--template-file infrastructure/elastic_ips.yaml
 
 validate-networking:
 	@sam validate -t infrastructure/networking.yaml
