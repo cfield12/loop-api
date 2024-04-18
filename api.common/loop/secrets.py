@@ -52,10 +52,13 @@ def get_secret(secret_name, add_environment=False, region=REGION):
 def get_db_dict(secret_name="rds_loop_root"):
     # db_dict = get_secret(secret_name)
     db_dict = {
-        'user': 'admin',
+        'user': 'loop_root',
         'password': 'v5IK9wGrOyqjX4esI6Vi',
         'port': '3306',
-        'host': 'rds-loop-develop.c3ucksma8huu.eu-west-2.rds.amazonaws.com',
+        'host': (
+            'loop-stack-rds-develop-rdsinstancea-by0mhlp7prmq.'
+            'c3ucksma8huu.eu-west-2.rds.amazonaws.com'
+        ),
     }
     db_dict.update(
         {"database": "loop", "provider": "mysql", "port": int(db_dict['port'])}
