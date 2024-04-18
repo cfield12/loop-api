@@ -1,0 +1,248 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Deploy an RDS Cluster and DB subnet group inside an existing VPC.
+
+# Parameters ===========================================================================================================
+Parameters:
+  Project:
+    Description: Name of project.
+    Type:        String
+    Default:     loop
+    AllowedValues:
+    - loop
+
+  Environment:
+    Description: >-
+      Type of environment: develop[ment], staging, prod[uction] or d[isaster]r[ecovery].
+    Type:        String
+    Default:     develop
+    AllowedValues:
+    - develop
+    - staging
+    - prod
+    - dr
+
+  DBAvailabilityZoneA:
+    Description: First Availability Zone for the RDS instance.
+    Type:        AWS::EC2::AvailabilityZone::Name
+    Default:     eu-west-2a
+
+  DBAvailabilityZoneB:
+    Description: Second Availability Zone for the RDS instance.
+    Type:        AWS::EC2::AvailabilityZone::Name
+    Default:     eu-west-2b
+
+  DBAvailabilityZoneC:
+    Description: Third Availability Zone for the RDS instance.
+    Type:        AWS::EC2::AvailabilityZone::Name
+    Default:     eu-west-2c
+
+  DBEngine:
+    Description:  >-
+      The DB engine to use.
+    Type:         String
+    Default:      mysql
+    AllowedValues:
+    - mysql
+
+  DBStorage:
+    Description:  >-
+      The DB storage.
+    Type:         Number
+    Default:      20
+    AllowedValues:
+    - 20
+
+  DBMasterPassword:
+    Description:           Password for RDS Instance.
+    ConstraintDescription: Must contain only alphanumeric characters and be 6-24 characters long.
+    Type:                  String
+    NoEcho:                true
+    AllowedPattern:        '[a-zA-Z0-9_]*'
+    MinLength:             6
+    MaxLength:             24
+
+  DBPreferredBackupWindow:
+    Description: The daily time range in UTC during which to create automated backups e.g. 01:00-02:00.
+    Type:        String
+    Default:     22:30-23:30
+
+  DBPreferredMaintenanceWindow:
+      Description: The weekly time range (in UTC) during which system maintenance can occur.
+      Type:        String
+      Default:     sat:06:00-sat:12:00
+
+  MultiAZ:
+    Description: Flag for whether creating MultiAZ or not.
+    Type:        String
+    Default:     FALSE
+    AllowedValues:
+    - TRUE
+    - FALSE
+
+
+# Mappings =============================================================================================================
+Mappings:
+  Database:
+    InstanceClass:
+      develop: db.t3.micro
+      staging: db.t2.small
+      prod:    db.t2.medium
+    BackupRetentionPeriod:
+      develop:  1
+      staging:  5
+      prod:    35
+  CidrBlocks:
+    SubnetA:
+      develop: 172.31.96.0/24
+      staging: 173.31.96.0/24
+      prod:    174.31.96.0/24
+    SubnetB:
+      develop: 172.31.97.0/24
+      staging: 173.31.97.0/24
+      prod:    174.31.97.0/24
+    SubnetC:
+      develop: 172.31.98.0/24
+      staging: 173.31.98.0/24
+      prod:    174.31.98.0/24
+
+# Conditions ===========================================================================================================
+Conditions:
+  CreateMultiAZ: !Or [!Equals [!Ref Environment, prod], !Equals [!Ref Environment, staging]]
+
+# Outputs ==============================================================================================================
+Outputs:
+  RDSAddress:
+    Condition: CreateMultiAZ
+    Description: Address of the created RDS instance
+    Value: !GetAtt RdsCluster.Endpoint.Address
+    Export:
+      Name: !Join ['-', [!Ref Project, export, rds-address, !Ref Environment]]
+
+#  RDSSecurityGroup:
+#    Description: Group to allow access to RDS.
+#    Value: !Ref RDSEgressSecurityGroup
+#    Export:
+#      Name: !Join ['-', [!Ref Project, export, security-group, rds !Ref Environment]]
+
+# Resources ============================================================================================================
+Resources:
+
+# Subnets --------------------------------------------------------------------------------------------------------------
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:    !Ref DBAvailabilityZoneA
+      CidrBlock:           !FindInMap [CidrBlocks, SubnetA , !Ref Environment]
+      MapPublicIpOnLaunch: false
+      VpcId:
+        Fn::ImportValue: !Join ['-', [!Ref Project, export, vpc, !Ref Environment]]
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet, rds, a, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:    !Ref DBAvailabilityZoneB
+      CidrBlock:           !FindInMap [CidrBlocks, SubnetB , !Ref Environment]
+      MapPublicIpOnLaunch: false
+      VpcId:
+        Fn::ImportValue: !Join ['-', [!Ref Project, export, vpc, !Ref Environment]]
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet, rds, b, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+  # SubnetC:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     AvailabilityZone:    !Ref DBAvailabilityZoneC
+  #     CidrBlock:           !FindInMap [CidrBlocks, SubnetC , !Ref Environment]
+  #     MapPublicIpOnLaunch: false
+  #     VpcId:
+  #       Fn::ImportValue: !Join ['-', [!Ref Project, export, vpc, !Ref Environment]]
+  #     Tags:
+  #     - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet, rds, c, !Ref Environment]]}
+  #     - {Key: Environment, Value: !Ref Environment}
+  #     - {Key: Project,     Value: !Ref Project}
+
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for the  RDS instance
+      SubnetIds:
+      - !Ref SubnetA
+      - !Ref SubnetB
+      # - !Ref SubnetC
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet-group, rds, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+# RDS Cluster ----------------------------------------------------------------------------------------------------------
+  RdsCluster:
+    Type: AWS::RDS::DBCluster
+    Condition: CreateMultiAZ
+    Properties:
+      BackupRetentionPeriod:       !FindInMap [Database, BackupRetentionPeriod, !Ref Environment]
+      DatabaseName:                !Ref Project
+      DBClusterIdentifier:         !Join ['-', [!Ref Project, rds-cluster, !Ref Environment]]
+      DBClusterInstanceClass:      !FindInMap [Database, InstanceClass, !Ref Environment]
+      DBSubnetGroupName:           !Ref RDSSubnetGroup
+      Engine:                      !Ref DBEngine
+      MasterUsername:              !Join ['_', [!Ref Project, root]]
+      MasterUserPassword:          !Ref DBMasterPassword
+      PreferredBackupWindow:       !Ref DBPreferredBackupWindow
+      PreferredMaintenanceWindow:  !Ref DBPreferredMaintenanceWindow
+      AllocatedStorage:            !Ref DBStorage
+      # ScalingConfiguration: Leaving here as a reminder it probably needs to be set to optimise serverless
+      StorageEncrypted:            true
+#      VpcSecurityGroupIds:
+#      - RDSIngressSecurityGroup
+      Tags:
+      - {Key: Name,         Value: !Join ['-', [!Ref Project, rds, cluster, !Ref Environment]]}
+      - {Key: Environment,  Value: !Ref Environment}
+      - {Key: Project,      Value: !Ref Project}
+
+# RDS Instances --------------------------------------------------------------------------------------------------------
+# Note, not setting DBInstanceIdentifier as you 'you cannot perform updates that require replacement of this resource'
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-rds-database-instance.html#cfn-rds-dbinstance-dbinstanceidentifier
+# Also naming the resources 'A' and 'B' rather tha  'primary' and 'secondary' because the first one that comes up will
+# be designated primary and the order is arbitrary
+  RdsInstanceA:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AutoMinorVersionUpgrade: true
+      CopyTagsToSnapshot:      true
+      Engine:                  !Ref DBEngine
+      MasterUsername:          !Join ['_', [!Ref Project, root]]
+      MasterUserPassword:      !Ref DBMasterPassword
+      DBClusterIdentifier:     !If [CreateMultiAZ, !Ref RdsCluster, !Ref 'AWS::NoValue']
+      DBInstanceClass:         !FindInMap [Database, InstanceClass, !Ref Environment]
+      DBSubnetGroupName:       !Ref RDSSubnetGroup
+      MultiAZ:                 !If [CreateMultiAZ, "TRUE", "FALSE"]
+      AllocatedStorage:        !If [CreateMultiAZ, !Ref 'AWS::NoValue', !Ref DBStorage]
+      Tags:
+      - {Key: Name,         Value: !Join ['-', [!Ref Project, rds, instance, a, !Ref Environment]]}
+      - {Key: Environment,  Value: !Ref Environment}
+      - {Key: Project,      Value: !Ref Project}
+
+  RdsInstanceB:
+    Type: AWS::RDS::DBInstance
+    Condition: CreateMultiAZ
+    Properties:
+      AutoMinorVersionUpgrade: true
+      CopyTagsToSnapshot:      true
+      Engine:                  !Ref DBEngine
+      MasterUsername:          !Join ['_', [!Ref Project, root]]
+      MasterUserPassword:      !Ref DBMasterPassword
+      DBClusterIdentifier:     !Ref RdsCluster
+      DBInstanceClass:         !FindInMap [Database, InstanceClass, !Ref Environment]
+      DBSubnetGroupName:       !Ref RDSSubnetGroup
+      MultiAZ:                 !If [CreateMultiAZ, "TRUE", "FALSE"]
+      Tags:
+      - {Key: Name,         Value: !Join ['-', [!Ref Project, rds, instance, b, !Ref Environment]]}
+      - {Key: Environment,  Value: !Ref Environment}
+      - {Key: Project,      Value: !Ref Project}
