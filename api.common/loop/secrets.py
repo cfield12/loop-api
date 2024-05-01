@@ -56,8 +56,8 @@ def get_db_dict(secret_name="rds_loop_root"):
         'password': 'v5IK9wGrOyqjX4esI6Vi',
         'port': '3306',
         'host': (
-            'loop-stack-rds-develop-rdsinstancea-by0mhlp7prmq.'
-            'c3ucksma8huu.eu-west-2.rds.amazonaws.com'
+            'loop-stack-rds-develop-rdsinstancea-3gxma7jtax1i.c3ucksma8huu.eu'
+            '-west-2.rds.amazonaws.com',
         ),
     }
     db_dict.update(
