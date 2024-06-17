@@ -50,7 +50,7 @@ build-api-rest-ci-image:
 lint-api-common:
   stage: Lint
   tags:
-    - docker
+    - saas-linux-small-amd64
   image:
     name: $API_COMMON_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
@@ -65,7 +65,7 @@ lint-api-common:
 lint-api-rest:
   stage: Lint
   tags:
-    - docker
+    - saas-linux-small-amd64
   image:
     name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
@@ -82,7 +82,7 @@ lint-api-rest:
 test-api-common:
   stage: Test
   tags:
-    - docker
+    - saas-linux-small-amd64
   variables:
     ENVIRONMENT: test
   image:
@@ -107,7 +107,7 @@ test-api-common:
 test-api-rest:
   stage: Test
   tags:
-    - docker
+    - saas-linux-small-amd64
   variables:
     ENVIRONMENT: test
     LOOP_AUTH_DISABLED: 1
@@ -140,7 +140,7 @@ test-api-rest:
 deploy-api-rest-develop:
   stage: Build_Deploy
   tags:
-    - docker
+    - saas-linux-small-amd64
   image:
     name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
@@ -170,7 +170,7 @@ deploy-api-rest-develop:
 deploy-api-rest-staging:
   stage: Build_Deploy
   tags:
-    - docker
+    - saas-linux-small-amd64
   image:
     name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
@@ -200,7 +200,7 @@ deploy-api-rest-staging:
 deploy-api-rest-prod:
   stage: Build_Deploy
   tags:
-    - docker
+    - saas-linux-small-amd64
   image:
     name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   variables:
