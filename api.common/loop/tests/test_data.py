@@ -37,30 +37,6 @@ class LoopTestGetUserRatings(unittest.TestCase):
                 {
                     'food': 3,
                     'price': 4,
-                    'vibe': 5,
-                    'place_name': 'Home',
-                    'address': '14 Lambert Street, London, N1 1JE',
-                    'google_id': 'test_google_id_1',
-                },
-                {
-                    'food': 5,
-                    'price': 5,
-                    'vibe': 5,
-                    'place_name': 'JFs',
-                    'address': '38 Huntingdon Street, London, N1 1BP',
-                    'google_id': 'test_google_id_3',
-                },
-            ],
-        )
-
-    def test_get_test_user_ratings(self):
-        user_ratings = data.get_user_ratings(UserObject(id=1))
-        self.assertEqual(
-            user_ratings,
-            [
-                {
-                    'food': 3,
-                    'price': 4,
                     'vibe': 4,
                     'place_name': 'Home',
                     'address': '14 Lambert Street, London, N1 1JE',
@@ -73,6 +49,30 @@ class LoopTestGetUserRatings(unittest.TestCase):
                     'place_name': "Baggins'",
                     'address': '15 Noel Road, London, N1 8HQ',
                     'google_id': 'test_google_id_2',
+                },
+            ],
+        )
+
+    def test_get_test_user_ratings(self):
+        user_ratings = data.get_user_ratings(UserObject(id=2))
+        self.assertEqual(
+            user_ratings,
+            [
+                {
+                    'food': 3,
+                    'price': 4,
+                    'vibe': 5,
+                    'place_name': 'Home',
+                    'address': '14 Lambert Street, London, N1 1JE',
+                    'google_id': 'test_google_id_1',
+                },
+                {
+                    'food': 5,
+                    'price': 5,
+                    'vibe': 5,
+                    'place_name': 'JFs',
+                    'address': '38 Huntingdon Street, London, N1 1BP',
+                    'google_id': 'test_google_id_3',
                 },
             ],
         )
