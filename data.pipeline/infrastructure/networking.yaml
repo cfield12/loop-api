@@ -106,6 +106,45 @@ Resources:
       - {Key: Environment, Value: !Ref Environment}
       - {Key: Project,     Value: !Ref Project}
 
+# Internet Gateway(s)
+# ----------------------------------------------------------------------------------------------------------------------
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, internet-gateway, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+# Gateway Attachment(s) - Required to actually use the internet gateway with the VPC
+# ----------------------------------------------------------------------------------------------------------------------
+  InternetGatewayAttachement:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+# Route Table(s)
+# ----------------------------------------------------------------------------------------------------------------------
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, route-table, public, !Ref Environment]]}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+# Route(s)
+# ----------------------------------------------------------------------------------------------------------------------
+  InternetGatewayRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachement
+    Properties:
+      RouteTableId:         !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:            !Ref InternetGateway
+
 # Subnets
 # ----------------------------------------------------------------------------------------------------------------------
   PublicSubnetA:
@@ -155,6 +194,22 @@ Resources:
       - {Key: Name,        Value: !Join ['-', [!Ref Project, subnet, private, b, !Ref Environment]]}
       - {Key: Environment, Value: !Ref Environment}
       - {Key: Project,     Value: !Ref Project}
+
+# RouteTableAssociation(s) - To link a route table to a subnet
+# ----------------------------------------------------------------------------------------------------------------------
+  PublicSubnetARouteTableAssociation:
+    Type:      AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: InternetGateway
+    Properties:
+      SubnetId:     !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetBRouteTableAssociation:
+    Type:      AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: InternetGateway
+    Properties:
+      SubnetId:     !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
 
 # Security Groups
 # ----------------------------------------------------------------------------------------------------------------------
