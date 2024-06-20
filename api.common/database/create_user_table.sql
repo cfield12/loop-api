@@ -9,6 +9,8 @@ IF (SELECT TABLE_NAME FROM information_schema.tables WHERE table_schema = 'loop'
     CREATE TABLE `user` (
         `id` INT NOT NULL AUTO_INCREMENT,
         `cognito_user_name` VARCHAR(255) NULL,
+        `first_name` VARCHAR(255) NULL,
+        `last_name` VARCHAR(255) NULL,
         `created` DATETIME DEFAULT(sysdate()),
         `last_updated` DATETIME DEFAULT(sysdate()),
         PRIMARY KEY (`id`)

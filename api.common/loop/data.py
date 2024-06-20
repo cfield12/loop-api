@@ -6,7 +6,7 @@ from typing import Dict, List, Union
 from loop import exceptions, secrets
 from loop.constants import RDS_WRITE
 from loop.db_entities import define_entities
-from loop.utils import UserObject
+from loop.utils import UserCreateObject, UserObject
 from pony.orm import Database
 from pony.orm import InternalError as PonyOrmDbInternalError
 from pony.orm import (
@@ -149,3 +149,17 @@ def get_user_from_cognito_username(
     user_id = user.id
     user = UserObject(id=user_id, cognito_user_name=user.cognito_user_name)
     return user
+
+
+@DB_SESSION_RETRYABLE
+def create_user(user: UserCreateObject, db_instance_type=RDS_WRITE) -> None:
+    if not isinstance(user, UserCreateObject):
+        raise TypeError('user must be an instance of UserCreateObject')
+    DB_TYPE[db_instance_type].User(
+        cognito_user_name=user.cognito_user_name,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+    )
+    logger.info(f'Successfully created user in rds: {user.__dict__}')
+    return

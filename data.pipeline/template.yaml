@@ -66,6 +66,43 @@ Globals:
 # Resources
 # ----------------------------------------------------------------------------------------------------------------------
 Resources:
+# Cognito
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+# Lambdas
+# ----------------------------------------------------------------------------------------------------------------------
+  UserCreator:
+    Type: AWS::Serverless::Function
+    Properties:
+      Role:             !GetAtt LambdaRole.Arn
+      Policies:         AWSLambdaVPCAccessExecutionRole
+      FunctionName:     !Join ['-', [!Ref Project, lambda, user-creator, !Ref Environment]]
+      Description:      Adds user info to RDS.
+      ReservedConcurrentExecutions: 10
+      CodeUri:          lambdas/user_creator
+      Runtime:      python3.8
+      Handler:      main.lambda_handler
+      AutoPublishAlias: !Ref Environment
+      MemorySize:       2048
+      Timeout:      15
+      Environment:
+        Variables:
+          ENVIRONMENT:       !Ref Environment
+          LOGLEVEL:          INFO
+          PROJECT:           !Ref Project
+      Events:
+        Queue:
+          Type: Cognito
+          Properties:
+            UserPool:
+              Ref: LoopCognitoUserPool
+            Trigger: PostConfirmation
+      Tags:
+        Function:       RdsMaintenace
+        Name:           !Join ['-', [!Ref Project, lambda, user-creator, !Ref Environment]]
+        Environment:    !Ref Environment
+        Project:        !Ref Project
 
 # Roles
 # ----------------------------------------------------------------------------------------------------------------------
