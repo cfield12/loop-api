@@ -50,7 +50,7 @@ def get_current_user(func):
                     raise UnauthorizedError(f'Unexpected error: {e}')
                 if not cognito_user:
                     raise UnauthorizedError("Could not find cognito user")
-                cognito_user_name = cognito_user.get('username')
+                cognito_user_name = cognito_user.get('cognito:username')
                 if not cognito_user_name:
                     raise UnauthorizedError("Could not find cognito username")
                 user = data.get_user_from_cognito_username(cognito_user_name)
