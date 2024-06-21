@@ -67,8 +67,9 @@ Resources:
           AttributeDataType: String
           Mutable: true
           Required: true
-      # LambdaConfig:
-      #   - PostConfirmation: Fn::ImportValue: !Sub "${Project}-stack-lambdas-${Environment}-UserCreator-Arn"
+      LambdaConfig:
+        PostConfirmation:
+          Fn::ImportValue: !Sub "${Project}-stack-lambdas-${Environment}-UserCreator-Arn"
       Policies:
         PasswordPolicy:
           MinimumLength: 8
@@ -121,3 +122,9 @@ Outputs:
     Export:
       Name:
         'Fn::Sub': '${AWS::StackName}-UserPool'
+  CognitoUserPoolArn:
+    Description: The UserPool Arn.
+    Value: !GetAtt UserPool.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}-UserPool-Arn'

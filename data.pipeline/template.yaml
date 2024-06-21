@@ -85,19 +85,23 @@ Resources:
           ENVIRONMENT:       !Ref Environment
           LOGLEVEL:          INFO
           PROJECT:           !Ref Project
-      # Events:
-      #   Cognito:
-      #     Type: Cognito
-      #     Properties:
-      #       UserPool:
-      #         - Fn::ImportValue: !Sub "${Project}-stack-cognito-${Environment}-UserPool"
-      #       Trigger:
-      #           - PostConfirmation
       Tags:
         Function:       RdsMaintenace
         Name:           !Join ['-', [!Ref Project, lambda, user-creator, !Ref Environment]]
         Environment:    !Ref Environment
         Project:        !Ref Project
+
+# Lambda Permissions
+# ----------------------------------------------------------------------------------------------------------------------
+  CognitoLambdaInvokePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !GetAtt UserCreator.Arn
+      Principal: "cognito-idp.amazonaws.com"
+      SourceArn:
+        Fn::ImportValue:
+          !Sub "${Project}-stack-cognito-${Environment}-UserPool-Arn"
 
 # Roles
 # ----------------------------------------------------------------------------------------------------------------------
@@ -128,6 +132,16 @@ Resources:
           Statement:
           - Action:
             - cloudwatch:PutMetricData
+            Effect: Allow
+            Resource: '*'
+      - PolicyName: ec2-interfaces
+        PolicyDocument:
+          Statement:
+          - Action:
+            - ec2:DetachNetworkInterface
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DeleteNetworkInterface
             Effect: Allow
             Resource: '*'
 

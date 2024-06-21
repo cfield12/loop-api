@@ -10,6 +10,7 @@ LAMBDA_STACK_NAME                   = loop-stack-lambdas-$(Environment)
 NETWORKING_STACK_NAME               = loop-stack-networking-$(Environment)
 RDS_STACK_NAME                      = loop-stack-rds-$(Environment)
 COGNITO_STACK_NAME                  = loop-stack-cognito-$(Environment)
+STORAGE_STACK_NAME                  = loop-stack-storage-$(Environment)
 
 # Set bucket for template upload.
 TEMPLATES_BUCKET = loop-s3-cloudformation-templates-$(Environment)
@@ -88,10 +89,8 @@ deploy-cognito: validate-cognito
 		--stack-name $(COGNITO_STACK_NAME) \
 		--template-file infrastructure/cognito.yaml
 
-validate-data-pipeline:
-	@sam validate -t template.yaml
-
 build: template.yaml
+	@sam validate -t template.yaml
 	# Docker... if using containerised build.
 	# service docker start
 	# sleep 30
@@ -103,7 +102,7 @@ build: template.yaml
 	@sam package --s3-bucket=$(ARTEFACTS_BUCKET) \
 		--output-template-file packaged.yaml
 
-deploy: validate-data-pipeline build
+deploy: build
 	@sam deploy \
 		--capabilities CAPABILITY_IAM \
 		--no-fail-on-empty-changeset \
@@ -112,6 +111,18 @@ deploy: validate-data-pipeline build
 		--stack-name $(LAMBDA_STACK_NAME) \
 		--s3-bucket $(TEMPLATES_BUCKET) \
 		--template-file packaged.yaml
+
+validate-storage:
+	@sam validate -t infrastructure/storage.yaml
+
+deploy-storage: validate-storage
+	@sam deploy \
+		--capabilities CAPABILITY_IAM \
+		--no-fail-on-empty-changeset \
+		--parameter-overrides \
+				Environment=$(Environment) \
+		--stack-name $(STORAGE_STACK_NAME) \
+		--template-file infrastructure/storage.yaml
 
 clean:
 	rm -rf .aws-sam
