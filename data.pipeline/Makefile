@@ -90,10 +90,9 @@ deploy-cognito: validate-cognito
 		--template-file infrastructure/cognito.yaml
 
 validate:
-	@sam validate
-
-build: template.yaml
 	@sam validate -t template.yaml
+
+build:
 	# Docker... if using containerised build.
 	# service docker start
 	# sleep 30
