@@ -233,10 +233,6 @@ deploy-data-pipeline-develop:
   stage: Build_Deploy
   tags:
     - saas-linux-small-amd64
-  variables:
-    AWS_DEFAULT_REGION: eu-west-2
-    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
   image:
     name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:

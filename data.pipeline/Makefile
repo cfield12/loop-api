@@ -22,9 +22,9 @@ CONFIRMATION_STRING             = "I_accept_responsibility_for_the_death_of_$(En
 ifneq ($(CI),)
   $(info ******** CI Run ($(Environment)) **********)
   # Use environment specific environment variables in the CI environment
-  export AWS_ACCESS_KEY_ID     := $($(ENVIRONMENT_UC)_AWS_ACCESS_KEY_ID)
-  export AWS_SECRET_ACCESS_KEY := $($(ENVIRONMENT_UC)_AWS_SECRET_ACCESS_KEY)
-  export AWS_DEFAULT_REGION    := $($(ENVIRONMENT_UC)_AWS_DEFAULT_REGION)
+  export AWS_ACCESS_KEY_ID     := $(AWS_ACCESS_KEY_ID)
+  export AWS_SECRET_ACCESS_KEY := $(AWS_SECRET_ACCESS_KEY)
+  export AWS_DEFAULT_REGION    := $(AWS_DEFAULT_REGION)
   export ARTEFACTS_BUCKET      := loop-s3-artefacts-$(Environment)
 else
   ifneq ($(Environment),)
