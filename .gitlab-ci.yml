@@ -2,6 +2,7 @@ variables:
   CI_IMAGE_PATH: registry.gitlab.com/charlie.field98/back-end
   API_COMMON_CI_IMAGE_NAME: $CI_IMAGE_PATH/api-common-ci-image
   API_REST_CI_IMAGE_NAME: $CI_IMAGE_PATH/api-rest-ci-image
+  DATA_PIPELINE_CI_IMAGE_NAME: $CI_IMAGE_PATH/data-pipeline-ci-image
   AWS_DEFAULT_REGION: eu-west-2
   AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
   AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
@@ -45,6 +46,22 @@ build-api-rest-ci-image:
       - api.common/**/*
       - api.rest/**/*
 
+build-data-pipeline-ci-image:
+  stage: Ci_Setup
+  image: docker
+  services:
+    - docker:dind
+  script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - docker build -t $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG -f docker/data_pipeline/Dockerfile -t $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG .
+    - docker push $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  rules:
+    - changes:
+      - docker/**/*
+      - .gitlab-ci.yml
+      - api.common/**/*
+      - data.pipeline/**/*
+
 # Stage: Lint
 # ----------------------------------------------------------------------------------------------------------------------
 lint-api-common:
@@ -77,6 +94,21 @@ lint-api-rest:
       - api.rest/**/*
       - .gitlab-ci.yml
 
+lint-data-pipeline:
+  stage: Lint
+  tags:
+    - saas-linux-small-amd64
+  image:
+    name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  script:
+  - cd data.pipeline
+  - python -m pip install pycodestyle==2.8.0
+  - pycodestyle --config=.pycodestyle lambdas
+  rules:
+    - changes:
+      - data.pipeline/**/*
+      - .gitlab-ci.yml
+
 # Stage: Test
 # ----------------------------------------------------------------------------------------------------------------------
 test-api-common:
@@ -88,11 +120,11 @@ test-api-common:
   image:
     name: $API_COMMON_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
-   - cd api.common
-   - python setup.py sdist bdist_wheel
-   - python -m pip install pytest==8.1.1 pytest-cov==5.0.0
-   - python -m pip install pyopenssl --upgrade
-   - python -m pytest --cov=loop --cov-fail-under=80
+  - cd api.common
+  - python setup.py sdist bdist_wheel
+  - python -m pip install pytest==8.1.1 pytest-cov==5.0.0
+  - python -m pip install pyopenssl --upgrade
+  - python -m pytest --cov=loop --cov-fail-under=80
   rules:
     - changes:
       - api.common/**/*
@@ -133,6 +165,38 @@ test-api-rest:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
       when: always
 
+test-data-pipeline:
+  stage: Test
+  tags:
+    - saas-linux-small-amd64
+  variables:
+    ENVIRONMENT: test
+    LOOP_AUTH_DISABLED: 1
+    TEST: 1
+  before_script:
+    - cd api.common
+    - python setup.py sdist bdist_wheel
+    - python -m pip install dist/loop-1.0.tar.gz
+    - cd ../data.pipeline/
+    - python -m pip install pytest==8.1.1 pytest-cov==5.0.0
+    - python -m pip install pyopenssl --upgrade
+  image:
+    name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  script:
+    - python -m pytest --cov=lambdas/ --cov-fail-under=70
+  rules:
+    - changes:
+      - docker/**/*
+      - api.common/**/*
+      - api.rest/**/*
+      - .gitlab-ci.yml
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+      when: always
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "staging"'
+      when: always
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
+      when: always
+
 # Stage: "Build/Deploy"
 # ======================================================================================================================
 # Develop
@@ -144,23 +208,44 @@ deploy-api-rest-develop:
   image:
     name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
-   # Install package and dependencies (e.g. boto) for api.common
-   - cd api.common
-   - python setup.py install
-   # Generate artifact
-   - python setup.py sdist bdist_wheel
-   # Build the chalice app
-   - cd ../api.rest
-   - make clean
-   - python -m pip install pyopenssl --upgrade
-   - make build STAGE=develop
-   # Deploy to AWS
-   - make deploy STAGE=develop
+  # Install package and dependencies (e.g. boto) for api.common
+  - cd api.common
+  - python setup.py install
+  # Generate artifact
+  - python setup.py sdist bdist_wheel
+  # Build the chalice app
+  - cd ../api.rest
+  - make clean
+  - python -m pip install pyopenssl --upgrade
+  - make build STAGE=develop
+  # Deploy to AWS
+  - make deploy STAGE=develop
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
       - docker/**/*
       - api.rest/**/*
+      - api.common/**/*
+      - .gitlab-ci.yml
+      when: manual
+
+deploy-data-pipeline-develop:
+  stage: Build_Deploy
+  tags:
+    - saas-linux-small-amd64
+  image:
+    name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  script:
+  - cd api.common
+  - python setup.py install
+  - python setup.py sdist bdist_wheel
+  - cd ../data.pipeline
+  - make deploy Environment=develop || ( make explain; false )
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+      - docker/**/*
+      - data.pipeline/**/*
       - api.common/**/*
       - .gitlab-ci.yml
       when: manual
@@ -174,23 +259,44 @@ deploy-api-rest-staging:
   image:
     name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
-   # Install package and dependencies (e.g. boto) for api.common
-   - cd api.common
-   - python setup.py install
-   # Generate artifact
-   - python setup.py sdist bdist_wheel
-   # Build the chalice app
-   - cd ../api.rest
-   - make clean
-   - python -m pip install pyopenssl --upgrade
-   - make build STAGE=staging
-   # Deploy to AWS
-   - make deploy STAGE=staging
+  # Install package and dependencies (e.g. boto) for api.common
+  - cd api.common
+  - python setup.py install
+  # Generate artifact
+  - python setup.py sdist bdist_wheel
+  # Build the chalice app
+  - cd ../api.rest
+  - make clean
+  - python -m pip install pyopenssl --upgrade
+  - make build STAGE=staging
+  # Deploy to AWS
+  - make deploy STAGE=staging
   rules:
     - if: '$CI_COMMIT_BRANCH == "staging"'
       changes:
       - docker/**/*
       - api.rest/**/*
+      - api.common/**/*
+      - .gitlab-ci.yml
+      when: manual
+
+deploy-data-pipeline-staging:
+  stage: Build_Deploy
+  tags:
+    - saas-linux-small-amd64
+  image:
+    name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  script:
+  - cd api.common
+  - python setup.py install
+  - python setup.py sdist bdist_wheel
+  - cd ../data.pipeline
+  - make deploy Environment=staging || ( make explain; false )
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+      changes:
+      - docker/**/*
+      - data.pipeline/**/*
       - api.common/**/*
       - .gitlab-ci.yml
       when: manual
@@ -206,23 +312,44 @@ deploy-api-rest-prod:
   variables:
     API_VERSION: $CI_COMMIT_TAG
   script:
-   # Install package and dependencies (e.g. boto) for api.common
-   - cd api.common
-   - python setup.py install
-   # Generate artifact
-   - python setup.py sdist bdist_wheel
-   # Build the chalice app
-   - cd ../api.rest
-   - make clean
-   - python -m pip install pyopenssl --upgrade
-   - make build STAGE=prod
-   # Deploy to AWS
-   - make deploy STAGE=prod
+  # Install package and dependencies (e.g. boto) for api.common
+  - cd api.common
+  - python setup.py install
+  # Generate artifact
+  - python setup.py sdist bdist_wheel
+  # Build the chalice app
+  - cd ../api.rest
+  - make clean
+  - python -m pip install pyopenssl --upgrade
+  - make build STAGE=prod
+  # Deploy to AWS
+  - make deploy STAGE=prod
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v[0-9]*\.[0-9]*\.[0-9]*$/'
       changes:
       - docker/**/*
       - api.rest/**/*
+      - api.common/**/*
+      - .gitlab-ci.yml
+      when: manual
+
+deploy-data-pipeline-prod:
+  stage: Build_Deploy
+  tags:
+    - saas-linux-small-amd64
+  image:
+    name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  script:
+  - cd api.common
+  - python setup.py install
+  - python setup.py sdist bdist_wheel
+  - cd ../data.pipeline
+  - make deploy Environment=prod || ( make explain; false )
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]*\.[0-9]*\.[0-9]*$/'
+      changes:
+      - docker/**/*
+      - data.pipeline/**/*
       - api.common/**/*
       - .gitlab-ci.yml
       when: manual

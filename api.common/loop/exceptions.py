@@ -90,3 +90,10 @@ class DbDisconnectFailedError(Error):
 
     def __init__(self, message):
         self.message = message
+
+
+class CreateUserValidationError(Error):
+    '''Raised when incorrect user create inputs'''
+
+    def __init__(self, message):
+        self.message = message

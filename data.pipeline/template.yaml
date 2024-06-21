@@ -60,12 +60,45 @@ Globals:
       Environment:  !Ref Environment
       Project:      !Ref Project
 
-# Outputs
-# ----------------------------------------------------------------------------------------------------------------------
-
 # Resources
 # ----------------------------------------------------------------------------------------------------------------------
 Resources:
+
+# Lambdas
+# ----------------------------------------------------------------------------------------------------------------------
+  UserCreator:
+    Type: AWS::Serverless::Function
+    Properties:
+      Role:             !GetAtt LambdaRole.Arn
+      Policies:         AWSLambdaVPCAccessExecutionRole
+      FunctionName:     !Join ['-', [!Ref Project, lambda, user-creator, !Ref Environment]]
+      Description:      Adds user info to RDS.
+      ReservedConcurrentExecutions: 10
+      CodeUri:          lambdas/user_creator
+      Runtime:      python3.8
+      Handler:      main.lambda_handler
+      AutoPublishAlias: !Ref Environment
+      MemorySize:       2048
+      Timeout:      15
+      Environment:
+        Variables:
+          ENVIRONMENT:       !Ref Environment
+          LOGLEVEL:          INFO
+          PROJECT:           !Ref Project
+      Events:
+        Queue:
+          Type: Cognito
+          Properties:
+            UserPool:
+              Fn::ImportValue:
+                !Sub "${Project}-stack-cognito-${Environment}-UserPool-ID"
+            Trigger:
+                - PostConfirmation
+      Tags:
+        Function:       RdsMaintenace
+        Name:           !Join ['-', [!Ref Project, lambda, user-creator, !Ref Environment]]
+        Environment:    !Ref Environment
+        Project:        !Ref Project
 
 # Roles
 # ----------------------------------------------------------------------------------------------------------------------
@@ -98,3 +131,11 @@ Resources:
             - cloudwatch:PutMetricData
             Effect: Allow
             Resource: '*'
+
+Outputs:
+  UserCreatorArn:
+    Description: UserCreator ARN.
+    Value: !GetAtt UserCreator.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}-UserCreator-Arn'

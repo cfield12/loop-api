@@ -1,4 +1,6 @@
-from loop.constants import LOOP_ADMIN_ID, LOOP_ADMIN_COGNITO_USERNAME
+from dataclasses import dataclass
+
+from loop.constants import LOOP_ADMIN_COGNITO_USERNAME, LOOP_ADMIN_ID
 
 
 class UserObject(object):
@@ -19,6 +21,13 @@ class UserObject(object):
 
 def get_admin_user():
     return UserObject(
-        id=LOOP_ADMIN_ID,
-        cognito_user_name=LOOP_ADMIN_COGNITO_USERNAME
+        id=LOOP_ADMIN_ID, cognito_user_name=LOOP_ADMIN_COGNITO_USERNAME
     )
+
+
+@dataclass
+class UserCreateObject:
+    cognito_user_name: str
+    email: str
+    first_name: str
+    last_name: str

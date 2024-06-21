@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: >-
+  AWS CloudFormation template to for Loop data ingestion pipeline
+
+# Parameters
+# ----------------------------------------------------------------------------------------------------------------------
+Parameters:
+
+  Project:
+    Description: Name of project.
+    Type:        String
+    Default:     loop
+    AllowedValues:
+    - loop
+
+  Environment:
+    Description: >-
+      Type of environment: develop[ment], staging, prod[uction] or d[isaster]r[ecovery].
+    Type:        String
+    Default:     develop
+    AllowedValues:
+    - test
+    - develop
+    - staging
+    - prod
+    - dr
+
+  Region:
+    Description: aws region.
+    Type:        String
+    Default:     eu-west-2
+    AllowedValues:
+    - eu-west-2
+
+# Outputs
+# ----------------------------------------------------------------------------------------------------------------------
+
+# Resources
+# ----------------------------------------------------------------------------------------------------------------------
+Resources:
+
+# Cognito
+# ----------------------------------------------------------------------------------------------------------------------
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      UsernameConfiguration:
+        CaseSensitive: true
+      AutoVerifiedAttributes:
+        - email
+      UserPoolName: !Sub ${Project}-user-pool-${Environment}
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: given_name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: family_name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+      # LambdaConfig:
+      #   - PostConfirmation: Fn::ImportValue: !Sub "${Project}-stack-lambdas-${Environment}-UserCreator-Arn"
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireUppercase: true
+      UsernameAttributes:
+        - email
+      DeletionProtection: ACTIVE
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      AllowedOAuthFlowsUserPoolClient: true
+      CallbackURLs:
+        - https://example.com/callback
+      AllowedOAuthFlows:
+        - implicit
+      AllowedOAuthScopes:
+        - phone
+        - email
+        - openid
+      SupportedIdentityProviders:
+        - COGNITO
+      ClientName: !Sub ${Project}-api-client-${Environment}
+      ExplicitAuthFlows:
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub ${Project}-${Environment}
+      UserPoolId: !Ref UserPool
+
+Outputs:
+  CognitoUserPoolID:
+    Description: The UserPool ID.
+    Value: !GetAtt UserPool.UserPoolId
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}-UserPool-ID'
