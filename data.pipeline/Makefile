@@ -89,10 +89,8 @@ deploy-cognito: validate-cognito
 		--stack-name $(COGNITO_STACK_NAME) \
 		--template-file infrastructure/cognito.yaml
 
-validate-data-pipeline:
-	@sam validate -t template.yaml
-
 build: template.yaml
+	@sam validate -t template.yaml
 	# Docker... if using containerised build.
 	# service docker start
 	# sleep 30
@@ -104,7 +102,7 @@ build: template.yaml
 	@sam package --s3-bucket=$(ARTEFACTS_BUCKET) \
 		--output-template-file packaged.yaml
 
-deploy: validate-data-pipeline build
+deploy: build
 	@sam deploy \
 		--capabilities CAPABILITY_IAM \
 		--no-fail-on-empty-changeset \
