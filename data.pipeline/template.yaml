@@ -60,15 +60,9 @@ Globals:
       Environment:  !Ref Environment
       Project:      !Ref Project
 
-# Outputs
-# ----------------------------------------------------------------------------------------------------------------------
-
 # Resources
 # ----------------------------------------------------------------------------------------------------------------------
 Resources:
-# Cognito
-# ----------------------------------------------------------------------------------------------------------------------
-
 
 # Lambdas
 # ----------------------------------------------------------------------------------------------------------------------
@@ -96,8 +90,10 @@ Resources:
           Type: Cognito
           Properties:
             UserPool:
-              Ref: LoopCognitoUserPool
-            Trigger: PostConfirmation
+              Fn::ImportValue:
+                !Sub "${Project}-stack-cognito-${Environment}-UserPool-ID"
+            Trigger:
+                - PostConfirmation
       Tags:
         Function:       RdsMaintenace
         Name:           !Join ['-', [!Ref Project, lambda, user-creator, !Ref Environment]]
@@ -135,3 +131,11 @@ Resources:
             - cloudwatch:PutMetricData
             Effect: Allow
             Resource: '*'
+
+Outputs:
+  UserCreatorArn:
+    Description: UserCreator ARN.
+    Value: !GetAtt UserCreator.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}-UserCreator-Arn'

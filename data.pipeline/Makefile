@@ -9,6 +9,7 @@ EIP_STACK_NAME                      = loop-stack-elastic-ips-$(Environment)
 LAMBDA_STACK_NAME                   = loop-stack-lambdas-$(Environment)
 NETWORKING_STACK_NAME               = loop-stack-networking-$(Environment)
 RDS_STACK_NAME                      = loop-stack-rds-$(Environment)
+COGNITO_STACK_NAME                  = loop-stack-cognito-$(Environment)
 
 # Set bucket for template upload.
 TEMPLATES_BUCKET = loop-s3-cloudformation-templates-$(Environment)
@@ -74,6 +75,18 @@ deploy-rds: validate-rds
 				VPC=loop-export-vpc-$(Environment) \
 		--stack-name $(RDS_STACK_NAME) \
 		--template-file infrastructure/rds.yaml
+
+validate-cognito:
+	@sam validate -t infrastructure/cognito.yaml
+
+deploy-cognito: validate-cognito
+	@sam deploy \
+		--capabilities CAPABILITY_IAM \
+		--no-fail-on-empty-changeset \
+		--parameter-overrides \
+				Environment=$(Environment) \
+		--stack-name $(COGNITO_STACK_NAME) \
+		--template-file infrastructure/cognito.yaml
 
 validate:
 	@sam validate
