@@ -241,6 +241,7 @@ deploy-data-pipeline-develop:
   - python setup.py sdist bdist_wheel
   - cd ../data.pipeline
   - python -m pip install aws-sam-cli==1.37.0
+  - python -m pip install pyopenssl --upgrade
   - make deploy Environment=develop
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
