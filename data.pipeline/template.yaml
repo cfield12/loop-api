@@ -130,6 +130,16 @@ Resources:
             - cloudwatch:PutMetricData
             Effect: Allow
             Resource: '*'
+      - PolicyName: ec2-interfaces
+        PolicyDocument:
+          Statement:
+          - Action:
+            - ec2:DetachNetworkInterface
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DeleteNetworkInterface
+            Effect: Allow
+            Resource: '*'
 
 Outputs:
   UserCreatorArn:
