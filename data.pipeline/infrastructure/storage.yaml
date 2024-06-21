@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates common storage for use by LOOP in various projects (including packaging and deployment)
+
+# Parameters
+# ======================================================================================================================
+Parameters:
+  Project:
+    Description: Name of project.
+    Type:        String
+    Default:     loop
+    AllowedValues:
+    - loop
+
+  Environment:
+    Description: >-
+      Type of environment: develop[ment], staging, prod[uction] or d[isaster]r[ecovery].
+    Type:        String
+    Default:     develop
+    AllowedValues:
+    - develop
+    - staging
+    - prod
+    - dr
+
+# Resources
+# ======================================================================================================================
+Resources:
+  LoopArtefactsBucketS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ['-', [!Ref Project, s3, artefacts, !Ref Environment]]
+  LoopCloudFormationTemplatesBucketS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ['-', [!Ref Project, s3, cloudformation-templates, !Ref Environment]]

@@ -10,6 +10,7 @@ LAMBDA_STACK_NAME                   = loop-stack-lambdas-$(Environment)
 NETWORKING_STACK_NAME               = loop-stack-networking-$(Environment)
 RDS_STACK_NAME                      = loop-stack-rds-$(Environment)
 COGNITO_STACK_NAME                  = loop-stack-cognito-$(Environment)
+STORAGE_STACK_NAME                  = loop-stack-storage-$(Environment)
 
 # Set bucket for template upload.
 TEMPLATES_BUCKET = loop-s3-cloudformation-templates-$(Environment)
@@ -112,6 +113,18 @@ deploy: validate-data-pipeline build
 		--stack-name $(LAMBDA_STACK_NAME) \
 		--s3-bucket $(TEMPLATES_BUCKET) \
 		--template-file packaged.yaml
+
+validate-storage:
+	@sam validate -t infrastructure/storage.yaml
+
+deploy-storage: validate-storage
+	@sam deploy \
+		--capabilities CAPABILITY_IAM \
+		--no-fail-on-empty-changeset \
+		--parameter-overrides \
+				Environment=$(Environment) \
+		--stack-name $(STORAGE_STACK_NAME) \
+		--template-file infrastructure/storage.yaml
 
 clean:
 	rm -rf .aws-sam
