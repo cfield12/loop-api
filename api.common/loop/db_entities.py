@@ -20,6 +20,9 @@ def define_entities(db: Database):
         created = Required(datetime)
         last_updated = Required(datetime)
         cognito_user_name = Required(str)
+        email = Required(str)
+        first_name = Required(str)
+        last_name = Required(str)
         ratings = Set('Rating')
 
     class Location(db.Entity):
