@@ -32,11 +32,17 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
                 cognito_user_name='test_cognito_user_name',
+                email='test_email',
+                first_name='Test',
+                last_name='User',
             )
             admin_user = data.DB_TYPE[db_instance_type].User(
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
                 cognito_user_name='test_cognito_user_name_admin',
+                email='admin_test_email',
+                first_name='Admin',
+                last_name='User',
             )
             location_1 = data.DB_TYPE[db_instance_type].Location(
                 google_id='test_google_id_1',
