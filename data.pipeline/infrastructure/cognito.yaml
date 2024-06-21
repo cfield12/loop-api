@@ -122,3 +122,9 @@ Outputs:
     Export:
       Name:
         'Fn::Sub': '${AWS::StackName}-UserPool'
+  CognitoUserPoolArn:
+    Description: The UserPool Arn.
+    Value: !GetAtt UserPool.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}-UserPool-Arn'
