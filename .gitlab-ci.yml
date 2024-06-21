@@ -174,7 +174,9 @@ test-data-pipeline:
     LOOP_AUTH_DISABLED: 1
     TEST: 1
   before_script:
-    - cd data.pipeline
+    - cd api.common
+    - python setup.py sdist bdist_wheel
+    - cd ../data.pipeline/
   image:
     name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
