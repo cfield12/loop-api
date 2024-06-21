@@ -17,8 +17,8 @@ def define_entities(db: Database):
         """
 
         id = PrimaryKey(int, auto=True)
-        created = Required(datetime)
-        last_updated = Required(datetime)
+        created = Optional(datetime)
+        last_updated = Optional(datetime)
         cognito_user_name = Required(str)
         email = Required(str)
         first_name = Required(str)
@@ -34,8 +34,8 @@ def define_entities(db: Database):
         google_id = Required(str)
         address = Required(str)
         display_name = Required(str)
-        created = Required(datetime)
-        last_updated = Required(datetime)
+        created = Optional(datetime)
+        last_updated = Optional(datetime)
         ratings = Set('Rating')
 
     class Rating(db.Entity):
@@ -45,5 +45,5 @@ def define_entities(db: Database):
         food = Required(int)
         location = Required(Location)
         user = Required(User)
-        created = Required(datetime)
-        last_updated = Required(datetime)
+        created = Optional(datetime)
+        last_updated = Optional(datetime)
