@@ -34,9 +34,6 @@ Parameters:
     AllowedValues:
     - eu-west-2
 
-# Outputs
-# ----------------------------------------------------------------------------------------------------------------------
-
 # Resources
 # ----------------------------------------------------------------------------------------------------------------------
 Resources:
@@ -109,6 +106,8 @@ Resources:
       Domain: !Sub ${Project}-${Environment}
       UserPoolId: !Ref UserPool
 
+# Outputs
+# ----------------------------------------------------------------------------------------------------------------------
 Outputs:
   CognitoUserPoolID:
     Description: The UserPool ID.
@@ -116,3 +115,9 @@ Outputs:
     Export:
       Name:
         'Fn::Sub': '${AWS::StackName}-UserPool-ID'
+  CognitoUserPool:
+    Description: The UserPool.
+    Value: UserPool
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}-UserPool'

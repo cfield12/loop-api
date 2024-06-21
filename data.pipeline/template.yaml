@@ -85,15 +85,14 @@ Resources:
           ENVIRONMENT:       !Ref Environment
           LOGLEVEL:          INFO
           PROJECT:           !Ref Project
-      Events:
-        Queue:
-          Type: Cognito
-          Properties:
-            UserPool:
-              Fn::ImportValue:
-                !Sub "${Project}-stack-cognito-${Environment}-UserPool-ID"
-            Trigger:
-                - PostConfirmation
+      # Events:
+      #   Cognito:
+      #     Type: Cognito
+      #     Properties:
+      #       UserPool:
+      #         - Fn::ImportValue: !Sub "${Project}-stack-cognito-${Environment}-UserPool"
+      #       Trigger:
+      #           - PostConfirmation
       Tags:
         Function:       RdsMaintenace
         Name:           !Join ['-', [!Ref Project, lambda, user-creator, !Ref Environment]]
