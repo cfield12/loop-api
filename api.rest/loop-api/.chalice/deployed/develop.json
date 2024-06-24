@@ -14,8 +14,8 @@
     {
       "name": "rest_api",
       "resource_type": "rest_api",
-      "rest_api_id": "nlv3gibi30",
-      "rest_api_url": "https://nlv3gibi30.execute-api.eu-west-2.amazonaws.com/develop/"
+      "rest_api_id": "s8aumb1vnf",
+      "rest_api_url": "https://s8aumb1vnf.execute-api.eu-west-2.amazonaws.com/develop/"
     }
   ],
   "schema_version": "2.0",
