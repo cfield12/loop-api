@@ -27,4 +27,5 @@ redis==4.5.5
 fakeredis==2.13.0
 pyjwt==2.8.0
 python-dateutil==2.8.0
+googlemaps==4.10.0
 loop-1.0.tar.gz
