@@ -5,8 +5,10 @@ from typing import Union
 import jwt
 from chalice import Chalice, Response
 from loop import data
-from loop.exceptions import LoopException, UnauthorizedError
+from loop.api_classes.api_classes import CreateLocation
+from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
 from loop.utils import UserObject, get_admin_user
+from pydantic import ValidationError as PydanticValidationError
 
 LOOP_AUTH_DISABLED = os.environ.get('LOOP_AUTH_DISABLED', False)
 
@@ -50,7 +52,7 @@ def get_current_user(func):
                     raise UnauthorizedError(f'Unexpected error: {e}')
                 if not cognito_user:
                     raise UnauthorizedError("Could not find cognito user")
-                cognito_user_name = cognito_user.get('cognito:username')
+                cognito_user_name = cognito_user.get('sub')
                 if not cognito_user_name:
                     raise UnauthorizedError("Could not find cognito username")
                 user = data.get_user_from_cognito_username(cognito_user_name)
@@ -89,5 +91,52 @@ def get_user_ratings(user: UserObject = None):
         user_ratings = data.get_user_ratings(user)
         app.log.info(f"Successfully returned user ratings for user {user.id}")
         return user_ratings
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/location', methods=['POST'], cors=True)
+@app.route('/location', methods=['POST'], cors=True)
+@get_current_user
+def create_location(user: UserObject = None):
+    """
+    Get user ratings.
+    ---
+    post:
+        operationId: createLocation
+        summary: Create a location entry in the db.
+        description: Create a location entry in the db.
+        security:
+            - Qi API Key: []
+        consumes:
+            -   application/json
+        parameters:
+            -   in: body
+                name: create_location_schema
+                schema:
+                    type: object
+                required: true
+                description: JSON object containing location metadata.
+        responses:
+            204:
+                description: OK
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        payload = app.current_request.json_body
+        try:
+            validated_params = CreateLocation(**payload)
+        except PydanticValidationError as e:
+            raise BadRequestError(
+                "; ".join([error["msg"] for error in e.errors()])
+            )
+        data.create_location(validated_params)
+        app.log.info(
+            f"Successfully created location entry {validated_params.__dict__}"
+        )
+        return Response(status_code=204, body='')
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)

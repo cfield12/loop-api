@@ -4,6 +4,7 @@ from time import sleep
 from typing import Dict, List, Union
 
 from loop import exceptions, secrets
+from loop.api_classes.api_classes import CreateLocation
 from loop.constants import RDS_WRITE
 from loop.db_entities import define_entities
 from loop.utils import UserCreateObject, UserObject
@@ -161,5 +162,22 @@ def create_user(user: UserCreateObject, db_instance_type=RDS_WRITE) -> None:
         first_name=user.first_name,
         last_name=user.last_name,
     )
+    commit()
     logger.info(f'Successfully created user in rds: {user.__dict__}')
+    return
+
+
+@DB_SESSION_RETRYABLE
+def create_location(
+    location: CreateLocation, db_instance_type=RDS_WRITE
+) -> None:
+    if not isinstance(location, CreateLocation):
+        raise TypeError('user must be an instance of CreateLocation')
+    DB_TYPE[db_instance_type].Location(
+        google_id=location.google_id,
+        address=location.address,
+        display_name=location.display_name,
+    )
+    commit()
+    logger.info(f'Successfully created location in rds: {location.__dict__}')
     return
