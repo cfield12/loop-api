@@ -10,7 +10,7 @@ from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
 from loop.utils import Rating, UserObject, get_admin_user
 from pydantic import ValidationError as PydanticValidationError
 
-LOOP_AUTH_DISABLED = os.environ.get('LOOP_AUTH_DISABLED', False)
+LOOP_AUTH_DISABLED = os.environ.get("LOOP_AUTH_DISABLED", "0").lower() == "1"
 
 APP_NAME = 'loop-api'
 
