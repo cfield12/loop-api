@@ -4,10 +4,10 @@ from time import sleep
 from typing import Dict, List, Union
 
 from loop import exceptions, secrets
-from loop.api_classes.api_classes import CreateLocation
 from loop.constants import RDS_WRITE
 from loop.db_entities import define_entities
-from loop.utils import UserCreateObject, UserObject
+from loop.google_client import find_location
+from loop.utils import Location, Rating, UserCreateObject, UserObject
 from pony.orm import Database
 from pony.orm import InternalError as PonyOrmDbInternalError
 from pony.orm import (
@@ -168,16 +168,43 @@ def create_user(user: UserCreateObject, db_instance_type=RDS_WRITE) -> None:
 
 
 @DB_SESSION_RETRYABLE
-def create_location(
-    location: CreateLocation, db_instance_type=RDS_WRITE
-) -> None:
-    if not isinstance(location, CreateLocation):
-        raise TypeError('user must be an instance of CreateLocation')
-    DB_TYPE[db_instance_type].Location(
+def create_rating(rating: Rating, db_instance_type=RDS_WRITE) -> None:
+    if not isinstance(rating, Rating):
+        raise TypeError('rating must be an instance of Rating')
+    DB_TYPE[db_instance_type].Rating(
+        price=rating.price,
+        vibe=rating.vibe,
+        food=rating.food,
+        location=rating.location,
+        user=rating.user,
+    )
+    commit()
+    logger.info(f'Successfully created rating in rds: {rating.__dict__}')
+    return
+
+
+@DB_SESSION_RETRYABLE
+def create_location_entry(location: Location, db_instance_type=RDS_WRITE):
+    if not isinstance(location, Location):
+        raise TypeError('user must be an instance of Location')
+    location_entry = DB_TYPE[db_instance_type].Location(
         google_id=location.google_id,
         address=location.address,
         display_name=location.display_name,
     )
     commit()
     logger.info(f'Successfully created location in rds: {location.__dict__}')
-    return
+    return location_entry
+
+
+@DB_SESSION_RETRYABLE
+def get_or_create_location_id(
+    google_id: str, db_instance_type=RDS_WRITE
+) -> int:
+    if not isinstance(google_id, str):
+        raise TypeError('google_id must be of type string')
+    location = DB_TYPE[db_instance_type].Location.get(google_id=google_id)
+    if not location:
+        location_object: Location = find_location(google_id)
+        location = create_location_entry(location_object)
+    return location.id

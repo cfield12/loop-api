@@ -3,7 +3,8 @@ from typing import List, Union
 from pydantic import BaseModel, Extra, Field, ValidationError, validator
 
 
-class CreateLocation(BaseModel):
+class CreateRating(BaseModel):
     google_id: str
-    address: str
-    display_name: str
+    price: int
+    vibe: int
+    food: int

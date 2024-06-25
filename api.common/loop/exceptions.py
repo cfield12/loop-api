@@ -97,3 +97,10 @@ class CreateUserValidationError(Error):
 
     def __init__(self, message):
         self.message = message
+
+
+class GoogleApiError(Error):
+    '''Raised when Google returns an error'''
+
+    def __init__(self, message):
+        self.message = message
