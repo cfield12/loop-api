@@ -96,7 +96,7 @@ class GooglePlaces:
         Downloads a photo from the Places API.
 
         photo_reference: A string identifier that uniquely identifies a
-            photo, as provided by either a Places search or Places detail request.
+        photo, as provided by either a Places search or Places detail request.
 
         max_width: Specifies the maximum desired width, in pixels.
         """
