@@ -1,1 +1,1 @@
-from .places import GooglePlaces
+from .places import GooglePlaces, find_location

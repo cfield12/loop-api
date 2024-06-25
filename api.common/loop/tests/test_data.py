@@ -3,7 +3,7 @@ from unittest.mock import call, patch
 
 from loop import data, exceptions
 from loop.test_setup.common import setup_rds, unbind_rds
-from loop.utils import UserObject, get_admin_user
+from loop.utils import Location, Rating, UserObject, get_admin_user
 from pony.orm import Database
 
 TEST_DB_SECRET = {
@@ -192,6 +192,105 @@ class LoopTestInitDB(unittest.TestCase):
         self.assertRaises(
             exceptions.DbDisconnectFailedError, data.disconnect_db
         )
+
+
+class CreateUserRatings(unittest.TestCase):
+    """
+    Create user ratings.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        setup_rds()
+
+    @classmethod
+    def tearDownClass(cls):
+        unbind_rds()
+
+    def test_create_rating(self):
+        rating = Rating(location=4, user=1, price=3, food=4, vibe=5)
+        data.create_rating(rating)
+        admin_user_ratings = data.get_user_ratings(get_admin_user())
+        self.assertEqual(
+            admin_user_ratings,
+            [
+                {
+                    'food': 3,
+                    'price': 4,
+                    'vibe': 4,
+                    'place_name': 'Home',
+                    'address': '14 Lambert Street, London, N1 1JE',
+                    'google_id': 'test_google_id_1',
+                },
+                {
+                    'food': 5,
+                    'price': 4,
+                    'vibe': 5,
+                    'place_name': "Baggins'",
+                    'address': '15 Noel Road, London, N1 8HQ',
+                    'google_id': 'test_google_id_2',
+                },
+                {
+                    'food': 4,
+                    'price': 3,
+                    'vibe': 5,
+                    'place_name': 'som saa',
+                    'address': '43A Commercial Street, London',
+                    'google_id': 'ChIJobyn_rQcdkgRE042NxgeR1k',
+                },
+            ],
+        )
+
+    def test_create_rating_type_error(self):
+        rating = {'location': 4, 'user': 1, 'price': 3, 'food': 4, 'vibe': 5}
+        self.assertRaises(TypeError, data.create_rating, rating)
+
+
+class CreateLocation(unittest.TestCase):
+    """
+    Create Location.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        setup_rds()
+
+    @classmethod
+    def tearDownClass(cls):
+        unbind_rds()
+
+    def test_create_location(self):
+        location = Location(
+            google_id='X_TEST_GOOGLE_ID_X',
+            address='55 Northberk Street, Sunderland',
+            display_name='Greggs',
+        )
+        location_entry = data.create_location_entry(location)
+        self.assertEqual(location_entry.id, 5)
+
+    def test_create_rating_type_error(self):
+        location = {
+            'google_id': 'X_TEST_GOOGLE_ID_X',
+            'address': '55 Northberk Street, Sunderland',
+            'display_name': 'Greggs',
+        }
+        self.assertRaises(TypeError, data.create_location_entry, location)
+
+    def test_get_or_create_location_id(self):
+        google_id = 'test_google_id_1'
+        location_id = data.get_or_create_location_id(google_id)
+        self.assertEqual(location_id, 1)
+
+    @patch('loop.data.find_location')
+    def test_get_or_create_location_id_type_error(self, mock_location):
+        mock_location.return_value = Location(
+            google_id='test_google_id_5',
+            address='33 South Road, Liverpool',
+            display_name='Dominoes',
+        )
+        google_id = 'test_google_id_5'
+        location_id = data.get_or_create_location_id(google_id)
+        self.assertEqual(location_id, 6)
 
 
 if __name__ == "__main__":

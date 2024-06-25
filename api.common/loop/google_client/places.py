@@ -2,10 +2,9 @@ from typing import Dict, List
 
 import googlemaps
 from googlemaps.exceptions import ApiError
+from loop.constants import GOOGLE_API_KEY
 from loop.exceptions import GoogleApiError
 from loop.utils import Location
-
-API_KEY = 'AIzaSyDMxObuOxSIWbVHT9OttXiJrfcGQpO3o3U'
 
 
 class GooglePlaces:
@@ -18,7 +17,7 @@ class GooglePlaces:
         https://github.com/googlemaps/google-maps-services-python/blob/
         master/googlemaps/places.py
         """
-        self.gmaps = googlemaps.Client(key=API_KEY)
+        self.gmaps = googlemaps.Client(key=GOOGLE_API_KEY)
 
     def _validate_place(self, place: Dict) -> None:
         if 'status' not in place:
