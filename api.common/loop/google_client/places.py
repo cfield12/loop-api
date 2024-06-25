@@ -22,8 +22,10 @@ class GooglePlaces:
     def _validate_place(self, place: Dict) -> None:
         if 'status' not in place:
             raise GoogleApiError('Could not find status in response')
-        if status := place['status'] != 'OK':
-            raise GoogleApiError(f'Response status is not OK: {status}')
+        if place['status'] != 'OK':
+            raise GoogleApiError(
+                f'Response status is not OK: {place["status"]}'
+            )
         if 'result' not in place:
             raise GoogleApiError('Could not find result in response')
         if any([field not in place['result'] for field in self.PLACES_FIELDS]):
