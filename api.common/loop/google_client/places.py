@@ -90,7 +90,11 @@ class GooglePlaces:
         ]
 
     def download_photo(
-        self, photo_reference: str, max_width: int = 250
+        self,
+        photo_reference: str,
+        filename: str,
+        max_width: int = 250,
+        file_type: str = 'jpeg',
     ) -> None:
         """
         Downloads a photo from the Places API.
@@ -105,7 +109,7 @@ class GooglePlaces:
         if not isinstance(max_width, int):
             raise TypeError('max_width must be of type int')
         try:
-            f = open('test.jpeg', 'wb')
+            f = open(f'{filename}.{file_type}', 'wb')
             for chunk in self.gmaps.places_photo(
                 photo_reference, max_width=max_width
             ):
