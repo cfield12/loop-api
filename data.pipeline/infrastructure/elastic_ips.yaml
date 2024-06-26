@@ -30,32 +30,10 @@ Outputs:
     Export:
       Name: !Join ['-', [!Ref Project, export, elastic-ip, a, !Ref Environment]]
 
-  ElasticIpB:
-    Description: Static IP B to be imported by other stacks.
-    Value: !GetAtt ElasticIpB.AllocationId
-    Export:
-      Name: !Join ['-', [!Ref Project, export, elastic-ip, b, !Ref Environment]]
-
-  ElasticIpC:
-    Description: Static IP C to be imported by other stacks.
-    Value: !GetAtt ElasticIpC.AllocationId
-    Export:
-      Name: !Join ['-', [!Ref Project, export, elastic-ip, c, !Ref Environment]]
-
 # Resources ============================================================================================================
 Resources:
 # Elastic IPs ----------------------------------------------------------------------------------------------------------
   ElasticIpA:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-
-  ElasticIpB:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-
-  ElasticIpC:
     Type: AWS::EC2::EIP
     Properties:
       Domain: vpc
