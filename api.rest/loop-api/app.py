@@ -5,10 +5,12 @@ from typing import Union
 import jwt
 from chalice import Chalice, Response
 from loop import data
-from loop.exceptions import LoopException, UnauthorizedError
-from loop.utils import UserObject, get_admin_user
+from loop.api_classes import CreateRating
+from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
+from loop.utils import Rating, UserObject, get_admin_user
+from pydantic import ValidationError as PydanticValidationError
 
-LOOP_AUTH_DISABLED = os.environ.get('LOOP_AUTH_DISABLED', False)
+LOOP_AUTH_DISABLED = os.environ.get("LOOP_AUTH_DISABLED", "0").lower() == "1"
 
 APP_NAME = 'loop-api'
 
@@ -50,7 +52,7 @@ def get_current_user(func):
                     raise UnauthorizedError(f'Unexpected error: {e}')
                 if not cognito_user:
                     raise UnauthorizedError("Could not find cognito user")
-                cognito_user_name = cognito_user.get('cognito:username')
+                cognito_user_name = cognito_user.get('sub')
                 if not cognito_user_name:
                     raise UnauthorizedError("Could not find cognito username")
                 user = data.get_user_from_cognito_username(cognito_user_name)
@@ -89,5 +91,59 @@ def get_user_ratings(user: UserObject = None):
         user_ratings = data.get_user_ratings(user)
         app.log.info(f"Successfully returned user ratings for user {user.id}")
         return user_ratings
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/ratings', methods=['POST'], cors=True)
+@app.route('/ratings', methods=['POST'], cors=True)
+@get_current_user
+def create_rating(user: UserObject = None):
+    """
+    Create user ratings.
+    ---
+    post:
+        operationId: createRating
+        summary: Create a rating entry in the db.
+        description: Create a rating entry in the db.
+        security:
+            - Qi API Key: []
+        consumes:
+            -   application/json
+        parameters:
+            -   in: body
+                name: create_rating_schema
+                schema:
+                    type: object
+                required: true
+                description: JSON object containing rating metadata.
+        responses:
+            204:
+                description: OK
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        payload = app.current_request.json_body
+        try:
+            validated_params = CreateRating(**payload)
+        except PydanticValidationError as e:
+            raise BadRequestError(
+                "; ".join([error["msg"] for error in e.errors()])
+            )
+        google_location_id = validated_params.google_id
+        location_id = data.get_or_create_location_id(google_location_id)
+        rating = Rating(
+            location=location_id,
+            user=user.id,
+            price=validated_params.price,
+            vibe=validated_params.vibe,
+            food=validated_params.food,
+        )
+        data.create_rating(rating)
+        app.log.info(f"Successfully created rating entry {rating.__dict__}")
+        return Response(status_code=204, body='')
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)

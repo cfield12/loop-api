@@ -31,3 +31,19 @@ class UserCreateObject:
     email: str
     first_name: str
     last_name: str
+
+
+@dataclass
+class Location:
+    google_id: str
+    address: str
+    display_name: str
+
+
+@dataclass
+class Rating:
+    location: int
+    user: int
+    price: int
+    food: int
+    vibe: int

@@ -65,6 +65,11 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
             )
+            location_4 = data.DB_TYPE[db_instance_type].Location(
+                google_id='ChIJobyn_rQcdkgRE042NxgeR1k',
+                address='43A Commercial Street, London',
+                display_name='som saa',
+            )
             rating_1 = data.DB_TYPE[db_instance_type].Rating(
                 price=4,
                 vibe=5,
