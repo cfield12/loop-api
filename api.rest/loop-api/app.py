@@ -189,13 +189,65 @@ def add_friend(user_name=str(), user: UserObject = None):
             raise BadRequestError(
                 "; ".join([error["msg"] for error in e.errors()])
             )
-        requestor_user = data.get_user_from_cognito_username(
+        requestor_user: UserObject = data.get_user_from_cognito_username(
             validated_params.cognito_user_name_requestor
         )
-        target_user = data.get_user_from_cognito_username(
+        target_user: UserObject = data.get_user_from_cognito_username(
             validated_params.cognito_user_name_requestee
         )
         friends.create_friend_entry(requestor_user, target_user)
+        return Response(status_code=204, body='')
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/friends/{user_name}', methods=['PUT'], cors=True)
+@app.route('/friends/{user_name}', methods=['PUT'], cors=True)
+@get_current_user
+def accept_friend(user_name=str(), user: UserObject = None):
+    """
+    Add friend.
+    ---
+    put:
+        operationId: acceptFriend
+        summary: Accept a friend request.
+        description: Update a record in the friend table with status friends.
+        security:
+            - Qi API Key: []
+        consumes:
+            -   application/json
+        parameters:
+            -   in: path
+                name: user_name
+                type: string
+                required: true
+                description: Cognito user name of user whose request is being
+                 accepted.
+        responses:
+            204:
+                description: OK
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        try:
+            validated_params = AddFriend(
+                cognito_user_name_requestor=user_name,
+                cognito_user_name_requestee=user.cognito_user_name,
+            )
+        except PydanticValidationError as e:
+            raise BadRequestError(
+                "; ".join([error["msg"] for error in e.errors()])
+            )
+        requestor_user: UserObject = data.get_user_from_cognito_username(
+            validated_params.cognito_user_name_requestor
+        )
+        acceptor_user: UserObject = data.get_user_from_cognito_username(
+            validated_params.cognito_user_name_requestee
+        )
+        friends.accept_friend_request(acceptor_user, requestor_user)
         return Response(status_code=204, body='')
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)

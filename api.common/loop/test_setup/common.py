@@ -52,6 +52,14 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 first_name='Random',
                 last_name='Person',
             )
+            random_user_2 = data.DB_TYPE[db_instance_type].User(
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
+                cognito_user_name='67ce7049-109f-420f-861b-3f1e7d6824b5',
+                email='test_person_email_2',
+                first_name='Random',
+                last_name='Persons-Mate',
+            )
             location_1 = data.DB_TYPE[db_instance_type].Location(
                 google_id='test_google_id_1',
                 address='14 Lambert Street, London, N1 1JE',
@@ -125,6 +133,11 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
             )
             friendship_1 = data.DB_TYPE[db_instance_type].Friend(
                 friend_1=random_user, friend_2=admin_user, status=friend_status
+            )
+            friendship_1 = data.DB_TYPE[db_instance_type].Friend(
+                friend_1=random_user,
+                friend_2=random_user_2,
+                status=pending_status,
             )
 
 

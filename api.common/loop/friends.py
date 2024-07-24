@@ -4,7 +4,11 @@ from dataclasses import dataclass
 from enum import Enum
 
 from loop.constants import RDS_WRITE
-from loop.data import DB_SESSION_RETRYABLE, DB_TYPE
+from loop.data import (
+    DB_SESSION_RETRYABLE,
+    DB_TYPE,
+    update_object_last_updated_time,
+)
 from loop.exceptions import BadRequestError, UnknownFriendStatusType
 from loop.utils import UserObject
 from pony.orm import commit
@@ -67,7 +71,7 @@ def get_friend_db_object(
 
 def _create_friend_entry(
     requestor: UserObject, target: UserObject, db_instance_type=RDS_WRITE
-):
+) -> None:
     pending_status = get_friend_status(FriendStatusType.PENDING)
     if get_friend_db_object(requestor, target):
         raise BadRequestError(
@@ -88,9 +92,42 @@ def _create_friend_entry(
 
 
 @DB_SESSION_RETRYABLE
-def create_friend_entry(requestor: UserObject, target: UserObject):
-    if not isinstance(requestor, UserObject) or not isinstance(
-        target, UserObject
+def create_friend_entry(
+    requestor_user: UserObject, target_user: UserObject
+) -> None:
+    if not isinstance(requestor_user, UserObject) or not isinstance(
+        target_user, UserObject
     ):
         raise TypeError('Users supplied here must be instances of UserObject.')
-    return _create_friend_entry(requestor, target)
+    return _create_friend_entry(requestor_user, target_user)
+
+
+@DB_SESSION_RETRYABLE
+def accept_friend_request(
+    acceptor_user: UserObject, requestor_user: UserObject
+) -> None:
+    if not isinstance(acceptor_user, UserObject) or not isinstance(
+        requestor_user, UserObject
+    ):
+        raise TypeError('Users supplied here must be instances of UserObject.')
+    friend_object = get_friend_db_object(acceptor_user, requestor_user)
+    if not friend_object:
+        raise BadRequestError(
+            f'Friend entry does not exist for users {acceptor_user.id} and '
+            f'{requestor_user.id}.'
+        )
+    friend_status = get_friend_status(FriendStatusType.FRIENDS)
+    if friend_object.status.id == friend_status.id:
+        raise BadRequestError(f'Friend request already accepted.')
+    if friend_object.friend_2.id != acceptor_user.id:
+        raise BadRequestError(
+            f'Friend request can only be accepted by user {acceptor_user.id}.'
+        )
+    friend_object.status = friend_status.id
+    update_object_last_updated_time(friend_object)
+    commit()
+    logger.info(
+        'Successfully accepted friend request between users '
+        f'{acceptor_user.id} (acceptor) and {requestor_user.id} (requestor).'
+    )
+    return

@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import call, patch
 
 from loop import data, exceptions
+from loop.friends import get_friend_db_object
 from loop.test_setup.common import setup_rds, unbind_rds
 from loop.utils import Location, Rating, UserObject, get_admin_user
 from pony.orm import Database
@@ -194,7 +195,7 @@ class LoopTestInitDB(unittest.TestCase):
         )
 
 
-class CreateUserRatings(unittest.TestCase):
+class TestCreateUserRatings(unittest.TestCase):
     """
     Create user ratings.
     """
@@ -246,7 +247,7 @@ class CreateUserRatings(unittest.TestCase):
         self.assertRaises(TypeError, data.create_rating, rating)
 
 
-class CreateLocation(unittest.TestCase):
+class TestCreateLocation(unittest.TestCase):
     """
     Create Location.
     """
@@ -268,7 +269,7 @@ class CreateLocation(unittest.TestCase):
         location_entry = data.create_location_entry(location)
         self.assertEqual(location_entry.id, 5)
 
-    def test_create_rating_type_error(self):
+    def test_create_location_type_error(self):
         location = {
             'google_id': 'X_TEST_GOOGLE_ID_X',
             'address': '55 Northberk Street, Sunderland',
@@ -291,6 +292,31 @@ class CreateLocation(unittest.TestCase):
         google_id = 'test_google_id_5'
         location_id = data.get_or_create_location_id(google_id)
         self.assertEqual(location_id, 6)
+
+
+class TestUpdateObject(unittest.TestCase):
+    """
+    Tests the updating of DB objects.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        setup_rds()
+
+    @classmethod
+    def tearDownClass(cls):
+        unbind_rds()
+
+    @data.DB_SESSION_RETRYABLE
+    def test_updating_last_updated_time_error(self):
+        pending_status = data.DB_TYPE[data.RDS_WRITE].Friend_status.get(
+            description='Pending'
+        )
+        self.assertRaises(
+            AttributeError,
+            data.update_object_last_updated_time,
+            pending_status,
+        )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 from time import sleep
 from typing import Dict, List, Union
 
@@ -207,3 +208,16 @@ def get_or_create_location_id(
         location_object: Location = find_location(google_id)
         location = create_location_entry(location_object)
     return location.id
+
+
+@DB_SESSION_RETRYABLE
+def update_object_last_updated_time(db_object) -> None:
+    try:
+        db_object.last_updated
+    except AttributeError as e:
+        raise AttributeError(
+            f'DB object {db_object} does not have a last_updated field: {e}'
+        )
+    db_object.last_updated = datetime.utcnow()
+    commit()
+    return
