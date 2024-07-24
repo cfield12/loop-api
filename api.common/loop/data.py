@@ -148,8 +148,7 @@ def get_user_from_cognito_username(
     if not user:
         raise exceptions.UnauthorizedError('User not found')
     user_id = user.id
-    user = UserObject(id=user_id, cognito_user_name=user.cognito_user_name)
-    return user
+    return UserObject(id=user_id, cognito_user_name=user.cognito_user_name)
 
 
 @DB_SESSION_RETRYABLE

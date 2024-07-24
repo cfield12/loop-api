@@ -33,13 +33,18 @@ IF (SELECT TABLE_NAME FROM information_schema.tables WHERE table_schema = 'loop'
         `friend_1` INT NOT NULL,
         `friend_2` INT NOT NULL,
         `status` INT NOT NULL,
+        `created` DATETIME DEFAULT(sysdate()),
+        `last_updated` DATETIME DEFAULT(sysdate()),
         FOREIGN KEY (`friend_1`) REFERENCES `user`(`id`),
         FOREIGN KEY (`friend_2`) REFERENCES `user`(`id`),
         FOREIGN KEY (`status`) REFERENCES `friend_status`(`id`),
         PRIMARY KEY (`id`)
     );
-ALTER TABLE `friend` ADD UNIQUE unique_model_signal(
+ALTER TABLE `friend` ADD UNIQUE unique_friendship_1(
         `friend_1`, `friend_2`
+);
+ALTER TABLE `friend` ADD UNIQUE unique_friendship_2(
+        `friend_2`, `friend_1`
 );
 END IF;
 

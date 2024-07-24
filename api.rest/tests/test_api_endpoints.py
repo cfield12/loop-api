@@ -162,5 +162,59 @@ class TestCreateRating(unittest.TestCase):
             self.assertEqual(response.status_code, 400)
 
 
+class TestAddFriend(unittest.TestCase):
+    @patch(mock_url_write_db)
+    def setUp(self, write_db):
+        write_db.side_effect = mocked_init_write_db
+
+        global app
+        app = importlib.import_module("loop-api.app")
+        setup_rds()
+
+    def tearDown(self):
+        unbind_rds()
+
+    @patch('loop.friends.create_friend_entry')
+    def test_add_friend(self, mock_create_friend):
+        # Happy path test
+        target_cognito_user_name = '60c1f02b-f758-4458-8c41-3b5c9fa20ae0'
+        with Client(app.app) as client:
+            response = client.http.post(
+                f'/friends/{target_cognito_user_name}',
+                headers={'Content-Type': 'application/json'},
+            )
+            self.assertEqual(response.status_code, 204)
+            self.assertTrue(mock_create_friend.called)
+
+    def test_add_friend_not_uuid_error(self):
+        target_cognito_user_name = 'not a uuid'
+        with Client(app.app) as client:
+            response = client.http.post(
+                f'/friends/{target_cognito_user_name}',
+                headers={'Content-Type': 'application/json'},
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.json_body['Message'],
+                'BadRequestError: Value error, Invalid str uuid.',
+            )
+
+    def test_add_friend_same_cognito_user_name(self):
+        target_cognito_user_name = '86125274-40a1-70ec-da28-f779360f7c07'
+        with Client(app.app) as client:
+            response = client.http.post(
+                f'/friends/{target_cognito_user_name}',
+                headers={'Content-Type': 'application/json'},
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.json_body['Message'],
+                (
+                    'BadRequestError: Value error, User names cannot be the '
+                    'same when adding friends'
+                ),
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

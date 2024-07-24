@@ -104,3 +104,10 @@ class GoogleApiError(Error):
 
     def __init__(self, message):
         self.message = message
+
+
+class UnknownFriendStatusType(Error):
+    '''Unknown Friend status error'''
+
+    def __init__(self, message):
+        self.message = message

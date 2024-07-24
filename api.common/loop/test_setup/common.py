@@ -39,10 +39,18 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
             admin_user = data.DB_TYPE[db_instance_type].User(
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
-                cognito_user_name='test_cognito_user_name_admin',
+                cognito_user_name='86125274-40a1-70ec-da28-f779360f7c07',
                 email='admin_test_email',
                 first_name='Admin',
                 last_name='User',
+            )
+            random_user = data.DB_TYPE[db_instance_type].User(
+                created=datetime(2000, 1, 1),
+                last_updated=datetime(2000, 1, 1),
+                cognito_user_name='60c1f02b-f758-4458-8c41-3b5c9fa20ae0',
+                email='test_person_email',
+                first_name='Random',
+                last_name='Person',
             )
             location_1 = data.DB_TYPE[db_instance_type].Location(
                 google_id='test_google_id_1',
@@ -88,7 +96,7 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
             )
-            rating_1 = data.DB_TYPE[db_instance_type].Rating(
+            rating_3 = data.DB_TYPE[db_instance_type].Rating(
                 price=4,
                 vibe=4,
                 food=3,
@@ -97,7 +105,7 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
             )
-            rating_1 = data.DB_TYPE[db_instance_type].Rating(
+            rating_4 = data.DB_TYPE[db_instance_type].Rating(
                 price=4,
                 vibe=5,
                 food=5,
@@ -105,6 +113,18 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 user=user,
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
+            )
+            friend_status = data.DB_TYPE[db_instance_type].Friend_status(
+                description='Friends'
+            )
+            pending_status = data.DB_TYPE[db_instance_type].Friend_status(
+                description='Pending'
+            )
+            blocked_status = data.DB_TYPE[db_instance_type].Friend_status(
+                description='Blocked'
+            )
+            friendship_1 = data.DB_TYPE[db_instance_type].Friend(
+                friend_1=random_user, friend_2=admin_user, status=friend_status
             )
 
 

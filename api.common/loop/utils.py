@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 
 from loop.constants import LOOP_ADMIN_COGNITO_USERNAME, LOOP_ADMIN_ID
 
@@ -47,3 +48,10 @@ class Rating:
     price: int
     food: int
     vibe: int
+
+
+class UUIDVersion(Enum):
+    ONE = 1
+    TWO = 2
+    THREE = 3
+    FOUR = 4

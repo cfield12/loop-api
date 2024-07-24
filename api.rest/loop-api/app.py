@@ -4,8 +4,8 @@ from typing import Union
 
 import jwt
 from chalice import Chalice, Response
-from loop import data
-from loop.api_classes import CreateRating
+from loop import data, friends
+from loop.api_classes import AddFriend, CreateRating
 from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
 from loop.utils import Rating, UserObject, get_admin_user
 from pydantic import ValidationError as PydanticValidationError
@@ -144,6 +144,58 @@ def create_rating(user: UserObject = None):
         )
         data.create_rating(rating)
         app.log.info(f"Successfully created rating entry {rating.__dict__}")
+        return Response(status_code=204, body='')
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/friends/{user_name}', methods=['POST'], cors=True)
+@app.route('/friends/{user_name}', methods=['POST'], cors=True)
+@get_current_user
+def add_friend(user_name=str(), user: UserObject = None):
+    """
+    Add friend.
+    ---
+    post:
+        operationId: addFriend
+        summary: Add a friend.
+        description: Add a record in the friend table with status pending.
+        security:
+            - Qi API Key: []
+        consumes:
+            -   application/json
+        parameters:
+            -   in: path
+                name: user_name
+                type: string
+                required: true
+                description: Cognito user name of friend the user is trying to
+                 add.
+        responses:
+            204:
+                description: OK
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        try:
+            validated_params = AddFriend(
+                cognito_user_name_requestor=user.cognito_user_name,
+                cognito_user_name_requestee=user_name,
+            )
+        except PydanticValidationError as e:
+            raise BadRequestError(
+                "; ".join([error["msg"] for error in e.errors()])
+            )
+        requestor_user = data.get_user_from_cognito_username(
+            validated_params.cognito_user_name_requestor
+        )
+        target_user = data.get_user_from_cognito_username(
+            validated_params.cognito_user_name_requestee
+        )
+        friends.create_friend_entry(requestor_user, target_user)
         return Response(status_code=204, body='')
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)

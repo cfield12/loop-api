@@ -1,1 +1,1 @@
-from .api_classes import CreateRating
+from .api_classes import AddFriend, CreateRating
