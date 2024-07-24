@@ -134,7 +134,7 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
             friendship_1 = data.DB_TYPE[db_instance_type].Friend(
                 friend_1=random_user, friend_2=admin_user, status=friend_status
             )
-            friendship_1 = data.DB_TYPE[db_instance_type].Friend(
+            friendship_2 = data.DB_TYPE[db_instance_type].Friend(
                 friend_1=random_user,
                 friend_2=random_user_2,
                 status=pending_status,

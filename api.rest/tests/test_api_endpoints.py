@@ -216,5 +216,59 @@ class TestAddFriend(unittest.TestCase):
             )
 
 
+class TestAcceptFriend(unittest.TestCase):
+    @patch(mock_url_write_db)
+    def setUp(self, write_db):
+        write_db.side_effect = mocked_init_write_db
+
+        global app
+        app = importlib.import_module("loop-api.app")
+        setup_rds()
+
+    def tearDown(self):
+        unbind_rds()
+
+    @patch('loop.friends.accept_friend_request')
+    def test_add_friend(self, mock_accept_friend):
+        # Happy path test
+        target_cognito_user_name = '67ce7049-109f-420f-861b-3f1e7d6824b5'
+        with Client(app.app) as client:
+            response = client.http.put(
+                f'/friends/{target_cognito_user_name}',
+                headers={'Content-Type': 'application/json'},
+            )
+            self.assertEqual(response.status_code, 204)
+            self.assertTrue(mock_accept_friend.called)
+
+    def test_accept_friend_not_uuid_error(self):
+        target_cognito_user_name = 'not a uuid'
+        with Client(app.app) as client:
+            response = client.http.put(
+                f'/friends/{target_cognito_user_name}',
+                headers={'Content-Type': 'application/json'},
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.json_body['Message'],
+                'BadRequestError: Value error, Invalid str uuid.',
+            )
+
+    def test_accept_friend_same_cognito_user_name(self):
+        target_cognito_user_name = '86125274-40a1-70ec-da28-f779360f7c07'
+        with Client(app.app) as client:
+            response = client.http.put(
+                f'/friends/{target_cognito_user_name}',
+                headers={'Content-Type': 'application/json'},
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.json_body['Message'],
+                (
+                    'BadRequestError: Value error, User names cannot be the '
+                    'same when adding friends'
+                ),
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
