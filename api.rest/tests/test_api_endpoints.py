@@ -209,10 +209,7 @@ class TestAddFriend(unittest.TestCase):
             self.assertEqual(response.status_code, 400)
             self.assertEqual(
                 response.json_body['Message'],
-                (
-                    'BadRequestError: Value error, User names cannot be the '
-                    'same when adding friends'
-                ),
+                'BadRequestError: Value error, User names cannot be the same.',
             )
 
 
@@ -263,10 +260,58 @@ class TestAcceptFriend(unittest.TestCase):
             self.assertEqual(response.status_code, 400)
             self.assertEqual(
                 response.json_body['Message'],
-                (
-                    'BadRequestError: Value error, User names cannot be the '
-                    'same when adding friends'
-                ),
+                'BadRequestError: Value error, User names cannot be the same.',
+            )
+
+
+class TestDeleteFriend(unittest.TestCase):
+    @patch(mock_url_write_db)
+    def setUp(self, write_db):
+        write_db.side_effect = mocked_init_write_db
+
+        global app
+        app = importlib.import_module("loop-api.app")
+        setup_rds()
+
+    def tearDown(self):
+        unbind_rds()
+
+    @patch('loop.friends.delete_friend')
+    def test_delete_friend(self, mock_delete_friend):
+        # Happy path test
+        target_cognito_user_name = '67ce7049-109f-420f-861b-3f1e7d6824b5'
+        with Client(app.app) as client:
+            response = client.http.delete(
+                f'/friends/{target_cognito_user_name}',
+                headers={'Content-Type': 'application/json'},
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(mock_delete_friend.called)
+
+    def test_delete_friend_not_uuid_error(self):
+        target_cognito_user_name = 'not a uuid'
+        with Client(app.app) as client:
+            response = client.http.delete(
+                f'/friends/{target_cognito_user_name}',
+                headers={'Content-Type': 'application/json'},
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.json_body['Message'],
+                'BadRequestError: Value error, Invalid str uuid.',
+            )
+
+    def test_delete_friend_same_cognito_user_name(self):
+        target_cognito_user_name = '86125274-40a1-70ec-da28-f779360f7c07'
+        with Client(app.app) as client:
+            response = client.http.delete(
+                f'/friends/{target_cognito_user_name}',
+                headers={'Content-Type': 'application/json'},
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.json_body['Message'],
+                'BadRequestError: Value error, User names cannot be the same.',
             )
 
 

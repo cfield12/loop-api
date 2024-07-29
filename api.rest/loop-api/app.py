@@ -5,7 +5,7 @@ from typing import Union
 import jwt
 from chalice import Chalice, Response
 from loop import data, friends
-from loop.api_classes import AddFriend, CreateRating
+from loop.api_classes import CreateRating, FriendValidator
 from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
 from loop.utils import Rating, UserObject, get_admin_user
 from pydantic import ValidationError as PydanticValidationError
@@ -181,9 +181,9 @@ def add_friend(user_name=str(), user: UserObject = None):
     """
     try:
         try:
-            validated_params = AddFriend(
+            validated_params = FriendValidator(
                 cognito_user_name_requestor=user.cognito_user_name,
-                cognito_user_name_requestee=user_name,
+                cognito_user_name_target=user_name,
             )
         except PydanticValidationError as e:
             raise BadRequestError(
@@ -193,7 +193,7 @@ def add_friend(user_name=str(), user: UserObject = None):
             validated_params.cognito_user_name_requestor
         )
         target_user: UserObject = data.get_user_from_cognito_username(
-            validated_params.cognito_user_name_requestee
+            validated_params.cognito_user_name_target
         )
         friends.create_friend_entry(requestor_user, target_user)
         return Response(status_code=204, body='')
@@ -233,9 +233,9 @@ def accept_friend(user_name=str(), user: UserObject = None):
     """
     try:
         try:
-            validated_params = AddFriend(
-                cognito_user_name_requestor=user_name,
-                cognito_user_name_requestee=user.cognito_user_name,
+            validated_params = FriendValidator(
+                cognito_user_name_requestor=user.cognito_user_name,
+                cognito_user_name_target=user_name,
             )
         except PydanticValidationError as e:
             raise BadRequestError(
@@ -244,10 +244,62 @@ def accept_friend(user_name=str(), user: UserObject = None):
         requestor_user: UserObject = data.get_user_from_cognito_username(
             validated_params.cognito_user_name_requestor
         )
-        acceptor_user: UserObject = data.get_user_from_cognito_username(
-            validated_params.cognito_user_name_requestee
+        target_user: UserObject = data.get_user_from_cognito_username(
+            validated_params.cognito_user_name_target
         )
-        friends.accept_friend_request(acceptor_user, requestor_user)
+        friends.accept_friend_request(requestor_user, target_user)
         return Response(status_code=204, body='')
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/friends/{user_name}', methods=['DELETE'], cors=True)
+@app.route('/friends/{user_name}', methods=['DELETE'], cors=True)
+@get_current_user
+def delete_friend(user_name=str(), user: UserObject = None):
+    """
+    Delete friend.
+    ---
+    put:
+        operationId: deleteFriend
+        summary: Delete a friend.
+        description: Delete record in friend table.
+        security:
+            - Qi API Key: []
+        consumes:
+            -   application/json
+        parameters:
+            -   in: path
+                name: user_name
+                type: string
+                required: true
+                description: Cognito user name of user whose friendship is
+                 being deleted.
+        responses:
+            204:
+                description: OK
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        try:
+            validated_params = FriendValidator(
+                cognito_user_name_requestor=user.cognito_user_name,
+                cognito_user_name_target=user_name,
+            )
+        except PydanticValidationError as e:
+            raise BadRequestError(
+                "; ".join([error["msg"] for error in e.errors()])
+            )
+        requestor_user: UserObject = data.get_user_from_cognito_username(
+            validated_params.cognito_user_name_requestor
+        )
+        target_user: UserObject = data.get_user_from_cognito_username(
+            validated_params.cognito_user_name_target
+        )
+        friends.delete_friend(requestor_user, target_user)
+        return Response(body=str())
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)

@@ -8,6 +8,7 @@ from loop.friends import (
     FriendStatusType,
     accept_friend_request,
     create_friend_entry,
+    delete_friend,
     get_friend_db_object,
     get_friend_status,
 )
@@ -165,6 +166,37 @@ class TestFriends(unittest.TestCase):
         accept_friend_request(user_1, user_2)
         friendship = get_friend_db_object(user_1, user_2)
         self.assertEqual(friendship.status.id, 1)
+
+    def test_delete_friend(self):
+        '''
+        Test delete friend
+        '''
+        user_1 = UserObject(
+            id=2,
+            cognito_user_name='86125274-40a1-70ec-da28-f779360f7c07',
+        )
+        user_2 = UserObject(
+            id=3,
+            cognito_user_name='60c1f02b-f758-4458-8c41-3b5c9fa20ae0',
+        )
+        delete_friend(user_1, user_2)
+        self.assertRaises(
+            BadRequestError, accept_friend_request, user_1, user_2
+        )
+
+    def test_delete_friend_who_arent_friends(self):
+        '''
+        Test trying to delete a friend where does not exist
+        '''
+        user_1 = UserObject(
+            id=1,
+            cognito_user_name='test_cognito_user_name',
+        )
+        user_2 = UserObject(
+            id=3,
+            cognito_user_name='60c1f02b-f758-4458-8c41-3b5c9fa20ae0',
+        )
+        self.assertRaises(BadRequestError, delete_friend, user_1, user_2)
 
 
 if __name__ == '__main__':

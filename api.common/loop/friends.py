@@ -72,12 +72,12 @@ def get_friend_db_object(
 def _create_friend_entry(
     requestor: UserObject, target: UserObject, db_instance_type=RDS_WRITE
 ) -> None:
-    pending_status = get_friend_status(FriendStatusType.PENDING)
     if get_friend_db_object(requestor, target):
         raise BadRequestError(
             f'Friend entry already exists for users {requestor.id} and '
             f'{target.id}.'
         )
+    pending_status = get_friend_status(FriendStatusType.PENDING)
     friend_entry = DB_TYPE[db_instance_type].Friend(
         friend_1=requestor.id,
         friend_2=target.id,
@@ -91,43 +91,67 @@ def _create_friend_entry(
     return
 
 
-@DB_SESSION_RETRYABLE
-def create_friend_entry(
+def _validate_users(
     requestor_user: UserObject, target_user: UserObject
 ) -> None:
     if not isinstance(requestor_user, UserObject) or not isinstance(
         target_user, UserObject
     ):
         raise TypeError('Users supplied here must be instances of UserObject.')
+
+
+@DB_SESSION_RETRYABLE
+def create_friend_entry(
+    requestor_user: UserObject, target_user: UserObject
+) -> None:
+    _validate_users(requestor_user, target_user)
     return _create_friend_entry(requestor_user, target_user)
 
 
 @DB_SESSION_RETRYABLE
 def accept_friend_request(
-    acceptor_user: UserObject, requestor_user: UserObject
+    requestor_user: UserObject, target_user: UserObject
 ) -> None:
-    if not isinstance(acceptor_user, UserObject) or not isinstance(
-        requestor_user, UserObject
-    ):
-        raise TypeError('Users supplied here must be instances of UserObject.')
-    friend_object = get_friend_db_object(acceptor_user, requestor_user)
+    _validate_users(requestor_user, target_user)
+    friend_object = get_friend_db_object(requestor_user, target_user)
     if not friend_object:
         raise BadRequestError(
-            f'Friend entry does not exist for users {acceptor_user.id} and '
-            f'{requestor_user.id}.'
+            f'Friend entry does not exist for users {requestor_user.id} and '
+            f'{target_user.id}.'
         )
     friend_status = get_friend_status(FriendStatusType.FRIENDS)
     if friend_object.status.id == friend_status.id:
         raise BadRequestError(f'Friend request already accepted.')
-    if friend_object.friend_2.id != acceptor_user.id:
+    if friend_object.friend_2.id != requestor_user.id:
         raise BadRequestError(
-            f'Friend request can only be accepted by user {acceptor_user.id}.'
+            f'Friend request can only be accepted by user {requestor_user.id}.'
         )
     friend_object.status = friend_status.id
     update_object_last_updated_time(friend_object)
     commit()
     logger.info(
         'Successfully accepted friend request between users '
-        f'{acceptor_user.id} (acceptor) and {requestor_user.id} (requestor).'
+        f'{requestor_user.id} (requestor) and {target_user.id} (target).'
+    )
+    return
+
+
+@DB_SESSION_RETRYABLE
+def delete_friend(requestor_user: UserObject, target_user: UserObject) -> None:
+    '''
+    The target user is the friend to be deleted.
+    '''
+    _validate_users(requestor_user, target_user)
+    friend_object = get_friend_db_object(requestor_user, target_user)
+    if not friend_object:
+        raise BadRequestError(
+            f'Friend entry does not exist for users {requestor_user.id} and '
+            f'{target_user.id}.'
+        )
+    friend_object.delete()
+    commit()
+    logger.info(
+        'Successfully deleted friendship between users '
+        f'{requestor_user.id} (requestor) and {target_user.id} (target).'
     )
     return

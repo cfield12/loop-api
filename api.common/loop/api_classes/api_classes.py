@@ -11,20 +11,18 @@ class CreateRating(BaseModel):
     food: int
 
 
-class AddFriend(BaseModel):
+class FriendValidator(BaseModel):
     cognito_user_name_requestor: str
-    cognito_user_name_requestee: str
+    cognito_user_name_target: str
 
     @model_validator(mode="after")
     @classmethod
     def validate_cognito_user_names(cls, values):
         validate_str_uuid(values.cognito_user_name_requestor)
-        validate_str_uuid(values.cognito_user_name_requestee)
+        validate_str_uuid(values.cognito_user_name_target)
         if (
             values.cognito_user_name_requestor
-            == values.cognito_user_name_requestee
+            == values.cognito_user_name_target
         ):
-            raise ValueError(
-                'User names cannot be the same when adding friends'
-            )
+            raise ValueError('User names cannot be the same.')
         return
