@@ -174,7 +174,7 @@ class TestAddFriend(unittest.TestCase):
     def tearDown(self):
         unbind_rds()
 
-    @patch('loop.friends.create_friend_entry')
+    @patch('loop.friends.FriendWorker.create_friend_entry')
     def test_add_friend(self, mock_create_friend):
         # Happy path test
         target_cognito_user_name = '60c1f02b-f758-4458-8c41-3b5c9fa20ae0'
@@ -225,7 +225,7 @@ class TestAcceptFriend(unittest.TestCase):
     def tearDown(self):
         unbind_rds()
 
-    @patch('loop.friends.accept_friend_request')
+    @patch('loop.friends.FriendWorker.accept_friend_request')
     def test_add_friend(self, mock_accept_friend):
         # Happy path test
         target_cognito_user_name = '67ce7049-109f-420f-861b-3f1e7d6824b5'
@@ -276,7 +276,7 @@ class TestDeleteFriend(unittest.TestCase):
     def tearDown(self):
         unbind_rds()
 
-    @patch('loop.friends.delete_friend')
+    @patch('loop.friends.FriendWorker.delete_friend')
     def test_delete_friend(self, mock_delete_friend):
         # Happy path test
         target_cognito_user_name = '67ce7049-109f-420f-861b-3f1e7d6824b5'

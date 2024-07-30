@@ -85,6 +85,13 @@ class DbInitFailedError(Error):
         self.message = message
 
 
+class DbNotInitError(Error):
+    '''Raised when db not initialised'''
+
+    def __init__(self, message):
+        self.message = message
+
+
 class DbDisconnectFailedError(Error):
     '''Raised when db disconnect fails'''
 
@@ -106,7 +113,7 @@ class GoogleApiError(Error):
         self.message = message
 
 
-class UnknownFriendStatusType(Error):
+class UnknownFriendStatusTypeError(Error):
     '''Unknown Friend status error'''
 
     def __init__(self, message):
