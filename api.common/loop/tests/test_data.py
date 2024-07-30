@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import call, patch
 
 from loop import data, exceptions
-from loop.friends import get_friend_db_object
 from loop.test_setup.common import setup_rds, unbind_rds
 from loop.utils import Location, Rating, UserObject, get_admin_user
 from pony.orm import Database
