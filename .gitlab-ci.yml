@@ -211,6 +211,7 @@ deploy-api-rest-develop:
   # Install package and dependencies (e.g. boto) for api.common
   - cd api.common
   - python setup.py install
+  - python -m loop.secrets_generator
   # Generate artifact
   - python setup.py sdist bdist_wheel
   # Build the chalice app
@@ -238,6 +239,7 @@ deploy-data-pipeline-develop:
   script:
   - cd api.common
   - python setup.py install
+  - python -m loop.secrets_generator
   - python setup.py sdist bdist_wheel
   - cd ../data.pipeline
   - python -m pip install aws-sam-cli==1.37.0
@@ -264,6 +266,7 @@ deploy-api-rest-staging:
   # Install package and dependencies (e.g. boto) for api.common
   - cd api.common
   - python setup.py install
+  - python -m loop.secrets_generator
   # Generate artifact
   - python setup.py sdist bdist_wheel
   # Build the chalice app
@@ -291,6 +294,7 @@ deploy-data-pipeline-staging:
   script:
   - cd api.common
   - python setup.py install
+  - python -m loop.secrets_generator
   - python setup.py sdist bdist_wheel
   - cd ../data.pipeline
   - make deploy Environment=staging
@@ -317,6 +321,7 @@ deploy-api-rest-prod:
   # Install package and dependencies (e.g. boto) for api.common
   - cd api.common
   - python setup.py install
+  - python -m loop.secrets_generator
   # Generate artifact
   - python setup.py sdist bdist_wheel
   # Build the chalice app
@@ -344,6 +349,7 @@ deploy-data-pipeline-prod:
   script:
   - cd api.common
   - python setup.py install
+  - python -m loop.secrets_generator
   - python setup.py sdist bdist_wheel
   - cd ../data.pipeline
   - make deploy Environment=prod

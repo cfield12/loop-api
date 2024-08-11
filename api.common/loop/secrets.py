@@ -4,6 +4,7 @@ import os
 
 import boto3
 from botocore.exceptions import ClientError
+from loop.local_secrets import LocalSecretsManager
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOGLEVEL", "INFO"))
@@ -11,11 +12,20 @@ logger.setLevel(os.environ.get("LOGLEVEL", "INFO"))
 # Handle region control.
 REGION = boto3.session.Session().region_name
 
+# Optional override container for development.
+SECRET_OVERRIDES = {}
+
+SECRET_OVERRIDES = LocalSecretsManager.unmarshall().secrets_lookup_by_name_map
+assert isinstance(SECRET_OVERRIDES, dict)
+
 
 def get_secret(secret_name, add_environment=False, region=REGION):
 
     if add_environment:
         secret_name = '{}-{}'.format(secret_name, os.environ["ENVIRONMENT"])
+
+    if secret_name in SECRET_OVERRIDES:
+        return SECRET_OVERRIDES[secret_name]
 
     session = boto3.session.Session()
     client = session.client(service_name='secretsmanager', region_name=region)
