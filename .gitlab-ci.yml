@@ -124,7 +124,7 @@ test-api-common:
   - python setup.py sdist bdist_wheel
   - python -m pip install pytest==8.1.1 pytest-cov==5.0.0
   - python -m pip install pyopenssl --upgrade
-  - python -m pytest --cov=loop --cov-fail-under=80
+  - python -m pytest --cov-config=.coveragerc --cov=loop --cov-fail-under=80
   rules:
     - changes:
       - api.common/**/*
