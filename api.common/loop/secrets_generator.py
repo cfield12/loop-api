@@ -170,7 +170,10 @@ class Secret(object):
 def setup_logging(verbose=False):
 
     log_level = logging.DEBUG if verbose else logging.INFO
-    log_format = '%(asctime)s - %(process)d:%(thread)d:%(threadName)s - %(name)s - %(levelname)s - %(message)s'
+    log_format = (
+        '%(asctime)s - %(process)d:%(thread)d:%(threadName)s - '
+        '%(name)s - %(levelname)s - %(message)s'
+    )
 
     logging.basicConfig(
         level=log_level, format=log_format, handlers=[logging.StreamHandler()]
