@@ -210,6 +210,7 @@ deploy-api-rest-develop:
   script:
   # Install package and dependencies (e.g. boto) for api.common
   - cd api.common
+  - python -m pip install pyopenssl --upgrade
   - python setup.py install
   - python -m loop.secrets_generator
   # Generate artifact
@@ -217,7 +218,6 @@ deploy-api-rest-develop:
   # Build the chalice app
   - cd ../api.rest
   - make clean
-  - python -m pip install pyopenssl --upgrade
   - make build STAGE=develop
   # Deploy to AWS
   - make deploy STAGE=develop
@@ -238,12 +238,12 @@ deploy-data-pipeline-develop:
     name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
   - cd api.common
+  - python -m pip install pyopenssl --upgrade
   - python setup.py install
   - python -m loop.secrets_generator
   - python setup.py sdist bdist_wheel
   - cd ../data.pipeline
   - python -m pip install aws-sam-cli==1.37.0
-  - python -m pip install pyopenssl --upgrade
   - make deploy Environment=develop
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -265,6 +265,7 @@ deploy-api-rest-staging:
   script:
   # Install package and dependencies (e.g. boto) for api.common
   - cd api.common
+  - python -m pip install pyopenssl --upgrade
   - python setup.py install
   - python -m loop.secrets_generator
   # Generate artifact
@@ -272,7 +273,6 @@ deploy-api-rest-staging:
   # Build the chalice app
   - cd ../api.rest
   - make clean
-  - python -m pip install pyopenssl --upgrade
   - make build STAGE=staging
   # Deploy to AWS
   - make deploy STAGE=staging
@@ -293,6 +293,7 @@ deploy-data-pipeline-staging:
     name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
   - cd api.common
+  - python -m pip install pyopenssl --upgrade
   - python setup.py install
   - python -m loop.secrets_generator
   - python setup.py sdist bdist_wheel
@@ -320,6 +321,7 @@ deploy-api-rest-prod:
   script:
   # Install package and dependencies (e.g. boto) for api.common
   - cd api.common
+  - python -m pip install pyopenssl --upgrade
   - python setup.py install
   - python -m loop.secrets_generator
   # Generate artifact
@@ -327,7 +329,6 @@ deploy-api-rest-prod:
   # Build the chalice app
   - cd ../api.rest
   - make clean
-  - python -m pip install pyopenssl --upgrade
   - make build STAGE=prod
   # Deploy to AWS
   - make deploy STAGE=prod
@@ -348,6 +349,7 @@ deploy-data-pipeline-prod:
     name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
   - cd api.common
+  - python -m pip install pyopenssl --upgrade
   - python setup.py install
   - python -m loop.secrets_generator
   - python setup.py sdist bdist_wheel
