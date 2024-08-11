@@ -49,17 +49,8 @@ def get_secret(secret_name, add_environment=False, region=REGION):
             pass
 
 
-def get_db_dict(secret_name="rds_loop_root"):
-    # db_dict = get_secret(secret_name)
-    db_dict = {
-        'user': 'loop_root',
-        'password': 'v5IK9wGrOyqjX4esI6Vi',
-        'port': '3306',
-        'host': (
-            'loop-stack-rds-develop-rdsinstancea-mev3ci3rh7ez.'
-            'c3ucksma8huu.eu-west-2.rds.amazonaws.com'
-        ),
-    }
+def get_db_dict(secret_name):
+    db_dict = get_secret(secret_name)
     db_dict.update(
         {"database": "loop", "provider": "mysql", "port": int(db_dict['port'])}
     )
