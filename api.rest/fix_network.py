@@ -4,7 +4,7 @@ from pprint import pprint
 import boto3
 
 STAGE = os.environ['STAGE']
-FUNCTION_NAME = f'loop-api-{STAGE}'
+FUNCTION_NAME = os.environ.get('FUNCTION_NAME', f'loop-api-{STAGE}')
 
 VARIABLES = {
     'PROJECT': 'loop',

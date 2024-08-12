@@ -12,6 +12,8 @@ PYTHON = python3
 PIP = pip3
 STAGE = develop
 
+LOOP_GOOGLE_FUNCTION_NAME = loop-google-api-$(STAGE)
+
 # cd into api.rest
 deps: .deps
 .deps: $(REQUIREMENTS)
@@ -56,3 +58,4 @@ google-clean:
 google-deploy: google-build
 	cd $(LOOP_GOOGLE_SRC);\
 	$(CHALICE) deploy --stage $(STAGE) --no-autogen-policy
+	STAGE=$(STAGE) FUNCTION_NAME=$(LOOP_GOOGLE_FUNCTION_NAME) python fix_network.py
