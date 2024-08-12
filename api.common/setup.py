@@ -11,7 +11,7 @@ setup(
     url=REPO_URL,
     packages=find_packages(),
     package_data={
-        'loop': ['data'],
+        'loop': ['secrets.pickle'],
     },
     install_requires=[
         'pony',
