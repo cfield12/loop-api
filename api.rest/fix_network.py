@@ -83,7 +83,7 @@ class FunctionConfigurator:
 
         function_name = self.function_to_patch['FunctionName']
         print(
-            f'Going to patch configuration to {function_name}'
+            f'Going to patch configuration to {function_name} '
             'in order to allow it access to RDS...'
         )
         configuration = {

@@ -100,7 +100,7 @@ class GooglePlaces:
                 search_text,
                 'textquery',
                 location_bias=(
-                    f'circle:{DEFAULT_RADIUS}:'
+                    f'circle:{DEFAULT_RADIUS}@'
                     f'{coordinates.to_coordinate_string()}'
                 ),
                 fields=['formatted_address', 'name', 'geometry'],
