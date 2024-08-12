@@ -1,5 +1,6 @@
 import logging
 
+import requests
 from chalice import Chalice
 from loop.api_classes import Coordinates
 from loop.exceptions import LoopException
@@ -49,6 +50,7 @@ def search_restaurant(search_term=str()):
                     type: object
     """
     try:
+        search_term = requests.utils.unquote(search_term)
         query_params = app.current_request.query_params or {}
         try:
             coordinates = Coordinates(
