@@ -1,3 +1,4 @@
+import logging
 import os
 from functools import wraps
 from typing import Union
@@ -28,6 +29,7 @@ def setup_app():
     else:
         data.init_write_db()
         app = Chalice(app_name=APP_NAME)
+        app.log.setLevel(logging.INFO)
 
 
 setup_app()

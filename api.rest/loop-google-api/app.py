@@ -1,3 +1,5 @@
+import logging
+
 from chalice import Chalice
 from loop.api_classes import Coordinates
 from loop.exceptions import LoopException
@@ -5,6 +7,7 @@ from loop.google_client import search_place
 from pydantic import ValidationError as PydanticValidationError
 
 app = Chalice(app_name='loop-google-api')
+app.log.setLevel(logging.INFO)
 
 
 @app.route('/web/restaurant_search/{search_term}', methods=['GET'], cors=True)
