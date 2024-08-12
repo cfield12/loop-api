@@ -151,7 +151,10 @@ class TestGooglePlaces(unittest.TestCase):
     def test_search(self):
         candidates = [
             {
-                'formatted_address': 'Saint Katherine Docks, E Smithfield, London E1W 1AT, United Kingdom',
+                'formatted_address': (
+                    'Saint Katherine Docks, E Smithfield, '
+                    'London E1W 1AT, United Kingdom'
+                ),
                 'geometry': {
                     'location': {
                         'lat': 51.5074562,
