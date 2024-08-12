@@ -1,5 +1,7 @@
 [tool.coverage.run]
 omit = [
     "loop-api/vendor/*",
-    "loop-api/chalicelib/__init__.py"
+    "loop-api/chalicelib/__init__.py",
+    "loop-google-api/vendor/*",
+    "loop-google-api/chalicelib/__init__.py"
 ]

@@ -1,4 +1,6 @@
 # Distribution / packaging
 loop-api/vendor*
 loop-api/venv38*
+loop-google-api/vendor*
+loop-google-api/venv38*
 .deps

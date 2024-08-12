@@ -1,5 +1,7 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
+from typing import Dict
 
 from loop.constants import LOOP_ADMIN_COGNITO_USERNAME, LOOP_ADMIN_ID
 
@@ -39,6 +41,9 @@ class Location:
     google_id: str
     address: str
     display_name: str
+
+    def to_dict(self) -> Dict[str, str]:
+        return deepcopy(self.__dict__)
 
 
 @dataclass

@@ -1,10 +1,19 @@
+import os
+from dataclasses import dataclass
 from typing import Dict, List
 
 import googlemaps
 from googlemaps.exceptions import ApiError
-from loop.constants import GOOGLE_API_KEY
+from loop.api_classes import Coordinates
 from loop.exceptions import GoogleApiError
+from loop.secrets import get_secret
 from loop.utils import Location
+
+DEFAULT_RADIUS = 10000
+PROJECT = os.environ.get('PROJECT', 'loop')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'develop')
+
+GOOGLE_API_KEY_SECRET = f'{PROJECT}-google-api-key-{ENVIRONMENT}'
 
 
 class GooglePlaces:
@@ -17,7 +26,10 @@ class GooglePlaces:
         https://github.com/googlemaps/google-maps-services-python/blob/
         master/googlemaps/places.py
         """
-        self.gmaps = googlemaps.Client(key=GOOGLE_API_KEY)
+        google_api_key = get_secret(GOOGLE_API_KEY_SECRET)
+        if 'key' not in google_api_key:
+            raise ValueError('google api secret must have key.')
+        self.gmaps = googlemaps.Client(key=google_api_key['key'])
 
     def _validate_place(self, place: Dict) -> None:
         if 'status' not in place:
@@ -71,7 +83,9 @@ class GooglePlaces:
         if not isinstance(search['candidates'], list):
             raise GoogleApiError(f'Candidates should be a list')
 
-    def search(self, search_text: str) -> List[Location]:
+    def search(
+        self, search_text: str, coordinates: Coordinates
+    ) -> List[Location]:
         """
         A Find Place request takes a text input, and returns a place.
         The text input can be any kind of Places data, for example,
@@ -79,15 +93,22 @@ class GooglePlaces:
         """
         if not isinstance(search_text, str):
             raise TypeError('search_text must be of type str')
+        if not isinstance(coordinates, Coordinates):
+            raise TypeError('coordinates must be an instance of Coordinates.')
         try:
-            response = self.gmaps.find_place(search_text, 'textquery')
+            response = self.gmaps.find_place(
+                search_text,
+                'textquery',
+                location_bias=(
+                    f'circle:{DEFAULT_RADIUS}:'
+                    f'{coordinates.to_coordinate_string()}'
+                ),
+                fields=['formatted_address', 'name', 'geometry'],
+            )
         except ApiError as e:
             raise e
         self._validate_search(response)
-        return [
-            self.get_place(candidate['place_id'])
-            for candidate in response['candidates']
-        ]
+        return response['candidates']
 
     def download_photo(
         self,
@@ -118,6 +139,13 @@ class GooglePlaces:
             f.close()
         except ApiError as e:
             raise e
+
+
+def search_place(
+    search_term: str, coordinates: Coordinates
+) -> List[Dict[str, str]]:
+    google_places = GooglePlaces()
+    return google_places.search(search_term, coordinates)
 
 
 def find_location(google_id: str) -> Location:

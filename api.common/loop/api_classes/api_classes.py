@@ -1,4 +1,5 @@
-from typing import List, Union
+from copy import deepcopy
+from typing import Dict, List, Union
 
 from loop.api_classes.validators import validate_str_uuid
 from pydantic import BaseModel, model_validator, validator
@@ -26,3 +27,14 @@ class FriendValidator(BaseModel):
         ):
             raise ValueError('User names cannot be the same.')
         return
+
+
+class Coordinates(BaseModel):
+    lat: float
+    lng: float
+
+    def to_dict(self) -> Dict[str, str]:
+        return deepcopy(self.__dict__)
+
+    def to_coordinate_string(self) -> str:
+        return f"{self.lat},{self.lng}"

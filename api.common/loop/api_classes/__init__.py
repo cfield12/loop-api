@@ -1,1 +1,1 @@
-from .api_classes import CreateRating, FriendValidator
+from .api_classes import Coordinates, CreateRating, FriendValidator
