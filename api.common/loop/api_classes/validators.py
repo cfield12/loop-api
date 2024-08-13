@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from loop.utils import UUIDVersion
+from loop.constants import UUIDVersion
 
 
 def validate_str_uuid(str_uuid: str, version: UUIDVersion = UUIDVersion.FOUR):

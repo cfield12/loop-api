@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import call, patch
 
 from loop import data, exceptions
+from loop.api_classes import Coordinates
 from loop.test_setup.common import setup_rds, unbind_rds
 from loop.utils import Location, Rating, UserObject, get_admin_user
 from pony.orm import Database
@@ -14,6 +15,7 @@ TEST_DB_SECRET = {
     'database': 'loop',
     'provider': 'mysql',
 }
+TEST_COORDINATES = Coordinates(lat=1.0, lng=1.0)
 
 
 class LoopTestGetUserRatings(unittest.TestCase):
@@ -264,6 +266,7 @@ class TestCreateLocation(unittest.TestCase):
             google_id='X_TEST_GOOGLE_ID_X',
             address='55 Northberk Street, Sunderland',
             display_name='Greggs',
+            coordinates=TEST_COORDINATES,
         )
         location_entry = data.create_location_entry(location)
         self.assertEqual(location_entry.id, 5)
@@ -287,6 +290,7 @@ class TestCreateLocation(unittest.TestCase):
             google_id='test_google_id_5',
             address='33 South Road, Liverpool',
             display_name='Dominoes',
+            coordinates=TEST_COORDINATES,
         )
         google_id = 'test_google_id_5'
         location_id = data.get_or_create_location_id(google_id)

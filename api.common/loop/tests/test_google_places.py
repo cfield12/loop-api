@@ -5,22 +5,26 @@ import googlemaps
 from googlemaps.exceptions import ApiError
 from loop.api_classes import Coordinates
 from loop.exceptions import GoogleApiError
-from loop.google_client import GooglePlaces
+from loop.google_client import (
+    PlaceSearcher,
+    PlacesSearcher,
+    get_coordinates_from_result,
+)
 from loop.utils import Location
 
 TEST_COORDINATES = Coordinates(lat=1.0, lng=1.0)
 
 
-class TestGooglePlaces(unittest.TestCase):
+class TestSearchPlace(unittest.TestCase):
     @patch('loop.google_client.places.get_secret')
     @patch.object(googlemaps, 'Client')
     def setUp(self, mock_googlemaps, mock_secret):
         mock_secret.return_value = {'key': 'mock_secret'}
         self.mock_googlemaps = mock_googlemaps
-        self.google_places = GooglePlaces()
+        self.place_searcher = PlaceSearcher()
 
     def tearDown(self):
-        self.google_places = None
+        self.place_searcher = None
 
     def test_validate_place_success(self):
         response = {
@@ -28,9 +32,17 @@ class TestGooglePlaces(unittest.TestCase):
             'result': {
                 'formatted_address': 'Test Address, Test City',
                 'name': 'Test Name',
+                'geometry': {
+                    'location': {'lat': 51.5041392, 'lng': -0.0770409},
+                    'viewport': {
+                        'northeast': {'lat': 51.50544563, 'lng': -0.07565275},
+                        'southwest': {'lat': 51.50274766, 'lng': -0.07868495},
+                    },
+                },
+                'place_id': 'ChIJEcLP7kUDdkgRw2pqyXOSXzw',
             },
         }
-        self.google_places._validate_place(response)
+        self.place_searcher._validate_place(response)
 
     def test_validate_place_no_status_error(self):
         response = {
@@ -40,7 +52,7 @@ class TestGooglePlaces(unittest.TestCase):
             },
         }
         self.assertRaises(
-            GoogleApiError, self.google_places._validate_place, response
+            GoogleApiError, self.place_searcher._validate_place, response
         )
 
     def test_validate_place_status_error(self):
@@ -52,7 +64,7 @@ class TestGooglePlaces(unittest.TestCase):
             },
         }
         self.assertRaises(
-            GoogleApiError, self.google_places._validate_place, response
+            GoogleApiError, self.place_searcher._validate_place, response
         )
 
     def test_validate_place_no_result_error(self):
@@ -64,7 +76,7 @@ class TestGooglePlaces(unittest.TestCase):
             },
         }
         self.assertRaises(
-            GoogleApiError, self.google_places._validate_place, response
+            GoogleApiError, self.place_searcher._validate_place, response
         )
 
     def test_validate_place_invalid_result_key_error(self):
@@ -76,7 +88,7 @@ class TestGooglePlaces(unittest.TestCase):
             },
         }
         self.assertRaises(
-            GoogleApiError, self.google_places._validate_place, response
+            GoogleApiError, self.place_searcher._validate_place, response
         )
 
     def test_get_place(self):
@@ -87,38 +99,63 @@ class TestGooglePlaces(unittest.TestCase):
             'result': {
                 'formatted_address': address,
                 'name': name,
+                'geometry': {
+                    'location': {'lat': 51.5041392, 'lng': -0.0770409},
+                    'viewport': {
+                        'northeast': {'lat': 51.50544563, 'lng': -0.07565275},
+                        'southwest': {'lat': 51.50274766, 'lng': -0.07868495},
+                    },
+                },
+                'place_id': 'ChIJEcLP7kUDdkgRw2pqyXOSXzw',
             },
         }
         self.mock_googlemaps.return_value.place.return_value = response
         google_id = 'Test_google_id'
-        location = self.google_places.get_place(google_id)
+        location = self.place_searcher.get_place(google_id)
         self.assertEqual(
             location,
-            Location(google_id=google_id, address=address, display_name=name),
+            Location(
+                google_id=google_id,
+                address=address,
+                display_name=name,
+                coordinates=get_coordinates_from_result(response['result']),
+            ),
         )
 
     def test_get_place_google_type_error(self):
         google_id = 123456789
-        self.assertRaises(TypeError, self.google_places.get_place, google_id)
+        self.assertRaises(TypeError, self.place_searcher.get_place, google_id)
 
     def test_get_place_api_error(self):
         self.mock_googlemaps.return_value.place.side_effect = ApiError(500)
         google_id = 'Test_google_id'
-        self.assertRaises(ApiError, self.google_places.get_place, google_id)
+        self.assertRaises(ApiError, self.place_searcher.get_place, google_id)
+
+
+class TestSearchPlaces(unittest.TestCase):
+    @patch('loop.google_client.places.get_secret')
+    @patch.object(googlemaps, 'Client')
+    def setUp(self, mock_googlemaps, mock_secret):
+        mock_secret.return_value = {'key': 'mock_secret'}
+        self.mock_googlemaps = mock_googlemaps
+        self.places_searcher = PlacesSearcher()
+
+    def tearDown(self):
+        self.places_searcher = None
 
     def test_validate_search_response(self):
         response = {
             'status': 'OK',
             'candidates': [{'place_id': 'test_place_id'}],
         }
-        self.google_places._validate_search(response)
+        self.places_searcher._validate_search(response)
 
     def test_validate_search_response_no_status_error(self):
         response = {
             'candidates': [{'place_id': 'test_place_id'}],
         }
         self.assertRaises(
-            GoogleApiError, self.google_places._validate_search, response
+            GoogleApiError, self.places_searcher._validate_search, response
         )
 
     def test_validate_search_response_status_error(self):
@@ -127,7 +164,7 @@ class TestGooglePlaces(unittest.TestCase):
             'candidates': [{'place_id': 'test_place_id'}],
         }
         self.assertRaises(
-            GoogleApiError, self.google_places._validate_search, response
+            GoogleApiError, self.places_searcher._validate_search, response
         )
 
     def test_validate_search_response_no_candidates_error(self):
@@ -136,7 +173,7 @@ class TestGooglePlaces(unittest.TestCase):
             'result': [{'place_id': 'test_place_id'}],
         }
         self.assertRaises(
-            GoogleApiError, self.google_places._validate_search, response
+            GoogleApiError, self.places_searcher._validate_search, response
         )
 
     def test_validate_search_response_candidates_type_error(self):
@@ -145,7 +182,7 @@ class TestGooglePlaces(unittest.TestCase):
             'candidates': {'place_id': 'test_place_id'},
         }
         self.assertRaises(
-            GoogleApiError, self.google_places._validate_search, response
+            GoogleApiError, self.places_searcher._validate_search, response
         )
 
     def test_search(self):
@@ -182,13 +219,16 @@ class TestGooglePlaces(unittest.TestCase):
             search_response
         )
         text_search = 'Test search'
-        locations = self.google_places.search(text_search, TEST_COORDINATES)
+        locations = self.places_searcher.search(text_search, TEST_COORDINATES)
         self.assertEqual(locations, candidates)
 
     def test_search_type_error(self):
         text_search = ['Test search']
         self.assertRaises(
-            TypeError, self.google_places.search, text_search, TEST_COORDINATES
+            TypeError,
+            self.places_searcher.search,
+            text_search,
+            TEST_COORDINATES,
         )
 
     def test_search_api_error(self):
@@ -197,7 +237,10 @@ class TestGooglePlaces(unittest.TestCase):
         )
         text_search = 'Test search'
         self.assertRaises(
-            ApiError, self.google_places.search, text_search, TEST_COORDINATES
+            ApiError,
+            self.places_searcher.search,
+            text_search,
+            TEST_COORDINATES,
         )
 
 

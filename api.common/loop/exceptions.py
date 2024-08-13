@@ -118,3 +118,10 @@ class UnknownFriendStatusTypeError(Error):
 
     def __init__(self, message):
         self.message = message
+
+
+class BucketNotFoundError(Error):
+    '''Bucket not found error'''
+
+    def __init__(self, message):
+        self.message = message
