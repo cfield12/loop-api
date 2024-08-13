@@ -207,6 +207,18 @@ Resources:
               - arn:aws:s3:::loop-s3-restaurant-thumbnail-store-staging/*
               - arn:aws:s3:::loop-s3-restaurant-thumbnail-store-prod
               - arn:aws:s3:::loop-s3-restaurant-thumbnail-store-prod/*
+      - PolicyName: s3-loop-data-license
+        PolicyDocument:
+          Statement:
+          - Action:
+            - s3:GetObjectVersion
+            - s3:ListAllMyBuckets
+            - s3:ListBucket
+            - s3:ListBuckets
+            - s3:PutObject
+            - s3:GetObject
+            Effect: Allow
+            Resource: '*'
 
 Outputs:
   UserCreatorArn:
