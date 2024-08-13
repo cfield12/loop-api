@@ -1,3 +1,4 @@
+import json
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Dict
@@ -58,3 +59,21 @@ class Rating:
     price: int
     food: int
     vibe: int
+
+
+def conditional_load(body):
+    if isinstance(body, str):
+        body = json.loads(body)
+    return body
+
+
+def sqs_batch(event):
+    # Load the event.
+    event = conditional_load(event)
+
+    if 'Records' not in event:
+        raise ValueError('Unexpected SQS batch format.')
+
+    # Pull out records.
+    for message in event['Records']:
+        yield conditional_load(message.get('body'))
