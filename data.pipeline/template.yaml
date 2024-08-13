@@ -86,10 +86,42 @@ Resources:
           LOGLEVEL:          INFO
           PROJECT:           !Ref Project
       Tags:
-        Function:       RdsMaintenace
+        Function:       UserCreator
         Name:           !Join ['-', [!Ref Project, lambda, user-creator, !Ref Environment]]
         Environment:    !Ref Environment
         Project:        !Ref Project
+
+  ThumbnailUploader:
+    Type: AWS::Serverless::Function
+    Properties:
+      Role:             !GetAtt LambdaRole.Arn
+      Policies:         AWSLambdaVPCAccessExecutionRole
+      FunctionName:     !Join ['-', [!Ref Project, lambda, thumbnail-uploader, !Ref Environment]]
+      Description:      Uploads restaurant thumbnail to S3.
+      ReservedConcurrentExecutions: 10
+      CodeUri:          lambdas/restaurant_thumbnail_uploader
+      Runtime:      python3.8
+      Handler:      main.lambda_handler
+      AutoPublishAlias: !Ref Environment
+      MemorySize: 512
+      Timeout: 10
+      Environment:
+        Variables:
+          ENVIRONMENT:       !Ref Environment
+          LOGLEVEL:          INFO
+          PROJECT:           !Ref Project
+      Tags:
+        Function:       ThumbnailUploader
+        Name:           !Join ['-', [!Ref Project, lambda, thumbnail-uploader, !Ref Environment]]
+        Environment:    !Ref Environment
+        Project:        !Ref Project
+
+# S3 Storage
+# ----------------------------------------------------------------------------------------------------------------------
+  RestaurantThumbnailsS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ['-', [!Ref Project, s3, restaurant-thumbnail-store, !Ref Environment]]
 
 # Lambda Permissions
 # ----------------------------------------------------------------------------------------------------------------------
@@ -144,6 +176,27 @@ Resources:
             - ec2:DeleteNetworkInterface
             Effect: Allow
             Resource: '*'
+      - PolicyName: s3-loop-restaurant-thumbnail-store
+        PolicyDocument:
+          Statement:
+          - Action:
+            - s3:GetObjectVersion
+            - s3:ListAllMyBuckets
+            - s3:ListBucket
+            - s3:PutObject
+            - s3:PutObjectAcl
+            - s3:GetObject
+            - s3:ListBucketMultipartUploads
+            - s3:AbortMultipartUpload
+            - s3:ListMultipartUploadParts
+            Effect: Allow
+            Resource:
+              - arn:aws:s3:::loop-s3-restaurant-thumbnail-store-develop
+              - arn:aws:s3:::loop-s3-restaurant-thumbnail-store-develop/*
+              - arn:aws:s3:::loop-s3-restaurant-thumbnail-store-staging
+              - arn:aws:s3:::loop-s3-restaurant-thumbnail-store-staging/*
+              - arn:aws:s3:::loop-s3-restaurant-thumbnail-store-prod
+              - arn:aws:s3:::loop-s3-restaurant-thumbnail-store-prod/*
 
 Outputs:
   UserCreatorArn:
