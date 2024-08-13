@@ -122,6 +122,16 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Join ['-', [!Ref Project, s3, restaurant-thumbnail-store, !Ref Environment]]
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireThumbnail
+            Status: Enabled
+            ExpirationInDays: 1
+          - Id: DeleteThumbnail
+            Status: Enabled
+            ExpiredObjectDeleteMarker: true
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 0
 
 # Lambda Permissions
 # ----------------------------------------------------------------------------------------------------------------------

@@ -18,7 +18,8 @@ class TestThumbnailUploader(unittest.TestCase):
         'PhotoDownloader'
     )
     @patch(
-        'lambdas.restaurant_thumbnail_uploader.src.thumbnail_uploader.S3Service'
+        'lambdas.restaurant_thumbnail_uploader.src.thumbnail_uploader.'
+        'S3Service'
     )
     def setUp(self, mock_s3_service, mock_photo_downloader):
         mock_photo_downloader.return_value.download_photo.return_value = (
