@@ -131,7 +131,7 @@ Resources:
             Status: Enabled
             ExpiredObjectDeleteMarker: true
             AbortIncompleteMultipartUpload:
-              DaysAfterInitiation: 0
+              DaysAfterInitiation: 1
 
 # Lambda Permissions
 # ----------------------------------------------------------------------------------------------------------------------
