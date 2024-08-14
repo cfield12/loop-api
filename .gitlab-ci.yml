@@ -125,7 +125,7 @@ test-api-common:
   - python setup.py sdist bdist_wheel
   - python -m pip install pytest==8.1.1 pytest-cov==5.0.0
   - python -m pip install pyopenssl --upgrade
-  - python -m pytest --cov-config=.coveragerc --cov=loop --cov-fail-under=80
+  - make test
   rules:
     - changes:
       - api.common/**/*
@@ -152,7 +152,7 @@ test-api-rest:
   script:
     - python -m pip install pytest==8.1.1 pytest-cov==5.0.0
     - python -m pip install pyopenssl --upgrade
-    - python -m pytest tests/ --cov=loop-api/ --cov=loop-google-api/
+    - make test
   rules:
     - changes:
       - docker/**/*
@@ -184,7 +184,7 @@ test-data-pipeline:
   image:
     name: $DATA_PIPELINE_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
   script:
-    - python -m pytest --cov=lambdas/ --cov-fail-under=70
+    - make test
   rules:
     - changes:
       - docker/**/*

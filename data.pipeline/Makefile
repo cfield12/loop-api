@@ -4,6 +4,11 @@ Environment                     = develop
 # Uppercase environment name for expansion of variable name
 ENVIRONMENT_UC                  = $(shell echo $(Environment) | tr '[:lower:]' '[:upper:]')
 
+# Requirements.
+PYTHON = python3
+PYTEST = pytest
+MIN_COVER = 90
+
 # Reasonably stable variable names for this Makefile
 EIP_STACK_NAME                      = loop-stack-elastic-ips-$(Environment)
 LAMBDA_STACK_NAME                   = loop-stack-lambdas-$(Environment)
@@ -128,3 +133,6 @@ deploy-storage: validate-storage
 
 clean:
 	rm -rf .aws-sam
+
+test:
+	$(PYTHON) -m $(PYTEST) --cov=lambdas/ --cov-fail-under=$(MIN_COVER)
