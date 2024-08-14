@@ -1,6 +1,6 @@
 import json
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Dict
 
 from loop.api_classes import Coordinates
@@ -49,7 +49,9 @@ class Location:
     price_level: int = None
 
     def to_dict(self) -> Dict[str, str]:
-        return deepcopy(self.__dict__)
+        d = deepcopy(asdict(self))
+        d['coordinates'] = d['coordinates'].model_dump()
+        return d
 
 
 @dataclass

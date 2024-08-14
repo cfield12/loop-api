@@ -11,7 +11,7 @@ logger.setLevel(LOGLEVEL)
 
 
 def lambda_handler(event, context):
-    logger.info(f'Restaurant thumnail upload event detected: {event}')
+    logger.info(f'Restaurant thumbnail upload event detected: {event}')
     try:
         thumbnail_uploader = ThumbnailUploader()
         for message in sqs_batch(event):
@@ -20,7 +20,7 @@ def lambda_handler(event, context):
                 thumbnail_uploader.upload_thumbnail(upload_event)
             except Exception as e:
                 logger.error(
-                    'Restaurant thumnail upload event failed for event'
+                    'Restaurant thumbnail upload event failed for event'
                     f': {event} ({e})'
                 )
                 raise e

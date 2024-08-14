@@ -4,7 +4,8 @@ import requests
 from chalice import Chalice
 from loop.api_classes import Coordinates
 from loop.exceptions import LoopException
-from loop.google_client import search_place
+from loop.google_client import find_location, search_place
+from loop.utils import Location
 from pydantic import ValidationError as PydanticValidationError
 
 app = Chalice(app_name='loop-google-api')
@@ -66,5 +67,45 @@ def search_restaurant(search_term=str()):
             f"coordinates: {coordinates.to_dict()}"
         )
         return search_place(search_term, coordinates)
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/restaurant/{place_id}', methods=['GET'], cors=True)
+@app.route('/restaurant/{place_id}', methods=['GET'], cors=True)
+def get_restaurant(place_id=str()):
+    """
+    Get restaurant.
+    ---
+    get:
+        operationId: getRestaurant
+        summary: Get a restaurant's info.
+        description: Get a restaurant's information using Google API.
+        security:
+            - Qi API Key: []
+        parameters:
+            -   in: path
+                name: place_id
+                type: string
+                required: true
+                description: Google's place_id.
+        responses:
+            200:
+                description: OK
+                schema:
+                    type: object
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        place_id = requests.utils.unquote(place_id)
+        app.log.info(
+            "Getting restaurant information with Google API "
+            f"for place_id: {place_id}."
+        )
+        location: Location = find_location(place_id)
+        return location.to_dict()
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
