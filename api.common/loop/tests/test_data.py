@@ -3,8 +3,9 @@ from unittest.mock import call, patch
 
 from loop import data, exceptions
 from loop.api_classes import Coordinates
-from loop.data_classes import Location, Rating, UserObject, get_admin_user
+from loop.data_classes import Location, Rating, UserObject
 from loop.test_setup.common import setup_rds, unbind_rds
+from loop.utils import get_admin_user
 from pony.orm import Database
 
 TEST_DB_SECRET = {
@@ -56,7 +57,11 @@ class LoopTestGetUserRatings(unittest.TestCase):
         )
 
     def test_get_test_user_ratings(self):
-        user_ratings = data.get_user_ratings(UserObject(id=2))
+        user_ratings = data.get_user_ratings(
+            UserObject(
+                id=2, cognito_user_name='86125274-40a1-70ec-da28-f779360f7c07'
+            )
+        )
         self.assertEqual(
             user_ratings,
             [
