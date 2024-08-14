@@ -26,12 +26,21 @@
           "s3:ListBucket",
           "s3:ListBuckets",
           "s3:PutObject",
-          "s3:PutObjectAcl",
           "s3:GetObject"
         ],
         "Resource": [
-          "arn:aws:s3:::loop-s3-restaurant-thumbnail-store-develop",
-          "arn:aws:s3:::loop-s3-restaurant-thumbnail-store-develop/*"
+          "*"
+        ],
+        "Effect": "Allow"
+      },
+      {
+        "Action": [
+          "sqs:SendMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:GetQueueUrl"
+        ],
+        "Resource": [
+          "*"
         ],
         "Effect": "Allow"
       }
