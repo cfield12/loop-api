@@ -1,1 +1,0 @@
-from .thumbnail_uploader import GoogleThumbnailEvent, ThumbnailUploader
