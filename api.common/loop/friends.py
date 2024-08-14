@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import List
 
 from loop.constants import RDS_WRITE
 from loop.data import (
@@ -14,7 +15,7 @@ from loop.exceptions import (
     DbNotInitError,
     UnknownFriendStatusTypeError,
 )
-from pony.orm import Database, commit
+from pony.orm import Database, commit, select
 
 logger = logging.getLogger()
 LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
@@ -128,3 +129,30 @@ class FriendWorker:
             f'{self.requestor.id} (requestor) and {self.target.id}'
             ' (target).'
         )
+
+
+@DB_SESSION_RETRYABLE
+def get_user_friends(user: UserObject) -> List:
+    if not isinstance(user, UserObject):
+        raise TypeError('user should be of type UserObject')
+    friends = []
+    friends_query = select(
+        (friend.friend_1, friend.friend_2)
+        for friend in DB_TYPE[RDS_WRITE].Friend
+        if ((friend.friend_1.id == user.id) or (friend.friend_2.id == user.id))
+        and friend.status.description == FriendStatusType.FRIENDS.value
+    )
+    for user_1, user_2 in friends_query:
+        if user_1.id == user.id:
+            friend = user_2
+        else:
+            friend = user_1
+        friend_dict = {
+            'id': friend.id,
+            'user_name': friend.cognito_user_name,
+            'email': friend.email,
+            'first_name': friend.first_name,
+            'last_name': friend.last_name,
+        }
+        friends.append(friend_dict)
+    return friends

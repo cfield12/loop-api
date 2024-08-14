@@ -48,5 +48,7 @@ def check_thumbnail_exists(place_id: str) -> bool:
 
 
 def upload_thumbnail(event: UploadThumbnailEvent) -> None:
+    if not isinstance(event, UploadThumbnailEvent):
+        raise TypeError('event should be an instance of UploadThumbnailEvent.')
     queue_service = SqsClient(RESTAURANT_THUMBNAILS_QUEUE)
     return queue_service.send_message(event.to_dict())

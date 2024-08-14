@@ -9,7 +9,7 @@ from loop.exceptions import (
     DbNotInitError,
     UnknownFriendStatusTypeError,
 )
-from loop.friends import FriendWorker
+from loop.friends import FriendWorker, get_user_friends
 from loop.test_setup import setup_rds, unbind_rds
 
 USER_1 = UserObject(
@@ -158,6 +158,19 @@ class TestFriends(unittest.TestCase):
         '''
         friend_worker = FriendWorker(USER_1, USER_3)
         self.assertRaises(BadRequestError, friend_worker.delete_friend)
+
+    def test_get_user_friends(self):
+        expected_friends = [
+            {
+                'id': 3,
+                'user_name': '60c1f02b-f758-4458-8c41-3b5c9fa20ae0',
+                'email': 'test_person_email',
+                'first_name': 'Random',
+                'last_name': 'Person',
+            }
+        ]
+        user_friends = get_user_friends(USER_2)
+        self.assertEqual(user_friends, expected_friends)
 
 
 if __name__ == '__main__':

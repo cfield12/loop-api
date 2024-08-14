@@ -9,7 +9,7 @@ from loop import data
 from loop.api_classes import CreateRating, FriendValidator
 from loop.data_classes import Rating, UserObject
 from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
-from loop.friends import FriendWorker
+from loop.friends import FriendWorker, get_user_friends
 from loop.utils import get_admin_user
 from pydantic import ValidationError as PydanticValidationError
 
@@ -299,5 +299,38 @@ def delete_friend(user_name=str(), user: UserObject = None):
         friend_worker = FriendWorker(user, target_user)
         friend_worker.delete_friend()
         return Response(body=str())
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/friends', methods=['GET'], cors=True)
+@app.route('/friends', methods=['GET'], cors=True)
+@get_current_user
+def list_friends(user: UserObject = None):
+    """
+    List friends.
+    ---
+    get:
+        operationId: listFriends
+        summary: List your friend.
+        description: List a user's friends.
+        security:
+            - API Key: []
+        responses:
+            200:
+                description: OK
+                schema:
+                    type: object
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        user_friends = get_user_friends(user)
+        app.log.info(
+            f"Successfully returned user's friends for user {user.id}"
+        )
+        return user_friends
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
