@@ -2,14 +2,15 @@ import unittest
 from unittest.mock import Mock, call, patch
 
 from loop.data import DB_SESSION_RETRYABLE, DB_TYPE, RDS_WRITE
+from loop.data_classes import FriendStatus, UserObject
+from loop.enums import FriendStatusType
 from loop.exceptions import (
     BadRequestError,
     DbNotInitError,
     UnknownFriendStatusTypeError,
 )
-from loop.friends import FriendStatus, FriendStatusType, FriendWorker
+from loop.friends import FriendWorker
 from loop.test_setup import setup_rds, unbind_rds
-from loop.utils import UserObject
 
 USER_1 = UserObject(
     id=1,

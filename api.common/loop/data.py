@@ -5,10 +5,10 @@ from time import sleep
 from typing import Dict, List, Union
 
 from loop import exceptions, secrets
-from loop.constants import RDS_WRITE
+from loop.constants import ENVIRONMENT, PROJECT, RDS_WRITE
+from loop.data_classes import Location, Rating, UserCreateObject, UserObject
 from loop.db_entities import define_entities
 from loop.google_client import find_location
-from loop.utils import Location, Rating, UserCreateObject, UserObject
 from pony.orm import Database
 from pony.orm import InternalError as PonyOrmDbInternalError
 from pony.orm import (
@@ -19,9 +19,6 @@ from pony.orm import (
     db_session,
     select,
 )
-
-ENVIRONMENT = os.environ.get('ENVIRONMENT', 'develop')
-PROJECT = os.environ.get('PROJECT', 'loop')
 
 logger = logging.getLogger()
 LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")

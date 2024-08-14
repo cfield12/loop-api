@@ -1,8 +1,8 @@
 from typing import Dict
 
 from loop import data
+from loop.data_classes import UserCreateObject
 from loop.exceptions import CreateUserValidationError
-from loop.utils import UserCreateObject
 
 
 class UserCreator:

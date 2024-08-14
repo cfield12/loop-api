@@ -3,8 +3,8 @@ from unittest.mock import call, patch
 
 from loop import data, exceptions
 from loop.api_classes import Coordinates
+from loop.data_classes import Location, Rating, UserObject, get_admin_user
 from loop.test_setup.common import setup_rds, unbind_rds
-from loop.utils import Location, Rating, UserObject, get_admin_user
 from pony.orm import Database
 
 TEST_DB_SECRET = {

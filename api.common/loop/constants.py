@@ -1,4 +1,7 @@
-from enum import Enum
+import os
+
+PROJECT = os.environ.get('PROJECT', 'loop')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'develop')
 
 LOOP_ADMIN_ID = 1
 LOOP_ADMIN_COGNITO_USERNAME = '86125274-40a1-70ec-da28-f779360f7c07'
@@ -7,8 +10,12 @@ RDS_WRITE = 'write'
 DB_INSTANCE_TYPES = [RDS_WRITE]
 
 
-class UUIDVersion(Enum):
-    ONE = 1
-    TWO = 2
-    THREE = 3
-    FOUR = 4
+RESTAURANT_THUMBNAILS_BUCKET = (
+    f'{PROJECT}-s3-restaurant-thumbnail-store-{ENVIRONMENT}'
+)
+RESTAURANT_THUMBNAILS_QUEUE = (
+    f'{PROJECT}-sqs-restaurant-thumbnail-{ENVIRONMENT}'
+)
+# RESTAURANT_THUMBNAILS_QUEUE = 'test-queue'
+JPEG_SUFFIX = '.jpeg'
+SQS_BATCH_SIZE = 10

@@ -21,6 +21,14 @@ class S3Service:
             raise BucketNotFoundError(f'Could not find bucket {bucket_name}')
         self.bucket_name = bucket_name
 
+    def item_exists(self, key):
+        objects = self.s3.list_objects(Bucket=self.bucket_name)
+        contents = objects.get('Contents', list())
+        if key in [item['Key'] for item in contents]:
+            return True
+        else:
+            return False
+
     def upload_file(self, filename: str, key: str) -> None:
         try:
             self.s3.upload_file(filename, self.bucket_name, key)

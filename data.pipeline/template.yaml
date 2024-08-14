@@ -64,6 +64,32 @@ Globals:
 # ----------------------------------------------------------------------------------------------------------------------
 Resources:
 
+# SQS ------------------------------------------------------------------------------------------------------------------
+  RestaurantThumbnailGeneratorDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join ['-', [!Ref Project, sqs, restaurant-thumbnail-dlq, !Ref Environment]]
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, sqs, restaurant-thumbnail-dlq, !Ref Environment]]}
+      - {Key: Queue,       Value: RestaurantThumbnailGeneratorDlq}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+  RestaurantThumbnailGenerator:
+    Type: AWS::SQS::Queue
+    DependsOn: RestaurantThumbnailGeneratorDlq
+    Properties:
+      QueueName: !Join ['-', [!Ref Project, sqs, restaurant-thumbnail, !Ref Environment]]
+      VisibilityTimeout:     30
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt RestaurantThumbnailGeneratorDlq.Arn
+        maxReceiveCount:     5
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, sqs, restaurant-thumbnail, !Ref Environment]]}
+      - {Key: Queue,       Value: RestaurantThumbnailGenerator}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
 # Lambdas
 # ----------------------------------------------------------------------------------------------------------------------
   UserCreator:
@@ -110,6 +136,12 @@ Resources:
           ENVIRONMENT:       !Ref Environment
           LOGLEVEL:          INFO
           PROJECT:           !Ref Project
+      Events:
+        Queue:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt RestaurantThumbnailGenerator.Arn
+            BatchSize: 2
       Tags:
         Function:       ThumbnailUploader
         Name:           !Join ['-', [!Ref Project, lambda, thumbnail-uploader, !Ref Environment]]
@@ -219,6 +251,17 @@ Resources:
             - s3:GetObject
             Effect: Allow
             Resource: '*'
+      - PolicyName: resturant-thumbnail-queue
+        PolicyDocument:
+          Statement:
+          - Action:
+            - sqs:SendMessage
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            - sqs:GetQueueUrl
+            Effect: Allow
+            Resource: !GetAtt RestaurantThumbnailGenerator.Arn
 
 Outputs:
   UserCreatorArn:

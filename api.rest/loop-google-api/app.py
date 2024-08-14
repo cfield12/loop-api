@@ -3,9 +3,10 @@ import logging
 import requests
 from chalice import Chalice
 from loop.api_classes import Coordinates
+from loop.data_classes import Location, UploadThumbnailEvent
 from loop.exceptions import LoopException
 from loop.google_client import find_location, search_place
-from loop.utils import Location
+from loop.thumbnails import check_thumbnail_exists, upload_thumbnail
 from pydantic import ValidationError as PydanticValidationError
 
 app = Chalice(app_name='loop-google-api')
@@ -106,6 +107,16 @@ def get_restaurant(place_id=str()):
             f"for place_id: {place_id}."
         )
         location: Location = find_location(place_id)
+        """
+        Here we need to check to see if an image for this location is stored
+        in s3
+        """
+        if not check_thumbnail_exists(place_id):
+            upload_thumbnail(
+                UploadThumbnailEvent(
+                    place_id=place_id, photo_reference=location.photo_reference
+                )
+            )
         return location.to_dict()
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)

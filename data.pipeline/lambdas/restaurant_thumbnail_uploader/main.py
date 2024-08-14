@@ -2,8 +2,9 @@ import json
 import logging
 import os
 
+from loop.data_classes import UploadThumbnailEvent
+from loop.thumbnails import ThumbnailUploader
 from loop.utils import sqs_batch
-from src import GoogleThumbnailEvent, ThumbnailUploader
 
 logger = logging.getLogger()
 LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
@@ -16,7 +17,7 @@ def lambda_handler(event, context):
         thumbnail_uploader = ThumbnailUploader()
         for message in sqs_batch(event):
             try:
-                upload_event = GoogleThumbnailEvent(**message)
+                upload_event = UploadThumbnailEvent(**message)
                 thumbnail_uploader.upload_thumbnail(upload_event)
             except Exception as e:
                 logger.error(

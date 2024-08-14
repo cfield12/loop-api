@@ -4,13 +4,13 @@ from unittest.mock import Mock, call, patch
 import googlemaps
 from googlemaps.exceptions import ApiError
 from loop.api_classes import Coordinates
+from loop.data_classes import Location
 from loop.exceptions import GoogleApiError
 from loop.google_client import (
     PlaceSearcher,
     PlacesSearcher,
     get_coordinates_from_result,
 )
-from loop.utils import Location
 
 TEST_COORDINATES = Coordinates(lat=1.0, lng=1.0)
 

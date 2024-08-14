@@ -1,9 +1,10 @@
 import os
 import tempfile
 
+from loop.constants import ENVIRONMENT, PROJECT
+
 DEFAULT_RADIUS = 10000
-PROJECT = os.environ.get('PROJECT', 'loop')
-ENVIRONMENT = os.environ.get('ENVIRONMENT', 'develop')
+
 
 GOOGLE_API_KEY_SECRET = f'{PROJECT}-google-api-key-{ENVIRONMENT}'
 SEARCH_FIELDS = [

@@ -7,9 +7,10 @@ import jwt
 from chalice import Chalice, Response
 from loop import data
 from loop.api_classes import CreateRating, FriendValidator
+from loop.data_classes import Rating, UserObject
 from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
 from loop.friends import FriendWorker
-from loop.utils import Rating, UserObject, get_admin_user
+from loop.utils import get_admin_user
 from pydantic import ValidationError as PydanticValidationError
 
 LOOP_AUTH_DISABLED = os.environ.get("LOOP_AUTH_DISABLED", "0").lower() == "1"

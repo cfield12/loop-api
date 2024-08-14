@@ -6,8 +6,8 @@ from unittest.mock import patch
 from chalice.test import Client
 from loop import data
 from loop.constants import RDS_WRITE
+from loop.data_classes import UserObject
 from loop.test_setup.common import setup_rds, unbind_rds
-from loop.utils import UserObject
 
 mock_url_write_db = 'loop.data.init_write_db'
 

@@ -1,10 +1,10 @@
 import os
-from dataclasses import dataclass
 from typing import Dict, List, Optional
 
 import googlemaps
 from googlemaps.exceptions import ApiError
 from loop.api_classes import Coordinates
+from loop.data_classes import Location
 from loop.exceptions import GoogleApiError
 from loop.google_client import (
     DEFAULT_RADIUS,
@@ -14,7 +14,6 @@ from loop.google_client import (
     TEXTQUERY,
 )
 from loop.secrets import get_secret
-from loop.utils import Location
 
 
 def get_coordinates_from_result(result: Dict) -> Coordinates:

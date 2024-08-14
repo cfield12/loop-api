@@ -1,7 +1,5 @@
 import logging
 import os
-from dataclasses import dataclass
-from enum import Enum
 
 from loop.constants import RDS_WRITE
 from loop.data import (
@@ -9,37 +7,18 @@ from loop.data import (
     DB_TYPE,
     update_object_last_updated_time,
 )
+from loop.data_classes import FriendStatus, UserObject
+from loop.enums import FriendStatusType
 from loop.exceptions import (
     BadRequestError,
     DbNotInitError,
     UnknownFriendStatusTypeError,
 )
-from loop.utils import UserObject
 from pony.orm import Database, commit
 
 logger = logging.getLogger()
 LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
 logger.setLevel(LOGLEVEL)
-
-
-class FriendStatusType(Enum):
-    FRIENDS = 'Friends'
-    PENDING = 'Pending'
-    BLOCKED = 'Blocked'
-    UNKNOWN = 'Unknown'
-
-
-@dataclass
-class FriendStatus:
-    id: int
-    status: FriendStatusType
-
-
-@dataclass
-class Friendship:
-    friend_1: UserObject
-    friend_2: UserObject
-    status: FriendStatus
 
 
 class FriendWorker:
