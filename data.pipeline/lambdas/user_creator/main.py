@@ -1,12 +1,6 @@
-import logging
-import os
-
+from loop.constants import logger
 from loop.data import init_write_db
 from src import UserCreator
-
-logger = logging.getLogger()
-LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
-logger.setLevel(LOGLEVEL)
 
 # Initialise database outside lambda handler
 init_write_db()

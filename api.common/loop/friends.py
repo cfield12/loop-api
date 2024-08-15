@@ -1,8 +1,7 @@
-import logging
 import os
 from typing import List
 
-from loop.constants import RDS_WRITE
+from loop.constants import RDS_WRITE, logger
 from loop.data import (
     DB_SESSION_RETRYABLE,
     DB_TYPE,
@@ -16,10 +15,6 @@ from loop.exceptions import (
     UnknownFriendStatusTypeError,
 )
 from pony.orm import Database, commit, select
-
-logger = logging.getLogger()
-LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
-logger.setLevel(LOGLEVEL)
 
 
 class FriendWorker:

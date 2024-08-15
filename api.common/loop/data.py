@@ -1,11 +1,17 @@
-import logging
 import os
 from datetime import datetime
 from time import sleep
 from typing import Dict, List, Union
 
 from loop import exceptions, secrets
-from loop.constants import ENVIRONMENT, PROJECT, RDS_WRITE
+from loop.constants import (
+    ENVIRONMENT,
+    MAX_DB_INIT_RETRIES,
+    PROJECT,
+    RDS_WRITE,
+    RETRY_DB_DELAY_SECONDS,
+    logger,
+)
 from loop.data_classes import Location, Rating, UserCreateObject, UserObject
 from loop.db_entities import define_entities
 from loop.google_client import find_location
@@ -20,13 +26,6 @@ from pony.orm import (
     select,
 )
 
-logger = logging.getLogger()
-LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
-logger.setLevel(LOGLEVEL)
-
-MAX_RETRIES = 3
-RETRY_DELAY_SECONDS = 5
-
 DB_SESSION_RETRYABLE = db_session(
     retry=5,
     retry_exceptions=(
@@ -38,7 +37,7 @@ DB_SESSION_RETRYABLE = db_session(
 
 
 def init_db(db_dict=None, check_tables=False, create_tables=False):
-    for retry_count in range(MAX_RETRIES + 1):
+    for retry_count in range(MAX_DB_INIT_RETRIES + 1):
         try:
             db = Database()
             define_entities(db)
@@ -55,11 +54,12 @@ def init_db(db_dict=None, check_tables=False, create_tables=False):
                 print("Already mapped: %s" % error)
                 return
             else:
-                if retry_count < MAX_RETRIES:
+                if retry_count < MAX_DB_INIT_RETRIES:
                     print(
-                        f"Retrying to init db in {RETRY_DELAY_SECONDS} secs."
+                        f"Retrying to init db in {RETRY_DB_DELAY_SECONDS} "
+                        "secs."
                     )
-                    sleep(RETRY_DELAY_SECONDS)
+                    sleep(RETRY_DB_DELAY_SECONDS)
                 else:
                     raise exceptions.DbInitFailedError(
                         'Failed to initialise database in data.py.'

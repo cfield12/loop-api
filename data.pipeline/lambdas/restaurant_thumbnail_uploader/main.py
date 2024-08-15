@@ -1,14 +1,9 @@
 import json
-import logging
-import os
 
+from loop.constants import logger
 from loop.data_classes import UploadThumbnailEvent
 from loop.thumbnails import ThumbnailUploader
 from loop.utils import sqs_batch
-
-logger = logging.getLogger()
-LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
-logger.setLevel(LOGLEVEL)
 
 
 def lambda_handler(event, context):
