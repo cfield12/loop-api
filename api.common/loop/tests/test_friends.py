@@ -9,7 +9,7 @@ from loop.exceptions import (
     DbNotInitError,
     UnknownFriendStatusTypeError,
 )
-from loop.friends import FriendWorker, get_user_friends
+from loop.friends import FriendWorker, get_user_friends, search_for_users
 from loop.test_setup import setup_rds, unbind_rds
 
 USER_1 = UserObject(
@@ -171,6 +171,38 @@ class TestFriends(unittest.TestCase):
         ]
         user_friends = get_user_friends(USER_2)
         self.assertEqual(user_friends, expected_friends)
+
+    def test_search_for_users(self):
+        expected_users = [
+            {
+                'id': 3,
+                'user_name': '60c1f02b-f758-4458-8c41-3b5c9fa20ae0',
+                'name': 'Random Person',
+                'friend_status': 'Friends',
+            },
+            {
+                'id': 4,
+                'user_name': '67ce7049-109f-420f-861b-3f1e7d6824b5',
+                'name': 'Random Persons-Mate',
+                'friend_status': 'Unknown',
+            },
+        ]
+        search_term = 'random'
+        users = search_for_users(USER_2, search_term)
+        self.assertEqual(users, expected_users)
+
+    def test_search_for_users_unknown_name(self):
+        search_term = 'Pippa'
+        users = search_for_users(USER_2, search_term)
+        self.assertEqual(users, list())
+
+    def test_search_for_users_type_error_1(self):
+        search_term = 'Henry'
+        self.assertRaises(TypeError, search_for_users, 'USER_2', search_term)
+
+    def test_search_for_users_type_error_2(self):
+        search_term = 155
+        self.assertRaises(TypeError, search_for_users, USER_2, search_term)
 
 
 if __name__ == '__main__':

@@ -25,6 +25,7 @@ from pony.orm import (
     db_session,
     select,
 )
+from pony.orm.core import Query
 
 DB_SESSION_RETRYABLE = db_session(
     retry=5,
@@ -218,3 +219,8 @@ def update_object_last_updated_time(db_object) -> None:
     db_object.last_updated = datetime.utcnow()
     commit()
     return
+
+
+@DB_SESSION_RETRYABLE
+def get_all_users(db_instance_type=RDS_WRITE) -> Query:
+    return select(user for user in DB_TYPE[db_instance_type].User)

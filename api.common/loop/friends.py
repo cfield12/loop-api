@@ -1,10 +1,11 @@
 import os
-from typing import List
+from typing import Dict, List
 
-from loop.constants import RDS_WRITE, logger
+from loop.constants import MIN_FUZZ_SCORE, RDS_WRITE, logger
 from loop.data import (
     DB_SESSION_RETRYABLE,
     DB_TYPE,
+    get_all_users,
     update_object_last_updated_time,
 )
 from loop.data_classes import FriendStatus, UserObject
@@ -15,6 +16,8 @@ from loop.exceptions import (
     UnknownFriendStatusTypeError,
 )
 from pony.orm import Database, commit, select
+from rapidfuzz import fuzz, process
+from rapidfuzz.utils import default_process
 
 
 class FriendWorker:
@@ -151,3 +154,51 @@ def get_user_friends(user: UserObject) -> List:
         }
         friends.append(friend_dict)
     return friends
+
+
+@DB_SESSION_RETRYABLE
+def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
+    '''
+    In this function we search users using RapidFuzz string matching.
+    '''
+    if not isinstance(user_object, UserObject):
+        raise TypeError('user should be of type UserObject')
+    if not isinstance(search_term, str):
+        raise TypeError('search_term should be of type str')
+    users = get_all_users()
+    users = users.filter(lambda user: user.id != user_object.id)
+    users = select(
+        (
+            user.id,
+            user.cognito_user_name,
+            user.first_name,
+            user.last_name,
+        )
+        for user in users
+    )
+    users_friends = [
+        friend.get('id') for friend in get_user_friends(user_object)
+    ]
+    names = list()
+    search_users = list()
+    for user_id, username, first_name, last_name in users:
+        name = f'{first_name} {last_name}'
+        friend_status = (
+            FriendStatusType.FRIENDS.value
+            if user_id in users_friends
+            else FriendStatusType.UNKNOWN.value
+        )
+        search_users.append(
+            {
+                'id': user_id,
+                'user_name': username,
+                'name': name,
+                'friend_status': friend_status,
+            }
+        )
+        names.append(name)
+    response = process.extract(
+        search_term, names, scorer=fuzz.WRatio, processor=default_process
+    )
+    matches = [item[0] for item in response if item[1] > MIN_FUZZ_SCORE]
+    return [item for item in search_users if item["name"] in matches]

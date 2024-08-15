@@ -9,7 +9,7 @@ from loop import data
 from loop.api_classes import CreateRating, FriendValidator
 from loop.data_classes import Rating, UserObject
 from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
-from loop.friends import FriendWorker, get_user_friends
+from loop.friends import FriendWorker, get_user_friends, search_for_users
 from loop.utils import get_admin_user
 from pydantic import ValidationError as PydanticValidationError
 
@@ -332,5 +332,42 @@ def list_friends(user: UserObject = None):
             f"Successfully returned user's friends for user {user.id}"
         )
         return user_friends
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/search_users/{search_term}', methods=['GET'], cors=True)
+@app.route('/search_users/{search_term}', methods=['GET'], cors=True)
+@get_current_user
+def search_users(search_term=str(), user: UserObject = None):
+    """
+    List friends.
+    ---
+    get:
+        operationId: searchUsers
+        summary: Search users.
+        description: Search all users.
+        security:
+            - API Key: []
+        parameters:
+            -   in: path
+                name: search_term
+                type: string
+                required: true
+                description: Search term to search users for.
+        responses:
+            200:
+                description: OK
+                schema:
+                    type: object
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        users = search_for_users(user, search_term)
+        app.log.info(f"Successfully searched for users for user {user.id}")
+        return users
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
