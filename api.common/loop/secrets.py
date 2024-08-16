@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Dict
 
 import boto3
 from botocore.exceptions import ClientError
@@ -19,7 +20,7 @@ SECRET_OVERRIDES = LocalSecretsManager.unmarshall().secrets_lookup_by_name_map
 assert isinstance(SECRET_OVERRIDES, dict)
 
 
-def get_secret(secret_name, add_environment=False, region=REGION):
+def get_secret(secret_name: str, add_environment=False, region=REGION):
 
     if add_environment:
         secret_name = '{}-{}'.format(secret_name, os.environ["ENVIRONMENT"])
@@ -59,7 +60,7 @@ def get_secret(secret_name, add_environment=False, region=REGION):
             pass
 
 
-def get_db_dict(secret_name):
+def get_db_dict(secret_name: str) -> Dict:
     db_dict = get_secret(secret_name)
     db_dict.update(
         {"database": "loop", "provider": "mysql", "port": int(db_dict['port'])}
