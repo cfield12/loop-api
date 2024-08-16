@@ -12,6 +12,7 @@ PYTHON = python3
 PIP = pip3
 STAGE = develop
 PYTEST = pytest
+MIN_COVER = 80
 
 LOOP_GOOGLE_FUNCTION_NAME = loop-google-api-$(STAGE)
 
@@ -62,4 +63,4 @@ google-deploy: google-build
 	STAGE=$(STAGE) FUNCTION_NAME=$(LOOP_GOOGLE_FUNCTION_NAME) python fix_network.py
 
 test:
-	$(PYTHON) -m $(PYTEST) tests/ --cov=loop-api/ --cov=loop-google-api/
+	$(PYTHON) -m $(PYTEST) tests/ --cov=loop-api/ --cov-fail-under=$(MIN_COVER)

@@ -4,12 +4,20 @@ from functools import wraps
 from typing import Union
 
 import jwt
+import requests
 from chalice import Chalice, Response
 from loop import data
-from loop.api_classes import CreateRating, FriendValidator
-from loop.data_classes import Rating, UserObject
+from loop.api_classes import Coordinates, CreateRating, FriendValidator
+from loop.data_classes import (
+    Location,
+    Rating,
+    UploadThumbnailEvent,
+    UserObject,
+)
 from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
 from loop.friends import FriendWorker, get_user_friends, search_for_users
+from loop.google_client import find_location, search_place
+from loop.thumbnails import check_thumbnail_exists, upload_thumbnail
 from loop.utils import get_admin_user
 from pydantic import ValidationError as PydanticValidationError
 
@@ -369,5 +377,114 @@ def search_users(search_term=str(), user: UserObject = None):
         users = search_for_users(user, search_term)
         app.log.info(f"Successfully searched for users for user {user.id}")
         return users
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/restaurant_search/{search_term}', methods=['GET'], cors=True)
+@app.route('/restaurant_search/{search_term}', methods=['GET'], cors=True)
+def search_restaurant(search_term=str()):
+    """
+    Search restaurant.
+    ---
+    get:
+        operationId: searchRestaurant
+        summary: Search for a restaurant.
+        description: Search for a restaurant using Google API.
+        security:
+            - Qi API Key: []
+        parameters:
+            -   in: path
+                name: search_term
+                type: string
+                required: true
+                description: Restaurant search term.
+            -   in: query
+                name: lat
+                type: string
+                required: false
+                description: Latitude of base location bias on.
+            -   in: query
+                name: lng
+                type: string
+                required: false
+                description: Longitude of base location bias on.
+        responses:
+            200:
+                description: OK
+                schema:
+                    type: object
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        search_term = requests.utils.unquote(search_term)
+        query_params = app.current_request.query_params or {}
+        try:
+            coordinates = Coordinates(
+                lat=query_params.get('lat'),
+                lng=query_params.get('lng'),
+            )
+        except PydanticValidationError as e:
+            raise BadRequestError(
+                "; ".join([error["msg"] for error in e.errors()])
+            )
+        app.log.info(
+            f"Searching Google API with term: {search_term} and "
+            f"coordinates: {coordinates.to_dict()}"
+        )
+        return search_place(search_term, coordinates)
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/restaurant/{place_id}', methods=['GET'], cors=True)
+@app.route('/restaurant/{place_id}', methods=['GET'], cors=True)
+def get_restaurant(place_id=str()):
+    """
+    Get restaurant.
+    ---
+    get:
+        operationId: getRestaurant
+        summary: Get a restaurant's info.
+        description: Get a restaurant's information using Google API.
+        security:
+            - Qi API Key: []
+        parameters:
+            -   in: path
+                name: place_id
+                type: string
+                required: true
+                description: Google's place_id.
+        responses:
+            200:
+                description: OK
+                schema:
+                    type: object
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        place_id = requests.utils.unquote(place_id)
+        app.log.info(
+            "Getting restaurant information with Google API "
+            f"for place_id: {place_id}."
+        )
+        location: Location = find_location(place_id)
+        """
+        Here we need to check to see if an image for this location is stored
+        in s3
+        """
+        if not check_thumbnail_exists(place_id):
+            upload_thumbnail(
+                UploadThumbnailEvent(
+                    place_id=place_id, photo_reference=location.photo_reference
+                )
+            )
+        return location.to_dict()
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)

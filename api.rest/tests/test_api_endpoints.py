@@ -1,12 +1,13 @@
 import importlib
 import json
 import unittest
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from chalice.test import Client
 from loop import data
+from loop.api_classes import Coordinates
 from loop.constants import RDS_WRITE
-from loop.data_classes import UserObject
+from loop.data_classes import Location, UploadThumbnailEvent, UserObject
 from loop.test_setup.common import setup_rds, unbind_rds
 
 mock_url_write_db = 'loop.data.init_write_db'
@@ -313,6 +314,157 @@ class TestDeleteFriend(unittest.TestCase):
                 response.json_body['Message'],
                 'BadRequestError: Value error, User names cannot be the same.',
             )
+
+
+class TestListFriends(unittest.TestCase):
+    @patch(mock_url_write_db)
+    def setUp(self, write_db):
+        write_db.side_effect = mocked_init_write_db
+
+        global app
+        app = importlib.import_module("loop-api.app")
+        setup_rds()
+
+    def tearDown(self):
+        unbind_rds()
+
+    @patch('loop-api.app.get_user_friends')
+    def test_get_user_friends(self, mock_get_user_friends):
+        # Happy path test
+        mock_get_user_friends.return_value = list()
+        with Client(app.app) as client:
+            response = client.http.get(f'/friends')
+            self.assertEqual(response.status_code, 200)
+
+
+class TestSearchUsers(unittest.TestCase):
+    @patch(mock_url_write_db)
+    def setUp(self, write_db):
+        write_db.side_effect = mocked_init_write_db
+
+        global app
+        app = importlib.import_module("loop-api.app")
+        setup_rds()
+
+    def tearDown(self):
+        unbind_rds()
+
+    @patch('loop-api.app.search_for_users')
+    def test_search_users(self, mock_search_for_users):
+        # Happy path test
+        mock_search_for_users.return_value = list()
+        with Client(app.app) as client:
+            response = client.http.get('/search_users/hello')
+            self.assertEqual(response.status_code, 200)
+
+
+class TestSearchRestaurant(unittest.TestCase):
+    @patch(mock_url_write_db)
+    def setUp(self, write_db):
+        write_db.side_effect = mocked_init_write_db
+
+        global app
+        app = importlib.import_module("loop-api.app")
+        setup_rds()
+
+    def tearDown(self):
+        unbind_rds()
+
+    @patch('loop-api.app.search_place')
+    def test_search_restaurant(self, mock_search_place):
+        # Happy path test
+        mock_search_place.return_value = dict()
+        with Client(app.app) as client:
+            response = client.http.get(
+                '/restaurant_search/some_restaurant?lat=1.0&lng=1.0'
+            )
+            self.assertEqual(response.status_code, 200)
+
+    def test_search_restaurant_validation_error_no_lat(self):
+        # Not supplying the latitude
+        with Client(app.app) as client:
+            response = client.http.get(
+                '/restaurant_search/some_restaurant?lng=1.0'
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.json_body['Message'],
+                'BadRequestError: Input should be a valid number',
+            )
+
+    def test_search_restaurant_validation_error_no_lng(self):
+        # Not supplying the latitude
+        with Client(app.app) as client:
+            response = client.http.get(
+                '/restaurant_search/some_restaurant?lat=1.0'
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.json_body['Message'],
+                'BadRequestError: Input should be a valid number',
+            )
+
+
+class TestGetRestaurant(unittest.TestCase):
+    @patch(mock_url_write_db)
+    def setUp(self, write_db):
+        write_db.side_effect = mocked_init_write_db
+
+        global app
+        app = importlib.import_module("loop-api.app")
+        setup_rds()
+
+    def tearDown(self):
+        unbind_rds()
+
+    @patch('loop-api.app.upload_thumbnail')
+    @patch('loop-api.app.check_thumbnail_exists')
+    @patch('loop-api.app.find_location')
+    def test_get_restaurant_with_upload_thumbnail(
+        self, mock_find_location, mock_check_thumbnail, mock_upload_thumbnail
+    ):
+        location = Location(
+            google_id='X_TEST_GOOGLE_ID_X',
+            address='55 Northberk Street, Sunderland',
+            display_name='Greggs',
+            coordinates=Coordinates(lat=1.0, lng=1.0),
+        )
+        mock_find_location.return_value = location
+        mock_check_thumbnail.return_value = False
+        # Happy path test
+
+        with Client(app.app) as client:
+            response = client.http.get('/restaurant/X_TEST_GOOGLE_ID_X')
+            self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            mock_upload_thumbnail.call_args,
+            call(
+                UploadThumbnailEvent(
+                    place_id='X_TEST_GOOGLE_ID_X', photo_reference=None
+                )
+            ),
+        )
+
+    @patch('loop-api.app.upload_thumbnail')
+    @patch('loop-api.app.check_thumbnail_exists')
+    @patch('loop-api.app.find_location')
+    def test_get_restaurant_without_upload_thumbnail(
+        self, mock_find_location, mock_check_thumbnail, mock_upload_thumbnail
+    ):
+        location = Location(
+            google_id='X_TEST_GOOGLE_ID_X',
+            address='55 Northberk Street, Sunderland',
+            display_name='Greggs',
+            coordinates=Coordinates(lat=1.0, lng=1.0),
+        )
+        mock_find_location.return_value = location
+        mock_check_thumbnail.return_value = True
+        # Happy path test
+
+        with Client(app.app) as client:
+            response = client.http.get('/restaurant/X_TEST_GOOGLE_ID_X')
+            self.assertEqual(response.status_code, 200)
+        self.assertFalse(mock_upload_thumbnail.called)
 
 
 if __name__ == "__main__":
