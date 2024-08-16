@@ -1,6 +1,6 @@
 import json
 from copy import deepcopy
-from typing import Dict
+from typing import Dict, Generator, List
 
 from loop.api_classes import Coordinates
 from loop.constants import LOOP_ADMIN_COGNITO_USERNAME, LOOP_ADMIN_ID
@@ -25,7 +25,7 @@ def conditional_dump(body):
     return body
 
 
-def sqs_batch(event):
+def sqs_batch(event: Dict[str, List]) -> Generator:
     # Load the event.
     event = conditional_load(event)
 
