@@ -1,2 +1,2 @@
 [run]
-omit = secrets_generator.py
+omit = secrets_generator.py, local_secrets.py
