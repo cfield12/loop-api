@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import boto3
 from botocore.exceptions import ClientError
-from loop.constants import SQS_BATCH_SIZE
+from loop.constants import SQS_BATCH_SIZE, logger
 from loop.utils import conditional_dump
 
 
