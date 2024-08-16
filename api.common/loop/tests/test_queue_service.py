@@ -28,7 +28,7 @@ class TestSqsService(unittest.TestCase):
             'Error': {'Code': 'MessageSendJubb', 'Message': 'error'}
         }
         operation_name = 'test'
-        mock_boto3.return_value.get_queue_by_name.return_value.send_message.side_effect = ClientError(
+        mock_boto3.return_value.get_queue_by_name.return_value.send_message.side_effect = ClientError(  # noqa
             error_response, operation_name
         )
         queue = SqsClient(TEST_QUEUE_NAME)

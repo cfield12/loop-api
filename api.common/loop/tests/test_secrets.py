@@ -70,7 +70,7 @@ class TestSecrets(unittest.TestCase):
             'Error': {'Code': 'DecryptionFailureException', 'Message': 'error'}
         }
         operation_name = 'test'
-        mock_boto.Session.return_value.client.return_value.get_secret_value.side_effect = ClientError(
+        mock_boto.Session.return_value.client.return_value.get_secret_value.side_effect = ClientError(  # noqa
             error_response, operation_name
         )
         self.assertRaises(ClientError, get_secret, secret_name)
@@ -85,7 +85,7 @@ class TestSecrets(unittest.TestCase):
             }
         }
         operation_name = 'test'
-        mock_boto.Session.return_value.client.return_value.get_secret_value.side_effect = ClientError(
+        mock_boto.Session.return_value.client.return_value.get_secret_value.side_effect = ClientError(  # noqa
             error_response, operation_name
         )
         self.assertRaises(ClientError, get_secret, secret_name)
@@ -97,7 +97,7 @@ class TestSecrets(unittest.TestCase):
             'Error': {'Code': 'InvalidParameterException', 'Message': 'error'}
         }
         operation_name = 'test'
-        mock_boto.Session.return_value.client.return_value.get_secret_value.side_effect = ClientError(
+        mock_boto.Session.return_value.client.return_value.get_secret_value.side_effect = ClientError(  # noqa
             error_response, operation_name
         )
         self.assertRaises(ClientError, get_secret, secret_name)
@@ -109,7 +109,7 @@ class TestSecrets(unittest.TestCase):
             'Error': {'Code': 'InvalidRequestException', 'Message': 'error'}
         }
         operation_name = 'test'
-        mock_boto.Session.return_value.client.return_value.get_secret_value.side_effect = ClientError(
+        mock_boto.Session.return_value.client.return_value.get_secret_value.side_effect = ClientError(  # noqa
             error_response, operation_name
         )
         self.assertRaises(ClientError, get_secret, secret_name)
@@ -121,7 +121,7 @@ class TestSecrets(unittest.TestCase):
             'Error': {'Code': 'ResourceNotFoundException', 'Message': 'error'}
         }
         operation_name = 'test'
-        mock_boto.Session.return_value.client.return_value.get_secret_value.side_effect = ClientError(
+        mock_boto.Session.return_value.client.return_value.get_secret_value.side_effect = ClientError(  # noqa
             error_response, operation_name
         )
         self.assertRaises(ClientError, get_secret, secret_name)
