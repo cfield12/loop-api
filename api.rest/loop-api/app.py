@@ -384,7 +384,7 @@ def search_users(search_term=str(), user: UserObject = None):
 @app.route('/web/restaurant_search/{search_term}', methods=['GET'], cors=True)
 @app.route('/restaurant_search/{search_term}', methods=['GET'], cors=True)
 @get_current_user
-def search_restaurant(search_term=str()):
+def search_restaurant(search_term=str(), user: UserObject = None):
     """
     Search restaurant.
     ---
@@ -444,7 +444,7 @@ def search_restaurant(search_term=str()):
 @app.route('/web/restaurant/{place_id}', methods=['GET'], cors=True)
 @app.route('/restaurant/{place_id}', methods=['GET'], cors=True)
 @get_current_user
-def get_restaurant(place_id=str()):
+def get_restaurant(place_id=str(), user: UserObject = None):
     """
     Get restaurant.
     ---
