@@ -10,7 +10,8 @@ def lambda_handler(event, context):
     logger.info(f'User creator event detected: {event}')
     user_creator = UserCreator()
     try:
-        user_creator.create_user(event)
+        if event['triggerSource'] == 'PostConfirmation_ConfirmSignUp':
+            user_creator.create_user(event)
         return event
     except Exception as e:
         logger.error(f'User creator event failed for event: {event} ({e})')
@@ -20,6 +21,7 @@ def lambda_handler(event, context):
 if __name__ == '__main__':
     event = {
         'userName': '26f29234-c0e1-704f-3b56-2eade7808df9',
+        'triggerSource': 'PostConfirmation_ConfirmSignUp',
         'request': {
             'userAttributes': {
                 'given_name': 'Charlie',
