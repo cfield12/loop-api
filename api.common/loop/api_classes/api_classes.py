@@ -1,7 +1,11 @@
 from copy import deepcopy
 from typing import Dict, List, Union
 
-from loop.api_classes.validators import validate_str_uuid
+from loop.api_classes.validators import (
+    validate_code,
+    validate_email_address,
+    validate_str_uuid,
+)
 from pydantic import BaseModel, model_validator, validator
 
 
@@ -38,3 +42,34 @@ class Coordinates(BaseModel):
 
     def to_coordinate_string(self) -> str:
         return f"{self.lat},{self.lng}"
+
+
+class UserCredentials(BaseModel):
+    email: str
+
+    @validator("email")
+    @classmethod
+    def validate_email(cls, email: str):
+        return validate_email_address(email)
+
+
+class LoginCredentials(UserCredentials):
+    password: str
+
+
+class SignUpCredentials(LoginCredentials):
+    first_name: str
+    last_name: str
+
+
+class VerifyUser(UserCredentials):
+    code: str
+
+    @validator("code")
+    @classmethod
+    def validate_verification_code(cls, code: str):
+        return validate_code(code)
+
+
+class ForgotPassword(VerifyUser):
+    password: str

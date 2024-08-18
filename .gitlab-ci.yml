@@ -89,6 +89,7 @@ lint-api-rest:
   - cd api.rest
   - python -m pip install pycodestyle==2.8.0
   - pycodestyle --config=.pycodestyle loop-api --exclude=loop-api/vendor
+  - pycodestyle --config=.pycodestyle auth-api --exclude=auth-api/vendor
   rules:
     - changes:
       - api.rest/**/*
@@ -230,6 +231,35 @@ deploy-api-rest-develop:
       - .gitlab-ci.yml
       when: manual
 
+deploy-auth-api-rest-develop:
+  stage: Build_Deploy
+  tags:
+    - saas-linux-small-amd64
+  image:
+    name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  script:
+  # Install package and dependencies (e.g. boto) for api.common
+  - cd api.common
+  - python -m pip install pyopenssl --upgrade
+  - python setup.py install
+  - python -m loop.secrets_generator
+  # Generate artifact
+  - python setup.py sdist bdist_wheel
+  # Build the chalice app
+  - cd ../api.rest
+  - make clean-auth
+  - make build-auth STAGE=develop
+  # Deploy to AWS
+  - make deploy-auth STAGE=develop
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+      - docker/**/*
+      - api.rest/**/*
+      - api.common/**/*
+      - .gitlab-ci.yml
+      when: manual
+
 deploy-data-pipeline-develop:
   stage: Build_Deploy
   tags:
@@ -276,6 +306,35 @@ deploy-api-rest-staging:
   - make build STAGE=staging
   # Deploy to AWS
   - make deploy STAGE=staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+      changes:
+      - docker/**/*
+      - api.rest/**/*
+      - api.common/**/*
+      - .gitlab-ci.yml
+      when: manual
+
+deploy-auth-api-rest-staging:
+  stage: Build_Deploy
+  tags:
+    - saas-linux-small-amd64
+  image:
+    name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  script:
+  # Install package and dependencies (e.g. boto) for api.common
+  - cd api.common
+  - python -m pip install pyopenssl --upgrade
+  - python setup.py install
+  - python -m loop.secrets_generator
+  # Generate artifact
+  - python setup.py sdist bdist_wheel
+  # Build the chalice app
+  - cd ../api.rest
+  - make clean-auth
+  - make build-auth STAGE=staging
+  # Deploy to AWS
+  - make deploy-auth STAGE=staging
   rules:
     - if: '$CI_COMMIT_BRANCH == "staging"'
       changes:
@@ -332,6 +391,37 @@ deploy-api-rest-prod:
   - make build STAGE=prod
   # Deploy to AWS
   - make deploy STAGE=prod
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]*\.[0-9]*\.[0-9]*$/'
+      changes:
+      - docker/**/*
+      - api.rest/**/*
+      - api.common/**/*
+      - .gitlab-ci.yml
+      when: manual
+
+deploy-auth-api-rest-prod:
+  stage: Build_Deploy
+  tags:
+    - saas-linux-small-amd64
+  image:
+    name: $API_REST_CI_IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  variables:
+    API_VERSION: $CI_COMMIT_TAG
+  script:
+  # Install package and dependencies (e.g. boto) for api.common
+  - cd api.common
+  - python -m pip install pyopenssl --upgrade
+  - python setup.py install
+  - python -m loop.secrets_generator
+  # Generate artifact
+  - python setup.py sdist bdist_wheel
+  # Build the chalice app
+  - cd ../api.rest
+  - make clean-auth
+  - make build-auth STAGE=prod
+  # Deploy to AWS
+  - make deploy-auth STAGE=prod
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v[0-9]*\.[0-9]*\.[0-9]*$/'
       changes:

@@ -125,3 +125,10 @@ class BucketNotFoundError(Error):
 
     def __init__(self, message):
         self.message = message
+
+
+class UnknownCognitoError(Error):
+    '''Unknown Cognito error'''
+
+    def __init__(self, message):
+        self.message = message

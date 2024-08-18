@@ -1,0 +1,32 @@
+{
+  "stages": {
+    "develop": {
+      "api_gateway_stage": "develop",
+      "app_name": "loop-auth-api-develop",
+      "autogen_policy": false,
+      "environment_variables": {
+        "ENVIRONMENT": "develop"
+      }
+    },
+    "staging": {
+      "api_gateway_stage": "staging",
+      "app_name": "loop-auth-api-staging",
+      "autogen_policy": false,
+      "environment_variables": {
+        "ENVIRONMENT": "staging"
+      }
+    },
+    "prod": {
+      "api_gateway_stage": "api",
+      "app_name": "loop-auth-api-prod",
+      "autogen_policy": false,
+      "environment_variables": {
+        "ENVIRONMENT": "prod"
+      }
+    }
+  },
+  "version": "2.0",
+  "app_name": "loop-auth-api",
+  "lambda_memory_size": 3008,
+  "lambda_timeout" : 60
+}
