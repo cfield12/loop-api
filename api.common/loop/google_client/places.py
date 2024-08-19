@@ -5,7 +5,7 @@ import googlemaps
 from googlemaps.exceptions import ApiError
 from loop.api_classes import Coordinates
 from loop.data_classes import Location
-from loop.exceptions import GoogleApiError
+from loop.exceptions import BadRequestError, GoogleApiError
 from loop.google_client import (
     DEFAULT_RADIUS,
     GOOGLE_API_KEY_SECRET,
@@ -220,4 +220,9 @@ def search_place(
 def find_location(google_id: str) -> Location:
     '''Finds location using google API'''
     place_searcher = PlaceSearcher()
-    return place_searcher.get_place(google_id)
+    try:
+        return place_searcher.get_place(google_id)
+    except ApiError as e:
+        raise BadRequestError(
+            f'Could not find google place with ID: {google_id}'
+        )
