@@ -228,6 +228,8 @@ class TestFriends(unittest.TestCase):
                 'first_name': 'Admin',
                 'last_name': 'User',
                 'place_id': 'test_google_id_1',
+                'latitude': 1.5,
+                'longitude': -0.7,
                 'food': 3,
                 'price': 4,
                 'vibe': 5,

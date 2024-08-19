@@ -11,6 +11,8 @@ IF (SELECT TABLE_NAME FROM information_schema.tables WHERE table_schema = 'loop'
         `google_id` VARCHAR(255) NULL,
         `address` VARCHAR(255) NULL,
         `display_name` VARCHAR(255) NULL,
+        `latitude` FLOAT NOT NULL,
+        `longitude` FLOAT NOT NULL,
         `created` DATETIME DEFAULT(sysdate()),
         `last_updated` DATETIME DEFAULT(sysdate()),
         PRIMARY KEY (`id`)

@@ -36,6 +36,8 @@ def define_entities(db: Database):
         google_id = Required(str)
         address = Required(str)
         display_name = Required(str)
+        latitude = Required(float)
+        longitude = Required(float)
         created = Optional(datetime)
         last_updated = Optional(datetime)
         ratings = Set('Rating')

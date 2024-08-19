@@ -64,6 +64,8 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 google_id='test_google_id_1',
                 address='14 Lambert Street, London, N1 1JE',
                 display_name='Home',
+                latitude=1.5,
+                longitude=-0.7,
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
             )
@@ -71,6 +73,8 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 google_id='test_google_id_2',
                 address='15 Noel Road, London, N1 8HQ',
                 display_name="Baggins'",
+                latitude=1.2,
+                longitude=-0.9,
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
             )
@@ -78,6 +82,8 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 google_id='test_google_id_3',
                 address='38 Huntingdon Street, London, N1 1BP',
                 display_name='JFs',
+                latitude=1.9,
+                longitude=-0.8,
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
             )
@@ -85,6 +91,8 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 google_id='ChIJobyn_rQcdkgRE042NxgeR1k',
                 address='43A Commercial Street, London',
                 display_name='som saa',
+                latitude=1.1,
+                longitude=-0.7,
             )
             rating_1 = data.DB_TYPE[db_instance_type].Rating(
                 price=4,

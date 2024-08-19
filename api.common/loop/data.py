@@ -190,6 +190,8 @@ def create_location_entry(location: Location, db_instance_type=RDS_WRITE):
         google_id=location.google_id,
         address=location.address,
         display_name=location.display_name,
+        latitude=location.coordinates.lat,
+        longitude=location.coordinates.lng,
     )
     commit()
     logger.info(f'Successfully created location in rds: {location.__dict__}')
@@ -249,6 +251,8 @@ def get_ratings(
                 'first_name': r.user.first_name,
                 'last_name': r.user.last_name,
                 'place_id': r.location.google_id,
+                'latitude': r.location.latitude,
+                'longitude': r.location.longitude,
                 'food': r.food,
                 'price': r.price,
                 'vibe': r.vibe,
