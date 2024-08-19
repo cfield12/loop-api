@@ -6,6 +6,7 @@ from loop.data import (
     DB_SESSION_RETRYABLE,
     DB_TYPE,
     get_all_users,
+    get_ratings,
     update_object_last_updated_time,
 )
 from loop.data_classes import FriendStatus, UserObject
@@ -156,6 +157,20 @@ def get_user_friends(user: UserObject) -> List:
     return friends
 
 
+def get_user_friend_ids(user: UserObject, include_own_id=True) -> List[int]:
+    """
+    This function returns a list of user's friend ids.
+
+    It has the option to include the user's id.
+    """
+    if not isinstance(user, UserObject):
+        raise TypeError('user should be of type UserObject')
+    users = [friend['id'] for friend in get_user_friends(user)]
+    if include_own_id:
+        users.append(user.id)
+    return users
+
+
 @DB_SESSION_RETRYABLE
 def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
     '''
@@ -176,9 +191,7 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
         )
         for user in users
     )
-    users_friends = [
-        friend.get('id') for friend in get_user_friends(user_object)
-    ]
+    users_friends = get_user_friend_ids(user_object, include_own_id=False)
     names = list()
     search_users = list()
     for user_id, username, first_name, last_name in users:
@@ -202,3 +215,11 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
     )
     matches = [item[0] for item in response if item[1] > MIN_FUZZ_SCORE]
     return [item for item in search_users if item["name"] in matches]
+
+
+@DB_SESSION_RETRYABLE
+def get_ratings_for_place_and_friends(place_id: str, user: UserObject) -> List:
+    if not isinstance(user, UserObject):
+        raise TypeError('user should be of type UserObject')
+    users_friends: List[int] = get_user_friend_ids(user)
+    return get_ratings(users_friends, place_id=place_id)

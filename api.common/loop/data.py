@@ -1,11 +1,12 @@
 import os
 from datetime import datetime
 from time import sleep
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from loop import exceptions, secrets
 from loop.constants import (
     ENVIRONMENT,
+    LOOP_TIME_FORMAT,
     MAX_DB_INIT_RETRIES,
     PROJECT,
     RDS_WRITE,
@@ -224,3 +225,34 @@ def update_object_last_updated_time(db_object) -> None:
 @DB_SESSION_RETRYABLE
 def get_all_users(db_instance_type=RDS_WRITE) -> Query:
     return select(user for user in DB_TYPE[db_instance_type].User)
+
+
+@DB_SESSION_RETRYABLE
+def get_ratings(
+    users: List[int],
+    place_id: Optional[str] = None,
+    db_instance_type=RDS_WRITE,
+) -> Dict:
+    reviews = list()
+    ratings = select(
+        rating
+        for rating in DB_TYPE[db_instance_type].Rating
+        if rating.user.id in users
+    )
+    if place_id:
+        ratings = ratings.filter(
+            lambda rating: rating.location.google_id == place_id
+        )
+    for r in ratings:
+        reviews.append(
+            {
+                'first_name': r.user.first_name,
+                'last_name': r.user.last_name,
+                'place_id': r.location.google_id,
+                'food': r.food,
+                'price': r.price,
+                'vibe': r.vibe,
+                'time_created': r.created.strftime(LOOP_TIME_FORMAT),
+            }
+        )
+    return reviews

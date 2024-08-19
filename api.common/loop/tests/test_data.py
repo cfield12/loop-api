@@ -19,9 +19,9 @@ TEST_DB_SECRET = {
 TEST_COORDINATES = Coordinates(lat=1.0, lng=1.0)
 
 
-class LoopTestGetUserRatings(unittest.TestCase):
+class LoopTestGetRatings(unittest.TestCase):
     """
-    Test getting user ratings.
+    Test getting user ratings and all ratings.
     """
 
     @classmethod
@@ -87,6 +87,75 @@ class LoopTestGetUserRatings(unittest.TestCase):
     def test_get_user_ratings_error(self):
         user = 1
         self.assertRaises(TypeError, data.get_user_ratings, user)
+
+    def test_get_ratings(self):
+        users = [1, 2, 3, 4]
+        ratings = data.get_ratings(users)
+        expected_ratings = [
+            {
+                'first_name': 'Test',
+                'last_name': 'User',
+                'place_id': 'test_google_id_1',
+                'food': 3,
+                'price': 4,
+                'vibe': 4,
+                'time_created': '2000-01-01 00:00:00',
+            },
+            {
+                'first_name': 'Test',
+                'last_name': 'User',
+                'place_id': 'test_google_id_2',
+                'food': 5,
+                'price': 4,
+                'vibe': 5,
+                'time_created': '2000-01-01 00:00:00',
+            },
+            {
+                'first_name': 'Admin',
+                'last_name': 'User',
+                'place_id': 'test_google_id_1',
+                'food': 3,
+                'price': 4,
+                'vibe': 5,
+                'time_created': '2000-01-01 00:00:00',
+            },
+            {
+                'first_name': 'Admin',
+                'last_name': 'User',
+                'place_id': 'test_google_id_3',
+                'food': 5,
+                'price': 5,
+                'vibe': 5,
+                'time_created': '2000-01-01 00:00:00',
+            },
+        ]
+        self.assertEqual(ratings, expected_ratings)
+
+    def test_get_ratings_place_specific(self):
+        users = [1, 2, 3, 4]
+        place_id = 'test_google_id_1'
+        ratings = data.get_ratings(users, place_id=place_id)
+        expected_ratings = [
+            {
+                'first_name': 'Test',
+                'last_name': 'User',
+                'place_id': 'test_google_id_1',
+                'food': 3,
+                'price': 4,
+                'vibe': 4,
+                'time_created': '2000-01-01 00:00:00',
+            },
+            {
+                'first_name': 'Admin',
+                'last_name': 'User',
+                'place_id': 'test_google_id_1',
+                'food': 3,
+                'price': 4,
+                'vibe': 5,
+                'time_created': '2000-01-01 00:00:00',
+            },
+        ]
+        self.assertEqual(ratings, expected_ratings)
 
 
 class LoopTestUserFromCognito(unittest.TestCase):

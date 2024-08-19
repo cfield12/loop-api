@@ -9,7 +9,13 @@ from loop.exceptions import (
     DbNotInitError,
     UnknownFriendStatusTypeError,
 )
-from loop.friends import FriendWorker, get_user_friends, search_for_users
+from loop.friends import (
+    FriendWorker,
+    get_ratings_for_place_and_friends,
+    get_user_friend_ids,
+    get_user_friends,
+    search_for_users,
+)
 from loop.test_setup import setup_rds, unbind_rds
 
 USER_1 = UserObject(
@@ -203,6 +209,37 @@ class TestFriends(unittest.TestCase):
     def test_search_for_users_type_error_2(self):
         search_term = 155
         self.assertRaises(TypeError, search_for_users, USER_2, search_term)
+
+    def test_get_user_friend_ids(self):
+        users = get_user_friend_ids(USER_2)
+        self.assertEqual(users, [3, 2])
+
+    def test_get_user_friend_ids_dont_include_own_id(self):
+        users = get_user_friend_ids(USER_2, include_own_id=False)
+        self.assertEqual(users, [3])
+
+    def test_get_user_friend_ids_type_error(self):
+        self.assertRaises(TypeError, get_user_friend_ids, 'User 1')
+
+    def test_get_ratings_for_place_and_friends(self):
+        ratings = get_ratings_for_place_and_friends('test_google_id_1', USER_2)
+        expected_ratings = [
+            {
+                'first_name': 'Admin',
+                'last_name': 'User',
+                'place_id': 'test_google_id_1',
+                'food': 3,
+                'price': 4,
+                'vibe': 5,
+                'time_created': '2000-01-01 00:00:00',
+            }
+        ]
+        self.assertEqual(ratings, expected_ratings)
+
+    def test_get_ratings_for_place_and_friends_type_error(self):
+        self.assertRaises(
+            TypeError, get_ratings_for_place_and_friends, 'GOOGLE_ID', 'User 1'
+        )
 
 
 if __name__ == '__main__':
