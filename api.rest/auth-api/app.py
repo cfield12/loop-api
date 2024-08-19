@@ -17,8 +17,8 @@ app = Chalice(app_name=APP_NAME)
 app.log.setLevel(logging.INFO)
 
 
-@app.route('/web/auth/login', methods=['POST'])
-@app.route('/auth/login', methods=['POST'])
+@app.route('/web/auth/login', methods=['POST'], cors=True)
+@app.route('/auth/login', methods=['POST'], cors=True)
 def login():
     """
     Login.
@@ -60,8 +60,8 @@ def login():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/auth/signup', methods=['POST'])
-@app.route('/auth/signup', methods=['POST'])
+@app.route('/web/auth/signup', methods=['POST'], cors=True)
+@app.route('/auth/signup', methods=['POST'], cors=True)
 def sign_up():
     """
     Sign up.
@@ -103,8 +103,8 @@ def sign_up():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/auth/confirm_signup', methods=['POST'])
-@app.route('/auth/confirm_signup', methods=['POST'])
+@app.route('/web/auth/confirm_signup', methods=['POST'], cors=True)
+@app.route('/auth/confirm_signup', methods=['POST'], cors=True)
 def confirm_sign_up():
     """
     Confirm sign up.
@@ -146,8 +146,8 @@ def confirm_sign_up():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/auth/resend_code', methods=['POST'])
-@app.route('/auth/resend_code', methods=['POST'])
+@app.route('/web/auth/resend_code', methods=['POST'], cors=True)
+@app.route('/auth/resend_code', methods=['POST'], cors=True)
 def resend_code():
     """
     Resend verification code.
@@ -189,8 +189,8 @@ def resend_code():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/auth/forgot_password', methods=['POST'])
-@app.route('/auth/forgot_password', methods=['POST'])
+@app.route('/web/auth/forgot_password', methods=['POST'], cors=True)
+@app.route('/auth/forgot_password', methods=['POST'], cors=True)
 def forgot_password():
     """
     Forgot password.
@@ -232,8 +232,8 @@ def forgot_password():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/auth/confirm_forgot_password', methods=['POST'])
-@app.route('/auth/confirm_forgot_password', methods=['POST'])
+@app.route('/web/auth/confirm_forgot_password', methods=['POST'], cors=True)
+@app.route('/auth/confirm_forgot_password', methods=['POST'], cors=True)
 def confirm_forgot_password():
     """
     Confirm forgot password.
