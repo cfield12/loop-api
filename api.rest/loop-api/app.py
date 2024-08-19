@@ -15,7 +15,13 @@ from loop.data_classes import (
     UserObject,
 )
 from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
-from loop.friends import FriendWorker, get_user_friends, search_for_users
+from loop.friends import (
+    FriendWorker,
+    get_ratings_for_place_and_friends,
+    get_user_friend_ids,
+    get_user_friends,
+    search_for_users,
+)
 from loop.google_client import find_location, search_place
 from loop.thumbnails import check_thumbnail_exists, upload_thumbnail
 from loop.utils import get_admin_user
@@ -103,6 +109,38 @@ def get_user_ratings(user: UserObject = None):
         user_ratings = data.get_user_ratings(user)
         app.log.info(f"Successfully returned user ratings for user {user.id}")
         return user_ratings
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route('/web/friends_ratings', methods=['GET'], cors=True)
+@app.route('/friends_ratings', methods=['GET'], cors=True)
+@get_current_user
+def get_all_ratings(user: UserObject = None):
+    """
+    Get all ratings.
+    ---
+    get:
+        operationId: getAllRatings
+        summary: Get the user and their friend's ratings.
+        description: Get the user and their friend's ratings.
+        security:
+            - API Key: []
+        responses:
+            200:
+                description: OK
+                schema:
+                    type: object
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        users = get_user_friend_ids(user)
+        ratings = data.get_ratings(users)
+        app.log.info(f"Successfully returned all ratings for user {user.id}.")
+        return ratings
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
 
@@ -487,6 +525,13 @@ def get_restaurant(place_id=str(), user: UserObject = None):
                     place_id=place_id, photo_reference=location.photo_reference
                 )
             )
-        return location.to_dict()
+        location = location.to_dict()
+        """
+        Add on user's friends/own reviews of this location.
+        """
+        reviews: List[Dict] = get_ratings_for_place_and_friends(place_id, user)
+        if reviews:
+            location['reviews'] = reviews
+        return location
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)

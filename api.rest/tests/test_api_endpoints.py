@@ -23,7 +23,7 @@ def mocked_init_write_db(check_tables=False, create_tables=False):
     return
 
 
-class TestGetUserRatings(unittest.TestCase):
+class TestGetRatings(unittest.TestCase):
     @patch(mock_url_write_db)
     def setUp(self, write_db):
         write_db.side_effect = mocked_init_write_db
@@ -60,6 +60,37 @@ class TestGetUserRatings(unittest.TestCase):
                         'place_name': "Baggins'",
                         'address': '15 Noel Road, London, N1 8HQ',
                         'google_id': 'test_google_id_2',
+                    },
+                ],
+            )
+
+    def test_get_all_ratings_endpoint(self):
+        # Happy path test
+        with Client(app.app) as client:
+            response = client.http.get(
+                f'/friends_ratings',
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.json_body,
+                [
+                    {
+                        'first_name': 'Test',
+                        'last_name': 'User',
+                        'place_id': 'test_google_id_1',
+                        'food': 3,
+                        'price': 4,
+                        'vibe': 4,
+                        'time_created': '2000-01-01 00:00:00',
+                    },
+                    {
+                        'first_name': 'Test',
+                        'last_name': 'User',
+                        'place_id': 'test_google_id_2',
+                        'food': 5,
+                        'price': 4,
+                        'vibe': 5,
+                        'time_created': '2000-01-01 00:00:00',
                     },
                 ],
             )
@@ -465,6 +496,50 @@ class TestGetRestaurant(unittest.TestCase):
             response = client.http.get('/restaurant/X_TEST_GOOGLE_ID_X')
             self.assertEqual(response.status_code, 200)
         self.assertFalse(mock_upload_thumbnail.called)
+
+    @patch('loop-api.app.upload_thumbnail')
+    @patch('loop-api.app.check_thumbnail_exists')
+    @patch('loop-api.app.find_location')
+    def test_get_restaurant_with_reviews(
+        self, mock_find_location, mock_check_thumbnail, mock_upload_thumbnail
+    ):
+        location = Location(
+            google_id='test_google_id_1',
+            address='55 Northberk Street, Sunderland',
+            display_name='Greggs',
+            coordinates=Coordinates(lat=1.0, lng=1.0),
+        )
+        mock_find_location.return_value = location
+        mock_check_thumbnail.return_value = True
+        # Happy path test
+
+        with Client(app.app) as client:
+            response = client.http.get('/restaurant/test_google_id_1')
+            self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json_body,
+            {
+                'google_id': 'test_google_id_1',
+                'address': '55 Northberk Street, Sunderland',
+                'display_name': 'Greggs',
+                'coordinates': {'lat': 1.0, 'lng': 1.0},
+                'photo_reference': None,
+                'website': None,
+                'phone_number': None,
+                'price_level': None,
+                'reviews': [
+                    {
+                        'first_name': 'Test',
+                        'last_name': 'User',
+                        'place_id': 'test_google_id_1',
+                        'food': 3,
+                        'price': 4,
+                        'vibe': 4,
+                        'time_created': '2000-01-01 00:00:00',
+                    }
+                ],
+            },
+        )
 
 
 if __name__ == "__main__":
