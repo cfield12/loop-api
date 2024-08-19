@@ -519,7 +519,7 @@ def get_restaurant(place_id=str(), user: UserObject = None):
         Here we need to check to see if an image for this location is stored
         in s3
         """
-        if not check_thumbnail_exists(place_id):
+        if location.photo_reference and not check_thumbnail_exists(place_id):
             upload_thumbnail(
                 UploadThumbnailEvent(
                     place_id=place_id, photo_reference=location.photo_reference

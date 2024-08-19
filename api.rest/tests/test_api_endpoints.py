@@ -459,6 +459,7 @@ class TestGetRestaurant(unittest.TestCase):
             address='55 Northberk Street, Sunderland',
             display_name='Greggs',
             coordinates=Coordinates(lat=1.0, lng=1.0),
+            photo_reference='TEST_PHOTO_REFERENCE',
         )
         mock_find_location.return_value = location
         mock_check_thumbnail.return_value = False
@@ -471,10 +472,32 @@ class TestGetRestaurant(unittest.TestCase):
             mock_upload_thumbnail.call_args,
             call(
                 UploadThumbnailEvent(
-                    place_id='X_TEST_GOOGLE_ID_X', photo_reference=None
+                    place_id='X_TEST_GOOGLE_ID_X',
+                    photo_reference='TEST_PHOTO_REFERENCE',
                 )
             ),
         )
+
+    @patch('loop-api.app.upload_thumbnail')
+    @patch('loop-api.app.check_thumbnail_exists')
+    @patch('loop-api.app.find_location')
+    def test_get_restaurant_no_photo_reference(
+        self, mock_find_location, mock_check_thumbnail, mock_upload_thumbnail
+    ):
+        location = Location(
+            google_id='X_TEST_GOOGLE_ID_X',
+            address='55 Northberk Street, Sunderland',
+            display_name='Greggs',
+            coordinates=Coordinates(lat=1.0, lng=1.0),
+        )
+        mock_find_location.return_value = location
+        mock_check_thumbnail.return_value = False
+        # Happy path test
+
+        with Client(app.app) as client:
+            response = client.http.get('/restaurant/X_TEST_GOOGLE_ID_X')
+            self.assertEqual(response.status_code, 200)
+        self.assertFalse(mock_upload_thumbnail.called)
 
     @patch('loop-api.app.upload_thumbnail')
     @patch('loop-api.app.check_thumbnail_exists')
