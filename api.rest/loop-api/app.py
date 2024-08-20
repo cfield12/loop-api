@@ -5,9 +5,10 @@ from typing import Union
 
 import jwt
 import requests
-from chalice import Chalice, Response
+from chalice import Chalice, CognitoUserPoolAuthorizer, Response
 from loop import data
 from loop.api_classes import Coordinates, CreateRating, FriendValidator
+from loop.constants import COGNITO_SECRET_NAME
 from loop.data_classes import (
     Location,
     Rating,
@@ -23,6 +24,7 @@ from loop.friends import (
     search_for_users,
 )
 from loop.google_client import find_location, search_place
+from loop.secrets import get_secret
 from loop.thumbnails import check_thumbnail_exists, upload_thumbnail
 from loop.utils import get_admin_user
 from pydantic import ValidationError as PydanticValidationError
@@ -48,6 +50,23 @@ def setup_app():
 
 
 setup_app()
+
+
+def get_required_cognito_authorizer() -> CognitoUserPoolAuthorizer:
+    if not LOOP_AUTH_DISABLED:
+        cognito_secret = get_secret(COGNITO_SECRET_NAME)
+        if 'arn' not in cognito_secret:
+            raise ValueError('cognito secret missing arn.')
+        cognito_authorizer = CognitoUserPoolAuthorizer(
+            'cognito_authorizer', provider_arns=[cognito_secret['arn']]
+        )
+        app.log.info(
+            f"Setting up cognito authorizer with arn: {cognito_user_pool_arn}."
+        )
+        return cognito_authorizer
+
+
+COGNITO_AUTHORIZER = get_required_cognito_authorizer()
 
 
 def get_current_user(func):
@@ -82,7 +101,9 @@ def get_current_user(func):
     return _get_current_user
 
 
-@app.route('/web/ratings', methods=['GET'], cors=True)
+@app.route(
+    '/web/ratings', methods=['GET'], cors=True, authorizer=COGNITO_AUTHORIZER
+)
 @app.route('/ratings', methods=['GET'], cors=True)
 @get_current_user
 def get_user_ratings(user: UserObject = None):
@@ -113,7 +134,12 @@ def get_user_ratings(user: UserObject = None):
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/friends_ratings', methods=['GET'], cors=True)
+@app.route(
+    '/web/friends_ratings',
+    methods=['GET'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
 @app.route('/friends_ratings', methods=['GET'], cors=True)
 @get_current_user
 def get_all_ratings(user: UserObject = None):
@@ -145,7 +171,9 @@ def get_all_ratings(user: UserObject = None):
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/ratings', methods=['POST'], cors=True)
+@app.route(
+    '/web/ratings', methods=['POST'], cors=True, authorizer=COGNITO_AUTHORIZER
+)
 @app.route('/ratings', methods=['POST'], cors=True)
 @get_current_user
 def create_rating(user: UserObject = None):
@@ -199,7 +227,12 @@ def create_rating(user: UserObject = None):
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/friends/{user_name}', methods=['POST'], cors=True)
+@app.route(
+    '/web/friends/{user_name}',
+    methods=['POST'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
 @app.route('/friends/{user_name}', methods=['POST'], cors=True)
 @get_current_user
 def add_friend(user_name=str(), user: UserObject = None):
@@ -249,7 +282,12 @@ def add_friend(user_name=str(), user: UserObject = None):
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/friends/{user_name}', methods=['PUT'], cors=True)
+@app.route(
+    '/web/friends/{user_name}',
+    methods=['PUT'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
 @app.route('/friends/{user_name}', methods=['PUT'], cors=True)
 @get_current_user
 def accept_friend(user_name=str(), user: UserObject = None):
@@ -299,7 +337,12 @@ def accept_friend(user_name=str(), user: UserObject = None):
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/friends/{user_name}', methods=['DELETE'], cors=True)
+@app.route(
+    '/web/friends/{user_name}',
+    methods=['DELETE'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
 @app.route('/friends/{user_name}', methods=['DELETE'], cors=True)
 @get_current_user
 def delete_friend(user_name=str(), user: UserObject = None):
@@ -349,7 +392,9 @@ def delete_friend(user_name=str(), user: UserObject = None):
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/friends', methods=['GET'], cors=True)
+@app.route(
+    '/web/friends', methods=['GET'], cors=True, authorizer=COGNITO_AUTHORIZER
+)
 @app.route('/friends', methods=['GET'], cors=True)
 @get_current_user
 def list_friends(user: UserObject = None):
@@ -382,7 +427,12 @@ def list_friends(user: UserObject = None):
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/search_users/{search_term}', methods=['GET'], cors=True)
+@app.route(
+    '/web/search_users/{search_term}',
+    methods=['GET'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
 @app.route('/search_users/{search_term}', methods=['GET'], cors=True)
 @get_current_user
 def search_users(search_term=str(), user: UserObject = None):
@@ -419,7 +469,12 @@ def search_users(search_term=str(), user: UserObject = None):
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/restaurant_search/{search_term}', methods=['GET'], cors=True)
+@app.route(
+    '/web/restaurant_search/{search_term}',
+    methods=['GET'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
 @app.route('/restaurant_search/{search_term}', methods=['GET'], cors=True)
 @get_current_user
 def search_restaurant(search_term=str(), user: UserObject = None):
@@ -479,7 +534,12 @@ def search_restaurant(search_term=str(), user: UserObject = None):
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/restaurant/{place_id}', methods=['GET'], cors=True)
+@app.route(
+    '/web/restaurant/{place_id}',
+    methods=['GET'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
 @app.route('/restaurant/{place_id}', methods=['GET'], cors=True)
 @get_current_user
 def get_restaurant(place_id=str(), user: UserObject = None):
