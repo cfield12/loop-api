@@ -57,8 +57,9 @@ def get_required_cognito_authorizer() -> CognitoUserPoolAuthorizer:
         cognito_secret = get_secret(COGNITO_SECRET_NAME)
         if 'arn' not in cognito_secret:
             raise ValueError('cognito secret missing arn.')
+        cognito_user_pool_arn = cognito_secret['arn']
         cognito_authorizer = CognitoUserPoolAuthorizer(
-            'cognito_authorizer', provider_arns=[cognito_secret['arn']]
+            'cognito_authorizer', provider_arns=[cognito_user_pool_arn]
         )
         app.log.info(
             f"Setting up cognito authorizer with arn: {cognito_user_pool_arn}."
