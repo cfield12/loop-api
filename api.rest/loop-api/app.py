@@ -77,7 +77,7 @@ def get_current_user(func):
             user = get_admin_user()
         else:
             try:
-                auth_token = app.current_request.headers.get('auth-token')
+                auth_token = app.current_request.headers.get('Authorization')
                 if not auth_token:
                     raise UnauthorizedError("Authorization header is expected")
                 try:
