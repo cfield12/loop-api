@@ -1,3 +1,5 @@
+from typing import Dict, Optional
+
 import boto3
 from botocore.exceptions import ClientError
 from loop.exceptions import BucketNotFoundError
@@ -29,8 +31,12 @@ class S3Service:
         else:
             return False
 
-    def upload_file(self, filename: str, key: str) -> None:
+    def upload_file(
+        self, filename: str, key: str, extra_args: Optional[Dict] = None
+    ) -> None:
         try:
-            self.s3.upload_file(filename, self.bucket_name, key)
+            self.s3.upload_file(
+                filename, self.bucket_name, key, ExtraArgs=extra_args
+            )
         except boto3.exceptions.S3UploadFailedError as e:
             raise e

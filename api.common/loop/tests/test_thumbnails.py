@@ -42,7 +42,11 @@ class TestThumbnailUploader(unittest.TestCase):
         )
         self.assertEqual(
             self.mock_s3_service.mock_calls[1],
-            call().upload_file(TMP_FILENAME, FILE_NAME),
+            call().upload_file(
+                TMP_FILENAME,
+                FILE_NAME,
+                extra_args={'Metadata': {'Content-Type': 'image/jpeg'}},
+            ),
         )
 
     def test_upload_thumbnail_type_error(self):

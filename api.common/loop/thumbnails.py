@@ -39,7 +39,10 @@ class ThumbnailUploader(RestaurantThumbnails):
         tmp_filename = self.photo_downloader.download_photo(
             event.photo_reference, filename
         )
-        self.s3_service.upload_file(tmp_filename, filename)
+        extra_args = {'Metadata': {'Content-Type': 'image/jpeg'}}
+        self.s3_service.upload_file(
+            tmp_filename, filename, extra_args=extra_args
+        )
 
 
 def check_thumbnail_exists(place_id: str) -> bool:
