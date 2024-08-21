@@ -5,6 +5,7 @@ from uuid import UUID
 from loop.api_classes.validators import (
     validate_code,
     validate_email_address,
+    validate_int_thresholds,
     validate_str_uuid,
 )
 
@@ -42,6 +43,17 @@ class TestValidators(unittest.TestCase):
 
     def test_validate_email_address_invalid(self):
         self.assertRaises(ValueError, validate_email_address, 'test-email.com')
+
+    def test_validate_int_thresholds(self):
+        number = 3
+        response = validate_int_thresholds(number)
+        self.assertEqual(response, number)
+
+    def test_validate_int_thresholds_too_small(self):
+        self.assertRaises(ValueError, validate_int_thresholds, 0)
+
+    def test_validate_int_thresholds_too_big(self):
+        self.assertRaises(ValueError, validate_int_thresholds, 6)
 
 
 if __name__ == '__main__':

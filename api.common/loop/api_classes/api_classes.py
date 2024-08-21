@@ -4,6 +4,7 @@ from typing import Dict, List, Union
 from loop.api_classes.validators import (
     validate_code,
     validate_email_address,
+    validate_int_thresholds,
     validate_str_uuid,
 )
 from pydantic import BaseModel, model_validator, validator
@@ -14,6 +15,11 @@ class CreateRating(BaseModel):
     price: int
     vibe: int
     food: int
+
+    @validator("price", "vibe", "food")
+    @classmethod
+    def validate_rating(cls, rating: int):
+        return validate_int_thresholds(rating)
 
 
 class FriendValidator(BaseModel):
