@@ -197,7 +197,7 @@ def create_rating(user: UserObject = None):
                 required: true
                 description: JSON object containing rating metadata.
         responses:
-            204:
+            200:
                 description: OK
             default:
                 description: Unexpected error
@@ -223,7 +223,7 @@ def create_rating(user: UserObject = None):
         )
         data.create_rating(rating)
         app.log.info(f"Successfully created rating entry {rating.__dict__}")
-        return Response(status_code=204, body='')
+        return Response(status_code=200, body='')
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
 
@@ -256,7 +256,7 @@ def add_friend(user_name=str(), user: UserObject = None):
                 description: Cognito user name of friend the user is trying to
                  add.
         responses:
-            204:
+            200:
                 description: OK
             default:
                 description: Unexpected error
@@ -278,7 +278,7 @@ def add_friend(user_name=str(), user: UserObject = None):
         )
         friend_worker = FriendWorker(user, target_user)
         friend_worker.create_friend_entry()
-        return Response(status_code=204, body='')
+        return Response(status_code=200, body='')
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
 
@@ -311,7 +311,7 @@ def accept_friend(user_name=str(), user: UserObject = None):
                 description: Cognito user name of user whose request is being
                  accepted.
         responses:
-            204:
+            200:
                 description: OK
             default:
                 description: Unexpected error
@@ -333,7 +333,7 @@ def accept_friend(user_name=str(), user: UserObject = None):
         )
         friend_worker = FriendWorker(user, target_user)
         friend_worker.accept_friend_request()
-        return Response(status_code=204, body='')
+        return Response(status_code=200, body='')
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
 
@@ -366,7 +366,7 @@ def delete_friend(user_name=str(), user: UserObject = None):
                 description: Cognito user name of user whose friendship is
                  being deleted.
         responses:
-            204:
+            200:
                 description: OK
             default:
                 description: Unexpected error
