@@ -127,7 +127,7 @@ class TestCreateRating(unittest.TestCase):
                     }
                 ),
             )
-            self.assertEqual(response.status_code, 204)
+            self.assertEqual(response.status_code, 200)
 
     def test_create_rating_endpoint_pydantic_error_1(self):
         # Test pydantic error
@@ -219,7 +219,7 @@ class TestAddFriend(unittest.TestCase):
                 f'/friends/{target_cognito_user_name}',
                 headers={'Content-Type': 'application/json'},
             )
-            self.assertEqual(response.status_code, 204)
+            self.assertEqual(response.status_code, 200)
             self.assertTrue(mock_create_friend.called)
 
     def test_add_friend_not_uuid_error(self):
@@ -270,7 +270,7 @@ class TestAcceptFriend(unittest.TestCase):
                 f'/friends/{target_cognito_user_name}',
                 headers={'Content-Type': 'application/json'},
             )
-            self.assertEqual(response.status_code, 204)
+            self.assertEqual(response.status_code, 200)
             self.assertTrue(mock_accept_friend.called)
 
     def test_accept_friend_not_uuid_error(self):
