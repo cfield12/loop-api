@@ -44,7 +44,10 @@ class TestS3Service(unittest.TestCase):
         self.assertEqual(
             self.mock_boto_client.mock_calls[2],
             call().upload_file(
-                '/tmp/other_test.pdf', 'test_bucket', 'other_test.pdf'
+                '/tmp/other_test.pdf',
+                'test_bucket',
+                'other_test.pdf',
+                ExtraArgs=None,
             ),
         )
 
