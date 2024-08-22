@@ -146,7 +146,7 @@ def get_user_from_cognito_username(
         cognito_user_name=cognito_user_name
     )
     if not user:
-        raise exceptions.UnauthorizedError('User not found')
+        raise exceptions.BadRequestError('User not found')
     user_id = user.id
     return UserObject(id=user_id, cognito_user_name=user.cognito_user_name)
 

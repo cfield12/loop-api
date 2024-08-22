@@ -192,7 +192,7 @@ class LoopTestUserFromCognito(unittest.TestCase):
     def test_get_user_from_cognito_error(self):
         cognito_user_name = 'unknown_test_cognito_user_name'
         self.assertRaises(
-            exceptions.UnauthorizedError,
+            exceptions.BadRequestError,
             data.get_user_from_cognito_username,
             cognito_user_name,
         )
