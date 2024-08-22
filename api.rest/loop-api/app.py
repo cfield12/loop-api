@@ -7,7 +7,12 @@ import jwt
 import requests
 from chalice import Chalice, CognitoUserPoolAuthorizer, Response
 from loop import data
-from loop.api_classes import Coordinates, CreateRating, FriendValidator
+from loop.api_classes import (
+    Coordinates,
+    CreateRating,
+    FriendValidator,
+    UpdateRating,
+)
 from loop.constants import COGNITO_SECRET_NAME
 from loop.data_classes import (
     Location,
@@ -224,6 +229,104 @@ def create_rating(user: UserObject = None):
         )
         data.create_rating(rating)
         app.log.info(f"Successfully created rating entry {rating.__dict__}")
+        return Response(status_code=200, body='')
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route(
+    '/web/ratings/{rating_id}',
+    methods=['PUT'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
+@app.route('/ratings/{rating_id}', methods=['PUT'], cors=True)
+@get_current_user
+def update_rating(rating_id: int, user: UserObject = None):
+    """
+    Update user ratings.
+    ---
+    put:
+        operationId: updateRating
+        summary: Update a rating entry in the db.
+        description: Update a rating entry in the db.
+        security:
+            - Qi API Key: []
+        consumes:
+            -   application/json
+        parameters:
+            -   in: body
+                name: update_rating_schema
+                schema:
+                    type: object
+                required: true
+                description: JSON object containing rating metadata.
+        responses:
+            200:
+                description: OK
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        payload = app.current_request.json_body
+        try:
+            validated_params = UpdateRating(id=rating_id, **payload)
+        except PydanticValidationError as e:
+            raise BadRequestError(
+                "; ".join([error["msg"] for error in e.errors()])
+            )
+        data.update_rating(validated_params, user)
+        app.log.info(
+            f"Successfully updated rating entry {validated_params.__dict__}"
+        )
+        return Response(status_code=200, body='')
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route(
+    '/web/ratings/{rating_id}',
+    methods=['DELETE'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
+@app.route('/ratings/{rating_id}', methods=['DELETE'], cors=True)
+@get_current_user
+def delete_rating(rating_id: int, user: UserObject = None):
+    """
+    Delete a user rating.
+    ---
+    put:
+        operationId: deleteRating
+        summary: Delete a rating entry in the db.
+        description: Delete a rating entry in the db.
+        security:
+            - Qi API Key: []
+        consumes:
+            -   application/json
+        parameters:
+            -   in: body
+                name: delete_rating_schema
+                schema:
+                    type: object
+                required: true
+                description: JSON object containing rating metadata.
+        responses:
+            200:
+                description: OK
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        data.delete_rating(rating_id, user)
+        app.log.info(
+            f"Successfully deleted rating entry {rating_id} "
+            f"for user {user.id}."
+        )
         return Response(status_code=200, body='')
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)

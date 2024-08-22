@@ -5,6 +5,7 @@ from .api_classes import (
     FriendValidator,
     LoginCredentials,
     SignUpCredentials,
+    UpdateRating,
     UserCredentials,
     VerifyUser,
 )

@@ -5,7 +5,7 @@ from unittest.mock import call, patch
 
 from chalice.test import Client
 from loop import data
-from loop.api_classes import Coordinates
+from loop.api_classes import Coordinates, UpdateRating
 from loop.constants import RDS_WRITE
 from loop.data_classes import Location, UploadThumbnailEvent, UserObject
 from loop.test_setup.common import setup_rds, unbind_rds
@@ -46,6 +46,7 @@ class TestGetRatings(unittest.TestCase):
                 response.json_body,
                 [
                     {
+                        'id': 3,
                         'food': 3,
                         'price': 4,
                         'vibe': 4,
@@ -55,6 +56,7 @@ class TestGetRatings(unittest.TestCase):
                         'google_id': 'test_google_id_1',
                     },
                     {
+                        'id': 4,
                         'food': 5,
                         'price': 4,
                         'vibe': 5,
@@ -77,6 +79,7 @@ class TestGetRatings(unittest.TestCase):
                 response.json_body,
                 [
                     {
+                        'id': 3,
                         'first_name': 'Test',
                         'last_name': 'User',
                         'place_id': 'test_google_id_1',
@@ -89,6 +92,7 @@ class TestGetRatings(unittest.TestCase):
                         'time_created': '2000-01-01 00:00:00',
                     },
                     {
+                        'id': 4,
                         'first_name': 'Test',
                         'last_name': 'User',
                         'place_id': 'test_google_id_2',
@@ -102,6 +106,78 @@ class TestGetRatings(unittest.TestCase):
                     },
                 ],
             )
+
+
+class TestDeleteAndUpdateRating(unittest.TestCase):
+    @patch(mock_url_write_db)
+    def setUp(self, write_db):
+        write_db.side_effect = mocked_init_write_db
+
+        global app
+        app = importlib.import_module("loop-api.app")
+        setup_rds()
+
+    def tearDown(self):
+        unbind_rds()
+
+    @patch('loop.data.update_rating')
+    def test_update_rating_endpoint(self, mock_update_rating):
+        # Happy path test
+        rating_id = 1
+        with Client(app.app) as client:
+            response = client.http.put(
+                f'/ratings/{rating_id}',
+                headers={'Content-Type': 'application/json'},
+                body=json.dumps({"price": 1, "food": 3}),
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                mock_update_rating.call_args,
+                call(
+                    UpdateRating(
+                        id=1, price=1, vibe=None, food=3, message=None
+                    ),
+                    UserObject(
+                        id=1,
+                        cognito_user_name='86125274-40a1-70ec-da28-f779360f7c07',
+                        groups=None,
+                    ),
+                ),
+            )
+
+    def test_update_rating_endpoint_message_too_long(self):
+        # unHappy path test
+        message = 'Great wine ' * 100
+        rating_id = 1
+        with Client(app.app) as client:
+            response = client.http.put(
+                f'/ratings/{rating_id}',
+                headers={'Content-Type': 'application/json'},
+                body=json.dumps({"price": 1, "message": message}),
+            )
+            self.assertEqual(response.status_code, 400)
+
+    def test_update_rating_endpoint_unknown_param(self):
+        # unHappy path test
+        rating_id = 1
+        with Client(app.app) as client:
+            response = client.http.put(
+                f'/ratings/{rating_id}',
+                headers={'Content-Type': 'application/json'},
+                body=json.dumps({"wine": 1}),
+            )
+            self.assertEqual(response.status_code, 400)
+
+    def test_update_rating_endpoint_price_too_big(self):
+        # unHappy path test
+        rating_id = 1
+        with Client(app.app) as client:
+            response = client.http.put(
+                f'/ratings/{rating_id}',
+                headers={'Content-Type': 'application/json'},
+                body=json.dumps({"price": 55}),
+            )
+            self.assertEqual(response.status_code, 400)
 
 
 class TestCreateRating(unittest.TestCase):
@@ -560,6 +636,7 @@ class TestGetRestaurant(unittest.TestCase):
                 'price_level': None,
                 'reviews': [
                     {
+                        'id': 3,
                         'first_name': 'Test',
                         'last_name': 'User',
                         'place_id': 'test_google_id_1',

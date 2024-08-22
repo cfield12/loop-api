@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import call, patch
 
 from loop import data, exceptions
-from loop.api_classes import Coordinates
+from loop.api_classes import Coordinates, UpdateRating
 from loop.data_classes import Location, Rating, UserObject
 from loop.test_setup.common import setup_rds, unbind_rds
 from loop.utils import get_admin_user
@@ -358,6 +358,92 @@ class TestCreateUserRatings(unittest.TestCase):
     def test_create_rating_type_error(self):
         rating = {'location': 4, 'user': 1, 'price': 3, 'food': 4, 'vibe': 5}
         self.assertRaises(TypeError, data.create_rating, rating)
+
+    @data.DB_SESSION_RETRYABLE
+    def test_get_rating_wrong_user_error(self):
+        rating_id = 1
+        self.assertRaises(
+            exceptions.BadRequestError,
+            data._get_rating,
+            rating_id,
+            get_admin_user(),
+        )
+
+    @data.DB_SESSION_RETRYABLE
+    def test_get_rating(self):
+        rating_id = 1
+        rating = data._get_rating(
+            rating_id, UserObject(id=2, cognito_user_name='user_name')
+        )
+        self.assertEqual(rating.id, 1)
+
+    @data.DB_SESSION_RETRYABLE
+    def test_get_rating_type_error_id(self):
+        rating_id = '1'
+        self.assertRaises(
+            TypeError,
+            data._get_rating,
+            rating_id,
+            UserObject(id=2, cognito_user_name='user_name'),
+        )
+
+    @data.DB_SESSION_RETRYABLE
+    def test_get_rating_type_error_user(self):
+        rating_id = 1
+        self.assertRaises(
+            TypeError,
+            data._get_rating,
+            rating_id,
+            {'id': 2, 'cognito_user_name': 'user_name'},
+        )
+
+    @data.DB_SESSION_RETRYABLE
+    def test_update_rating_message(self):
+        user = UserObject(id=2, cognito_user_name='user_name')
+        update_rating = UpdateRating(id=1, message='hello')
+        data.update_rating(update_rating, user)
+        rating = data._get_rating(
+            1, UserObject(id=2, cognito_user_name='user_name')
+        )
+        self.assertEqual(rating.message, 'hello')
+
+    @data.DB_SESSION_RETRYABLE
+    def test_update_ratings(self):
+        user = UserObject(id=2, cognito_user_name='user_name')
+        update_rating = UpdateRating(id=1, price=4, food=3, vibe=2)
+        data.update_rating(update_rating, user)
+        rating = data._get_rating(
+            1, UserObject(id=2, cognito_user_name='user_name')
+        )
+        self.assertEqual(rating.price, 4)
+        self.assertEqual(rating.food, 3)
+        self.assertEqual(rating.vibe, 2)
+
+    def test_update_rating_type_error(self):
+        update_rating = {'message': 'hello'}
+        self.assertRaises(TypeError, data.update_rating, update_rating)
+
+    @data.DB_SESSION_RETRYABLE
+    def test_delete_rating(self):
+        rating_id = 2
+        user = UserObject(id=2, cognito_user_name='user_name')
+        data.delete_rating(rating_id, user)
+        self.assertRaises(
+            exceptions.BadRequestError, data._get_rating, rating_id, user
+        )
+
+    @patch('loop.data._get_rating')
+    def test_delete_rating_works_with_str_int(self, mock_get_rating):
+        rating_id = '2'
+        user = UserObject(id=2, cognito_user_name='user_name')
+        data.delete_rating(rating_id, user)
+        self.assertEqual(mock_get_rating.mock_calls[1], call().delete())
+
+    @patch('loop.data._get_rating')
+    def test_delete_rating_type_error_1(self, mock_get_rating):
+        rating_id = 'hello'
+        user = UserObject(id=2, cognito_user_name='user_name')
+        self.assertRaises(TypeError, data.delete_rating, rating_id, user)
 
 
 class TestCreateLocation(unittest.TestCase):

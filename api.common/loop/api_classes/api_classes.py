@@ -29,6 +29,24 @@ class CreateRating(BaseModel):
         return validate_message_length(message)
 
 
+class UpdateRating(BaseModel):
+    id: int
+    price: Optional[int] = None
+    vibe: Optional[int] = None
+    food: Optional[int] = None
+    message: Optional[str] = None
+
+    @validator("price", "vibe", "food")
+    @classmethod
+    def validate_rating(cls, rating: int):
+        return validate_int_thresholds(rating) if rating else None
+
+    @validator("message")
+    @classmethod
+    def validate_message_len(cls, message: str):
+        return validate_message_length(message) if message else None
+
+
 class FriendValidator(BaseModel):
     cognito_user_name_requestor: str
     cognito_user_name_target: str

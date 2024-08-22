@@ -4,6 +4,7 @@ from time import sleep
 from typing import Dict, List, Optional, Union
 
 from loop import exceptions, secrets
+from loop.api_classes import UpdateRating
 from loop.constants import (
     ENVIRONMENT,
     LOOP_TIME_FORMAT,
@@ -186,6 +187,62 @@ def create_rating(rating: Rating, db_instance_type=RDS_WRITE) -> None:
     )
     commit()
     logger.info(f'Successfully created rating in rds: {rating.__dict__}')
+    return
+
+
+def _get_rating(rating_id: int, user: UserObject, db_instance_type=RDS_WRITE):
+    if not isinstance(rating_id, int):
+        raise TypeError('rating_id must be an int.')
+    if not isinstance(user, UserObject):
+        raise TypeError('user must be an instance of UserObject.')
+    rating = DB_TYPE[db_instance_type].Rating.get(id=rating_id, user=user.id)
+    if not rating:
+        raise exceptions.BadRequestError(
+            f'Could not find rating with id {rating_id} for user '
+            f'{user.id} to update.'
+        )
+    return rating
+
+
+@DB_SESSION_RETRYABLE
+def update_rating(
+    update_rating: UpdateRating,
+    user: UserObject,
+    db_instance_type=RDS_WRITE,
+) -> None:
+    if not isinstance(update_rating, UpdateRating):
+        raise TypeError('update_rating must be an instance of UpdateRating')
+    rating = _get_rating(update_rating.id, user)
+    if update_rating.price:
+        rating.price = update_rating.price
+    if update_rating.vibe:
+        rating.vibe = update_rating.vibe
+    if update_rating.food:
+        rating.food = update_rating.food
+    if update_rating.message:
+        rating.message = update_rating.message
+
+    commit()
+    logger.info(
+        f'Successfully updated rating in rds: {update_rating.__dict__}'
+    )
+    return
+
+
+@DB_SESSION_RETRYABLE
+def delete_rating(
+    rating_id: int,
+    user: UserObject,
+    db_instance_type=RDS_WRITE,
+) -> None:
+    if not isinstance(rating_id, int) and (
+        isinstance(rating_id, str) and not rating_id.isdigit()
+    ):
+        raise TypeError('rating_id must be an int.')
+    rating = _get_rating(int(rating_id), user)
+    rating.delete()
+    commit()
+    logger.info(f'Successfully deleted rating {rating_id}.')
     return
 
 
