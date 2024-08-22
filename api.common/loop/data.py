@@ -107,6 +107,7 @@ def get_user_ratings(
     ratings = []
     ratings_query = select(
         (
+            rating.id,
             rating.food,
             rating.price,
             rating.vibe,
@@ -119,6 +120,7 @@ def get_user_ratings(
         if rating.user.id == user.id
     )
     for (
+        id,
         food,
         price,
         vibe,
@@ -129,6 +131,7 @@ def get_user_ratings(
     ) in ratings_query:
         ratings.append(
             {
+                'id': id,
                 'food': food,
                 'price': price,
                 'vibe': vibe,
@@ -252,6 +255,7 @@ def get_ratings(
     for r in ratings:
         reviews.append(
             {
+                'id': r.id,
                 'first_name': r.user.first_name,
                 'last_name': r.user.last_name,
                 'place_id': r.location.google_id,

@@ -38,6 +38,7 @@ class LoopTestGetRatings(unittest.TestCase):
             admin_user_ratings,
             [
                 {
+                    'id': 3,
                     'food': 3,
                     'price': 4,
                     'vibe': 4,
@@ -47,6 +48,7 @@ class LoopTestGetRatings(unittest.TestCase):
                     'google_id': 'test_google_id_1',
                 },
                 {
+                    'id': 4,
                     'food': 5,
                     'price': 4,
                     'vibe': 5,
@@ -68,6 +70,7 @@ class LoopTestGetRatings(unittest.TestCase):
             user_ratings,
             [
                 {
+                    'id': 1,
                     'food': 3,
                     'price': 4,
                     'vibe': 5,
@@ -77,6 +80,7 @@ class LoopTestGetRatings(unittest.TestCase):
                     'google_id': 'test_google_id_1',
                 },
                 {
+                    'id': 2,
                     'food': 5,
                     'price': 5,
                     'vibe': 5,
@@ -97,6 +101,7 @@ class LoopTestGetRatings(unittest.TestCase):
         ratings = data.get_ratings(users)
         expected_ratings = [
             {
+                'id': 3,
                 'first_name': 'Test',
                 'last_name': 'User',
                 'place_id': 'test_google_id_1',
@@ -109,6 +114,7 @@ class LoopTestGetRatings(unittest.TestCase):
                 'time_created': '2000-01-01 00:00:00',
             },
             {
+                'id': 4,
                 'first_name': 'Test',
                 'last_name': 'User',
                 'place_id': 'test_google_id_2',
@@ -121,6 +127,7 @@ class LoopTestGetRatings(unittest.TestCase):
                 'time_created': '2000-01-01 00:00:00',
             },
             {
+                'id': 1,
                 'first_name': 'Admin',
                 'last_name': 'User',
                 'place_id': 'test_google_id_1',
@@ -133,6 +140,7 @@ class LoopTestGetRatings(unittest.TestCase):
                 'time_created': '2000-01-01 00:00:00',
             },
             {
+                'id': 2,
                 'first_name': 'Admin',
                 'last_name': 'User',
                 'place_id': 'test_google_id_3',
@@ -153,6 +161,7 @@ class LoopTestGetRatings(unittest.TestCase):
         ratings = data.get_ratings(users, place_id=place_id)
         expected_ratings = [
             {
+                'id': 3,
                 'first_name': 'Test',
                 'last_name': 'User',
                 'place_id': 'test_google_id_1',
@@ -165,6 +174,7 @@ class LoopTestGetRatings(unittest.TestCase):
                 'time_created': '2000-01-01 00:00:00',
             },
             {
+                'id': 1,
                 'first_name': 'Admin',
                 'last_name': 'User',
                 'place_id': 'test_google_id_1',
@@ -313,6 +323,7 @@ class TestCreateUserRatings(unittest.TestCase):
             admin_user_ratings,
             [
                 {
+                    'id': 3,
                     'food': 3,
                     'price': 4,
                     'vibe': 4,
@@ -322,6 +333,7 @@ class TestCreateUserRatings(unittest.TestCase):
                     'google_id': 'test_google_id_1',
                 },
                 {
+                    'id': 4,
                     'food': 5,
                     'price': 4,
                     'vibe': 5,
@@ -331,6 +343,7 @@ class TestCreateUserRatings(unittest.TestCase):
                     'google_id': 'test_google_id_2',
                 },
                 {
+                    'id': 5,
                     'food': 4,
                     'price': 3,
                     'vibe': 5,
