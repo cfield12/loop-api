@@ -225,6 +225,7 @@ class TestFriends(unittest.TestCase):
         ratings = get_ratings_for_place_and_friends('test_google_id_1', USER_2)
         expected_ratings = [
             {
+                'id': 1,
                 'first_name': 'Admin',
                 'last_name': 'User',
                 'place_id': 'test_google_id_1',
