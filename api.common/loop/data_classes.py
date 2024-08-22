@@ -45,6 +45,7 @@ class Rating:
     price: int
     food: int
     vibe: int
+    message: Optional[str] = None
 
 
 @dataclass

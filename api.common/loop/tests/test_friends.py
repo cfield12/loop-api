@@ -233,6 +233,7 @@ class TestFriends(unittest.TestCase):
                 'food': 3,
                 'price': 4,
                 'vibe': 5,
+                'message': None,
                 'time_created': '2000-01-01 00:00:00',
             }
         ]

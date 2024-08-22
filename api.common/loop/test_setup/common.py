@@ -120,6 +120,7 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 user=user,
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
+                message='Food was incredible.',
             )
             rating_4 = data.DB_TYPE[db_instance_type].Rating(
                 price=4,
@@ -129,6 +130,7 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 user=user,
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
+                message='Place had a great atmosphere.',
             )
             friend_status = data.DB_TYPE[db_instance_type].Friend_status(
                 description='Friends'

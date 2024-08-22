@@ -110,6 +110,7 @@ def get_user_ratings(
             rating.food,
             rating.price,
             rating.vibe,
+            rating.message,
             rating.location.display_name,
             rating.location.address,
             rating.location.google_id,
@@ -121,6 +122,7 @@ def get_user_ratings(
         food,
         price,
         vibe,
+        message,
         place_name,
         address,
         google_id,
@@ -130,6 +132,7 @@ def get_user_ratings(
                 'food': food,
                 'price': price,
                 'vibe': vibe,
+                'message': message,
                 'place_name': place_name,
                 'address': address,
                 'google_id': google_id,
@@ -176,6 +179,7 @@ def create_rating(rating: Rating, db_instance_type=RDS_WRITE) -> None:
         food=rating.food,
         location=rating.location,
         user=rating.user,
+        message=rating.message,
     )
     commit()
     logger.info(f'Successfully created rating in rds: {rating.__dict__}')
@@ -256,6 +260,7 @@ def get_ratings(
                 'food': r.food,
                 'price': r.price,
                 'vibe': r.vibe,
+                'message': r.message,
                 'time_created': r.created.strftime(LOOP_TIME_FORMAT),
             }
         )

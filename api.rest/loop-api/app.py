@@ -220,6 +220,7 @@ def create_rating(user: UserObject = None):
             price=validated_params.price,
             vibe=validated_params.vibe,
             food=validated_params.food,
+            message=validated_params.message,
         )
         data.create_rating(rating)
         app.log.info(f"Successfully created rating entry {rating.__dict__}")

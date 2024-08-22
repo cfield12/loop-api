@@ -1,10 +1,11 @@
 from copy import deepcopy
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from loop.api_classes.validators import (
     validate_code,
     validate_email_address,
     validate_int_thresholds,
+    validate_message_length,
     validate_str_uuid,
 )
 from pydantic import BaseModel, model_validator, validator
@@ -15,11 +16,17 @@ class CreateRating(BaseModel):
     price: int
     vibe: int
     food: int
+    message: Optional[str] = None
 
     @validator("price", "vibe", "food")
     @classmethod
     def validate_rating(cls, rating: int):
         return validate_int_thresholds(rating)
+
+    @validator("message")
+    @classmethod
+    def validate_message_len(cls, message: str):
+        return validate_message_length(message)
 
 
 class FriendValidator(BaseModel):

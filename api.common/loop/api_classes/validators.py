@@ -1,7 +1,12 @@
 import re
 from uuid import UUID
 
-from loop.constants import MAX_RATING, MIN_RATING, VERIFICATION_CODE_LENGTH
+from loop.constants import (
+    MAX_MESSAGE_LENGTH,
+    MAX_RATING,
+    MIN_RATING,
+    VERIFICATION_CODE_LENGTH,
+)
 from loop.enums import UUIDVersion
 
 
@@ -36,3 +41,9 @@ def validate_int_thresholds(number: int) -> int:
     if not MIN_RATING <= number <= MAX_RATING:
         raise ValueError('Ratings must be from 1 to 5')
     return number
+
+
+def validate_message_length(message: str):
+    if isinstance(message, str) and len(message) > MAX_MESSAGE_LENGTH:
+        raise ValueError('Message must maximum 200 characters.')
+    return message

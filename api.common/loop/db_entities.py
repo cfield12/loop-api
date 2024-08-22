@@ -51,6 +51,7 @@ def define_entities(db: Database):
         user = Required(User)
         created = Optional(datetime)
         last_updated = Optional(datetime)
+        message = Optional(str, nullable=True)
 
     class Friend_status(db.Entity):
         id = PrimaryKey(int, auto=True)

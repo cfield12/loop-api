@@ -11,6 +11,7 @@ IF (SELECT TABLE_NAME FROM information_schema.tables WHERE table_schema = 'loop'
         `price` INT NULL,
         `vibe` INT NULL,
         `food` INT NULL,
+        `message` VARCHAR(255) NULL,
         `location` INT NULL,
         `user` INT NULL,
         `created` DATETIME DEFAULT(sysdate()),
