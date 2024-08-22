@@ -44,6 +44,8 @@ def validate_int_thresholds(number: int) -> int:
 
 
 def validate_message_length(message: str):
+    if not message:
+        return None
     if isinstance(message, str) and len(message) > MAX_MESSAGE_LENGTH:
         raise ValueError('Message must maximum 200 characters.')
     return message
