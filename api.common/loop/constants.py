@@ -40,3 +40,7 @@ MAX_RATING = 5
 MIN_RATING = 1
 
 MAX_MESSAGE_LENGTH = 200
+
+LOOP_ADMIN_GROUP = 'loop_admin'
+
+ADMIN = 'admin'

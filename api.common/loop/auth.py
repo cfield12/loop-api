@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 import boto3
 from loop.api_classes import (
@@ -9,6 +9,7 @@ from loop.api_classes import (
     VerifyUser,
 )
 from loop.constants import (
+    ADMIN,
     AUTH_FLOW,
     COGNITO_SECRET_NAME,
     MINIMUM_PASSWORD_LENGTH,
@@ -30,6 +31,30 @@ class CognitoAuth:
             )
         self._user_pool_id = cognito_secret['user_pool_id']
         self._client_id = cognito_secret['client_id']
+
+    def _get_user_groups(self, username: str) -> List[Dict]:
+        try:
+            user_groups = self._auth_client.admin_list_groups_for_user(
+                UserPoolId=self._user_pool_id, Username=username
+            )
+        except self._auth_client.exceptions.UserNotFoundException as e:
+            raise ConflictError("The user does not exist.")
+        except Exception as e:
+            raise e
+        if user_groups := user_groups.get("Groups"):
+            return user_groups
+        else:
+            raise UnknownCognitoError(
+                'Unknown cognito error returning user groups - '
+                f'response: {user_groups}'
+            )
+
+    def _check_is_admin(self, login_credentials: LoginCredentials) -> bool:
+        user_groups = self._get_user_groups(login_credentials.email)
+        if ADMIN in [group['GroupName'] for group in user_groups]:
+            return True
+        else:
+            return False
 
     def _initiate_auth(self, login_credentials: LoginCredentials) -> Dict:
         try:
@@ -61,11 +86,14 @@ class CognitoAuth:
                 'login_credentials must be an instance of LoginCredentials'
             )
         auth_response = self._initiate_auth(login_credentials)
-        if "AuthenticationResult" not in auth_response:
+        if auth_response := auth_response.get("AuthenticationResult"):
+            is_admin: bool = self._check_is_admin(login_credentials)
+            auth_response["is_admin"] = is_admin
+            return auth_response
+        else:
             raise UnknownCognitoError(
                 f'Unknown cognito error - response: {auth_response}'
             )
-        return auth_response["AuthenticationResult"]
 
     def _sign_up(self, sign_up_creds: SignUpCredentials) -> Dict:
         try:
