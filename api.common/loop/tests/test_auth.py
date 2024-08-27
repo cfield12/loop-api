@@ -162,8 +162,21 @@ class TestCognitoAuth(unittest.TestCase):
         self.mock_boto.return_value.admin_initiate_auth.return_value = {
             'AuthenticationResult': {}
         }
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': []
+        }
         response = self.cognito_auth.login_user(TEST_LOGIN_CREDS)
-        self.assertEqual(response, {})
+        self.assertEqual(response, {'is_admin': False})
+
+    def test_login_admin(self):
+        self.mock_boto.return_value.admin_initiate_auth.return_value = {
+            'AuthenticationResult': {}
+        }
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': [{'GroupName': 'admin'}]
+        }
+        response = self.cognito_auth.login_user(TEST_LOGIN_CREDS)
+        self.assertEqual(response, {'is_admin': True})
 
     def test_login_type_error(self):
         self.assertRaises(

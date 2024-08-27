@@ -41,13 +41,12 @@ class CognitoAuth:
             raise ConflictError("The user does not exist.")
         except Exception as e:
             raise e
-        if user_groups := user_groups.get("Groups"):
-            return user_groups
-        else:
+        if "Groups" not in user_groups:
             raise UnknownCognitoError(
                 'Unknown cognito error returning user groups - '
                 f'response: {user_groups}'
             )
+        return user_groups['Groups']
 
     def _check_is_admin(self, login_credentials: LoginCredentials) -> bool:
         user_groups = self._get_user_groups(login_credentials.email)
@@ -86,14 +85,14 @@ class CognitoAuth:
                 'login_credentials must be an instance of LoginCredentials'
             )
         auth_response = self._initiate_auth(login_credentials)
-        if auth_response := auth_response.get("AuthenticationResult"):
-            is_admin: bool = self._check_is_admin(login_credentials)
-            auth_response["is_admin"] = is_admin
-            return auth_response
-        else:
+        if "AuthenticationResult" not in auth_response:
             raise UnknownCognitoError(
                 f'Unknown cognito error - response: {auth_response}'
             )
+        auth_response = auth_response["AuthenticationResult"]
+        is_admin: bool = self._check_is_admin(login_credentials)
+        auth_response["is_admin"] = is_admin
+        return auth_response
 
     def _sign_up(self, sign_up_creds: SignUpCredentials) -> Dict:
         try:
