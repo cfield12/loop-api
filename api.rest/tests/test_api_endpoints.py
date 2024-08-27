@@ -107,6 +107,71 @@ class TestGetRatings(unittest.TestCase):
                 ],
             )
 
+    def test_get_admin_ratings_endpoint(self):
+        # Happy path test
+        with Client(app.app) as client:
+            response = client.http.get(
+                f'/admin/ratings',
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.json_body,
+                [
+                    {
+                        'id': 1,
+                        'first_name': 'Admin',
+                        'last_name': 'User',
+                        'place_id': 'test_google_id_1',
+                        'latitude': 1.5,
+                        'longitude': -0.7,
+                        'food': 3,
+                        'price': 4,
+                        'vibe': 5,
+                        'message': None,
+                        'time_created': '2000-01-01 00:00:00',
+                    },
+                    {
+                        'id': 2,
+                        'first_name': 'Admin',
+                        'last_name': 'User',
+                        'place_id': 'test_google_id_3',
+                        'latitude': 1.9,
+                        'longitude': -0.8,
+                        'food': 5,
+                        'price': 5,
+                        'vibe': 5,
+                        'message': None,
+                        'time_created': '2000-01-01 00:00:00',
+                    },
+                    {
+                        'id': 3,
+                        'first_name': 'Test',
+                        'last_name': 'User',
+                        'place_id': 'test_google_id_1',
+                        'latitude': 1.5,
+                        'longitude': -0.7,
+                        'food': 3,
+                        'price': 4,
+                        'vibe': 4,
+                        'message': 'Food was incredible.',
+                        'time_created': '2000-01-01 00:00:00',
+                    },
+                    {
+                        'id': 4,
+                        'first_name': 'Test',
+                        'last_name': 'User',
+                        'place_id': 'test_google_id_2',
+                        'latitude': 1.2,
+                        'longitude': -0.9,
+                        'food': 5,
+                        'price': 4,
+                        'vibe': 5,
+                        'message': 'Place had a great atmosphere.',
+                        'time_created': '2000-01-01 00:00:00',
+                    },
+                ],
+            )
+
 
 class TestDeleteAndUpdateRating(unittest.TestCase):
     @patch(mock_url_write_db)
