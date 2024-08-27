@@ -96,8 +96,8 @@ class LoopTestGetRatings(unittest.TestCase):
         user = 1
         self.assertRaises(TypeError, data.get_user_ratings, user)
 
-    def test_get_ratings(self):
-        users = [1, 2, 3, 4]
+    def test_get_ratings_for_user(self):
+        users = [1, 3, 4]
         ratings = data.get_ratings(users)
         expected_ratings = [
             {
@@ -124,32 +124,6 @@ class LoopTestGetRatings(unittest.TestCase):
                 'price': 4,
                 'vibe': 5,
                 'message': 'Place had a great atmosphere.',
-                'time_created': '2000-01-01 00:00:00',
-            },
-            {
-                'id': 1,
-                'first_name': 'Admin',
-                'last_name': 'User',
-                'place_id': 'test_google_id_1',
-                'latitude': 1.5,
-                'longitude': -0.7,
-                'food': 3,
-                'price': 4,
-                'vibe': 5,
-                'message': None,
-                'time_created': '2000-01-01 00:00:00',
-            },
-            {
-                'id': 2,
-                'first_name': 'Admin',
-                'last_name': 'User',
-                'place_id': 'test_google_id_3',
-                'latitude': 1.9,
-                'longitude': -0.8,
-                'food': 5,
-                'price': 5,
-                'vibe': 5,
-                'message': None,
                 'time_created': '2000-01-01 00:00:00',
             },
         ]
@@ -184,6 +158,64 @@ class LoopTestGetRatings(unittest.TestCase):
                 'price': 4,
                 'vibe': 5,
                 'message': None,
+                'time_created': '2000-01-01 00:00:00',
+            },
+        ]
+        self.assertEqual(ratings, expected_ratings)
+
+    def test_get_ratings(self):
+        ratings = data.get_ratings()
+        expected_ratings = [
+            {
+                'id': 1,
+                'first_name': 'Admin',
+                'last_name': 'User',
+                'place_id': 'test_google_id_1',
+                'latitude': 1.5,
+                'longitude': -0.7,
+                'food': 3,
+                'price': 4,
+                'vibe': 5,
+                'message': None,
+                'time_created': '2000-01-01 00:00:00',
+            },
+            {
+                'id': 2,
+                'first_name': 'Admin',
+                'last_name': 'User',
+                'place_id': 'test_google_id_3',
+                'latitude': 1.9,
+                'longitude': -0.8,
+                'food': 5,
+                'price': 5,
+                'vibe': 5,
+                'message': None,
+                'time_created': '2000-01-01 00:00:00',
+            },
+            {
+                'id': 3,
+                'first_name': 'Test',
+                'last_name': 'User',
+                'place_id': 'test_google_id_1',
+                'latitude': 1.5,
+                'longitude': -0.7,
+                'food': 3,
+                'price': 4,
+                'vibe': 4,
+                'message': 'Food was incredible.',
+                'time_created': '2000-01-01 00:00:00',
+            },
+            {
+                'id': 4,
+                'first_name': 'Test',
+                'last_name': 'User',
+                'place_id': 'test_google_id_2',
+                'latitude': 1.2,
+                'longitude': -0.9,
+                'food': 5,
+                'price': 4,
+                'vibe': 5,
+                'message': 'Place had a great atmosphere.',
                 'time_created': '2000-01-01 00:00:00',
             },
         ]

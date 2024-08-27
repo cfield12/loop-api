@@ -25,6 +25,7 @@ from pony.orm import (
     TransactionError,
     commit,
     db_session,
+    desc,
     select,
 )
 from pony.orm.core import Query
@@ -295,21 +296,19 @@ def get_all_users(db_instance_type=RDS_WRITE) -> Query:
 
 @DB_SESSION_RETRYABLE
 def get_ratings(
-    users: List[int],
+    users: Optional[List[int]] = None,
     place_id: Optional[str] = None,
     db_instance_type=RDS_WRITE,
 ) -> Dict:
     reviews = list()
-    ratings = select(
-        rating
-        for rating in DB_TYPE[db_instance_type].Rating
-        if rating.user.id in users
-    )
+    ratings = select(rating for rating in DB_TYPE[db_instance_type].Rating)
+    if users:
+        ratings = ratings.filter(lambda rating: rating.user.id in users)
     if place_id:
         ratings = ratings.filter(
             lambda rating: rating.location.google_id == place_id
         )
-    for r in ratings:
+    for r in ratings.order_by(lambda rating: desc(rating.last_updated)):
         reviews.append(
             {
                 'id': r.id,

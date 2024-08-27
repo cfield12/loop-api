@@ -107,6 +107,11 @@ def get_current_user(func):
     return _get_current_user
 
 
+# -----------------------------------------------------------------------------
+# USER ENDPOINTS
+# -----------------------------------------------------------------------------
+
+
 @app.route(
     '/web/ratings', methods=['GET'], cors=True, authorizer=COGNITO_AUTHORIZER
 )
@@ -698,5 +703,45 @@ def get_restaurant(place_id=str(), user: UserObject = None):
         if reviews:
             location['reviews'] = reviews
         return location
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+# -----------------------------------------------------------------------------
+# ADMIN ENDPOINTS
+# -----------------------------------------------------------------------------
+
+
+@app.route(
+    '/web/admin/ratings',
+    methods=['GET'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
+@app.route('/admin/ratings', methods=['GET'], cors=True)
+def get_admin_ratings():
+    """
+    Get ratings (admin).
+    ---
+    get:
+        operationId: getAdminRatings
+        summary: Get all ratings (admin).
+        description: Get all ratings (admin).
+        security:
+            - API Key: []
+        responses:
+            200:
+                description: OK
+                schema:
+                    type: object
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        ratings = data.get_ratings()
+        app.log.info(f"Successfully returned all ratings (admin).")
+        return ratings
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
