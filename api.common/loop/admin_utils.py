@@ -46,8 +46,12 @@ def delete_user(user_credentials: UserCredentials) -> Dict:
     b) Delete user from Cognito.
     """
     # Send message to delete user from RDS Lambda.
+
     queue_service = SqsClient(DELETE_USER_QUEUE)
     queue_service.send_message(user_credentials.model_dump())
+    logger.info(
+        f'Sent message to delete user queue ({user_credentials.email})'
+    )
 
     # Delete user from Cognito.
     auth_client = CognitoAuth()

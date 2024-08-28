@@ -44,6 +44,15 @@
         "*"
       ],
       "Effect": "Allow"
+    },
+    {
+      "Action": [
+        "cognito-idp:AdminDeleteUser "
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Effect": "Allow"
     }
   ]
 }
