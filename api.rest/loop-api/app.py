@@ -124,7 +124,8 @@ def access_admin(func):
         try:
             if 'user' not in kwargs:
                 raise NoCurrentUserError(
-                    'Must get the current user before checking for admin rights.'
+                    'Must get the current user before checking for admin '
+                    'rights.'
                 )
             if LOOP_ADMIN_GROUP not in kwargs['user'].groups:
                 raise UnauthorizedError('Requires admin access.')
