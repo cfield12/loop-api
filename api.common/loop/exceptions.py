@@ -132,3 +132,10 @@ class UnknownCognitoError(Error):
 
     def __init__(self, message):
         self.message = message
+
+
+class NoCurrentUserError(Error):
+    '''No current user error.'''
+
+    def __init__(self, message):
+        self.message = message

@@ -241,6 +241,13 @@ class LoopTestUserFromCognito(unittest.TestCase):
         assert isinstance(user, UserObject)
         self.assertEqual(user.id, 1)
 
+    def test_get_admin_user_from_cognito(self):
+        cognito_user_name = '86125274-40a1-70ec-da28-f779360f7c07'
+        user = data.get_user_from_cognito_username(cognito_user_name)
+        assert isinstance(user, UserObject)
+        self.assertEqual(user.id, 2)
+        self.assertIn('loop_admin', user.groups)
+
     def test_get_user_from_cognito_error(self):
         cognito_user_name = 'unknown_test_cognito_user_name'
         self.assertRaises(

@@ -13,14 +13,19 @@ from loop.api_classes import (
     FriendValidator,
     UpdateRating,
 )
-from loop.constants import COGNITO_SECRET_NAME
+from loop.constants import COGNITO_SECRET_NAME, LOOP_ADMIN_GROUP
 from loop.data_classes import (
     Location,
     Rating,
     UploadThumbnailEvent,
     UserObject,
 )
-from loop.exceptions import BadRequestError, LoopException, UnauthorizedError
+from loop.exceptions import (
+    BadRequestError,
+    LoopException,
+    NoCurrentUserError,
+    UnauthorizedError,
+)
 from loop.friends import (
     FriendWorker,
     get_ratings_for_place_and_friends,
@@ -105,6 +110,21 @@ def get_current_user(func):
         return func(*args, **kwargs)
 
     return _get_current_user
+
+
+def access_admin(func):
+    @wraps(func)
+    def _access_admin(*args, **kwargs):
+        if 'user' not in kwargs:
+            raise NoCurrentUserError(
+                'Must get the current user before checking for admin rights.'
+            )
+        if LOOP_ADMIN_GROUP not in kwargs['user'].groups:
+            raise UnauthorizedError('Requires admin access.')
+        func_payload = func(*args, **kwargs)
+        return func_payload
+
+    return _access_admin
 
 
 # -----------------------------------------------------------------------------
@@ -260,6 +280,11 @@ def update_rating(rating_id: int, user: UserObject = None):
         consumes:
             -   application/json
         parameters:
+            -   in: path
+                name: rating_id
+                type: string
+                required: true
+                description: Rating id of rating to update.
             -   in: body
                 name: update_rating_schema
                 schema:
@@ -312,12 +337,11 @@ def delete_rating(rating_id: int, user: UserObject = None):
         consumes:
             -   application/json
         parameters:
-            -   in: body
-                name: delete_rating_schema
-                schema:
-                    type: object
+            -   in: path
+                name: rating_id
+                type: string
                 required: true
-                description: JSON object containing rating metadata.
+                description: Rating id of rating to delete.
         responses:
             200:
                 description: OK
@@ -719,7 +743,9 @@ def get_restaurant(place_id=str(), user: UserObject = None):
     authorizer=COGNITO_AUTHORIZER,
 )
 @app.route('/admin/ratings', methods=['GET'], cors=True)
-def get_admin_ratings():
+@get_current_user
+@access_admin
+def get_admin_ratings(user: UserObject = None):
     """
     Get ratings (admin).
     ---

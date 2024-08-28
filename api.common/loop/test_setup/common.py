@@ -28,6 +28,9 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
 
     with db_session:
         for db_instance_type in DB_INSTANCE_TYPES:
+            admin_group = data.DB_TYPE[db_instance_type].Group(
+                description='loop_admin'
+            )
             user = data.DB_TYPE[db_instance_type].User(
                 created=datetime(2000, 1, 1),
                 last_updated=datetime(2000, 1, 1),
@@ -43,6 +46,7 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
                 email='admin_test_email',
                 first_name='Admin',
                 last_name='User',
+                groups={admin_group},
             )
             random_user = data.DB_TYPE[db_instance_type].User(
                 created=datetime(2000, 1, 1),

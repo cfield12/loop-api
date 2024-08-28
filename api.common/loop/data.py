@@ -155,8 +155,11 @@ def get_user_from_cognito_username(
     )
     if not user:
         raise exceptions.BadRequestError('User not found')
-    user_id = user.id
-    return UserObject(id=user_id, cognito_user_name=user.cognito_user_name)
+    return UserObject(
+        id=user.id,
+        cognito_user_name=user.cognito_user_name,
+        groups=[group.description for group in user.groups],
+    )
 
 
 @DB_SESSION_RETRYABLE

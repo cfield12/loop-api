@@ -26,6 +26,16 @@ def define_entities(db: Database):
         ratings = Set('Rating')
         friend_1 = Set('Friend', reverse='friend_1')
         friend_2 = Set('Friend', reverse='friend_2')
+        groups = Set('Group')
+
+    class Group(db.Entity):
+        """
+        List of all groups.
+        """
+
+        id = PrimaryKey(int, auto=True)
+        description = Optional(str, nullable=True)
+        users = Set(User)
 
     class Location(db.Entity):
         """
