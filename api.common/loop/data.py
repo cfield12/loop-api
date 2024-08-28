@@ -163,6 +163,18 @@ def get_user_from_cognito_username(
 
 
 @DB_SESSION_RETRYABLE
+def get_user_from_email(email: str, db_instance_type=RDS_WRITE) -> UserObject:
+    user = DB_TYPE[db_instance_type].User.get(email=email)
+    if not user:
+        raise exceptions.BadRequestError('User not found')
+    return UserObject(
+        id=user.id,
+        cognito_user_name=user.cognito_user_name,
+        groups=[group.description for group in user.groups],
+    )
+
+
+@DB_SESSION_RETRYABLE
 def create_user(user: UserCreateObject, db_instance_type=RDS_WRITE) -> None:
     if not isinstance(user, UserCreateObject):
         raise TypeError('user must be an instance of UserCreateObject')
@@ -328,3 +340,45 @@ def get_ratings(
             }
         )
     return reviews
+
+
+@DB_SESSION_RETRYABLE
+def delete_user_ratings(user: UserObject, db_instance_type=RDS_WRITE) -> None:
+    if not isinstance(user, UserObject):
+        raise TypeError('user must be an instance of UserObject.')
+    ratings = select(
+        rating
+        for rating in DB_TYPE[db_instance_type].Rating
+        if rating.user.id == user.id
+    )
+    ratings.delete(bulk=True)
+    commit()
+    return
+
+
+@DB_SESSION_RETRYABLE
+def delete_user_friendships(
+    user: UserObject, db_instance_type=RDS_WRITE
+) -> None:
+    if not isinstance(user, UserObject):
+        raise TypeError('user must be an instance of UserObject.')
+    frienships = select(
+        f
+        for f in DB_TYPE[db_instance_type].Friend
+        if f.friend_1.id == user.id or f.friend_2.id == user.id
+    )
+    frienships.delete(bulk=True)
+    commit()
+    return
+
+
+@DB_SESSION_RETRYABLE
+def delete_user_entry(user: UserObject, db_instance_type=RDS_WRITE) -> None:
+    if not isinstance(user, UserObject):
+        raise TypeError('user must be an instance of UserObject.')
+    user = DB_TYPE[db_instance_type].User.get(id=user.id)
+    if not user:
+        raise exceptions.BadRequestError('User not found')
+    user.delete()
+    commit()
+    return

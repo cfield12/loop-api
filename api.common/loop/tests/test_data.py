@@ -4,6 +4,7 @@ from unittest.mock import call, patch
 from loop import data, exceptions
 from loop.api_classes import Coordinates, UpdateRating
 from loop.data_classes import Location, Rating, UserObject
+from loop.friends import get_user_friends
 from loop.test_setup.common import setup_rds, unbind_rds
 from loop.utils import get_admin_user
 from pony.orm import Database
@@ -254,6 +255,20 @@ class LoopTestUserFromCognito(unittest.TestCase):
             exceptions.BadRequestError,
             data.get_user_from_cognito_username,
             cognito_user_name,
+        )
+
+    def test_get_user_from_email(self):
+        email = 'test_email'
+        user = data.get_user_from_email(email)
+        assert isinstance(user, UserObject)
+        self.assertEqual(user.id, 1)
+
+    def test_get_user_from_email_error(self):
+        email = 'unknown_email'
+        self.assertRaises(
+            exceptions.BadRequestError,
+            data.get_user_from_email,
+            email,
         )
 
 
@@ -556,6 +571,59 @@ class TestUpdateObject(unittest.TestCase):
             AttributeError,
             data.update_object_last_updated_time,
             pending_status,
+        )
+
+
+class TestDeleteUser(unittest.TestCase):
+    """
+    Tests the functions used when deleting a user and all their objects from
+    RDS.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        setup_rds()
+
+    @classmethod
+    def tearDownClass(cls):
+        unbind_rds()
+
+    @data.DB_SESSION_RETRYABLE
+    def test_delete_user_ratings(self):
+        user = UserObject(id=2, cognito_user_name='user_name')
+        ratings = data.get_user_ratings(user)
+        assert len(ratings) == 2
+        data.delete_user_ratings(user)
+        ratings = data.get_user_ratings(user)
+        assert len(ratings) == 0
+
+    def test_delete_user_ratings_type_error(self):
+        user = 'user_name'
+        self.assertRaises(TypeError, data.get_user_ratings, user)
+
+    @data.DB_SESSION_RETRYABLE
+    def test_delete_friendships(self):
+        user = UserObject(id=2, cognito_user_name='user_name')
+        friendships = get_user_friends(user)
+        assert len(friendships) == 1
+        data.delete_user_friendships(user)
+        friendships = get_user_friends(user)
+        assert len(friendships) == 0
+
+    def test_delete_friendships_type_error(self):
+        user = 'user_name'
+        self.assertRaises(TypeError, data.delete_user_friendships, user)
+
+    @data.DB_SESSION_RETRYABLE
+    def test_delete_user_entry(self):
+        user_name = 'test_cognito_user_name'
+        user = data.get_user_from_cognito_username(user_name)
+        self.assertIsInstance(user, UserObject)
+        data.delete_user_entry(user)
+        self.assertRaises(
+            exceptions.BadRequestError,
+            data.get_user_from_cognito_username,
+            user_name,
         )
 
 
