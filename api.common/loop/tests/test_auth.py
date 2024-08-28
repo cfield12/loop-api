@@ -439,6 +439,38 @@ class TestCognitoAuth(unittest.TestCase):
             TEST_FORGOT_PASSWORD,
         )
 
+    def test_admin_delete_user(self):
+        self.cognito_auth.admin_delete_user(TEST_USER_CREDENTIALS)
+        self.assertEqual(
+            self.mock_boto.mock_calls[1],
+            call().admin_delete_user(
+                UserPoolId='test_user_pool_id', Username='test_email@test.com'
+            ),
+        )
+
+    def test_admin_delete_user_type_error(self):
+        self.assertRaises(TypeError, self.cognito_auth.admin_delete_user, {})
+
+    def test_admin_delete_username_not_exists(self):
+        self.mock_boto.return_value.admin_delete_user.side_effect = (
+            COGNITO_CLIENT.exceptions.UserNotFoundException(**ERROR_RESPONSE)
+        )
+        self.assertRaises(
+            ConflictError,
+            self.cognito_auth.admin_delete_user,
+            TEST_USER_CREDENTIALS,
+        )
+
+    def test_admin_delete_user_unknown_error(self):
+        self.mock_boto.return_value.admin_delete_user.side_effect = (
+            ValueError()
+        )
+        self.assertRaises(
+            ValueError,
+            self.cognito_auth.admin_delete_user,
+            TEST_USER_CREDENTIALS,
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

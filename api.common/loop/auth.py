@@ -205,3 +205,18 @@ class CognitoAuth:
             raise BadRequestError("Invalid Verification code.")
         except Exception as e:
             raise e
+
+    def admin_delete_user(self, user_credentials: UserCredentials) -> Dict:
+        if not isinstance(user_credentials, UserCredentials):
+            raise TypeError(
+                'user_credentials must be an instance of UserCredentials.'
+            )
+        try:
+            return self._auth_client.admin_delete_user(
+                UserPoolId=self._user_pool_id,
+                Username=user_credentials.email,
+            )
+        except self._auth_client.exceptions.UserNotFoundException:
+            raise ConflictError("Username does not exist.")
+        except Exception as e:
+            raise e

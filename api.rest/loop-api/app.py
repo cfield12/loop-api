@@ -6,13 +6,15 @@ from typing import Union
 import jwt
 import requests
 from chalice import Chalice, CognitoUserPoolAuthorizer, Response
-from loop import data
+from loop import admin_utils, data
 from loop.api_classes import (
     Coordinates,
     CreateRating,
     FriendValidator,
     UpdateRating,
+    UserCredentials,
 )
+from loop.auth import CognitoAuth
 from loop.constants import COGNITO_SECRET_NAME, LOOP_ADMIN_GROUP
 from loop.data_classes import (
     Location,
@@ -80,33 +82,37 @@ def get_required_cognito_authorizer() -> CognitoUserPoolAuthorizer:
 COGNITO_AUTHORIZER = get_required_cognito_authorizer()
 
 
+def _get_user_from_authorization() -> UserObject:
+    try:
+        auth_token = app.current_request.headers.get('Authorization')
+        if not auth_token:
+            raise UnauthorizedError("Authorization header is expected")
+        try:
+            cognito_user = jwt.decode(
+                auth_token, options={'verify_signature': False}
+            )
+        except jwt.DecodeError as e:
+            raise UnauthorizedError(f'Jwt decode error: {e}')
+        except Exception as e:
+            raise UnauthorizedError(f'Unexpected error: {e}')
+        if not cognito_user:
+            raise UnauthorizedError("Could not find cognito user")
+        cognito_user_name = cognito_user.get('sub')
+        if not cognito_user_name:
+            raise UnauthorizedError("Could not find cognito username")
+        return data.get_user_from_cognito_username(cognito_user_name)
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
 def get_current_user(func):
     @wraps(func)
     def _get_current_user(*args, **kwargs):
-        if LOOP_AUTH_DISABLED:
-            user = get_admin_user()
-        else:
-            try:
-                auth_token = app.current_request.headers.get('Authorization')
-                if not auth_token:
-                    raise UnauthorizedError("Authorization header is expected")
-                try:
-                    cognito_user = jwt.decode(
-                        auth_token, options={'verify_signature': False}
-                    )
-                except jwt.DecodeError as e:
-                    raise UnauthorizedError(f'Jwt decode error: {e}')
-                except Exception as e:
-                    raise UnauthorizedError(f'Unexpected error: {e}')
-                if not cognito_user:
-                    raise UnauthorizedError("Could not find cognito user")
-                cognito_user_name = cognito_user.get('sub')
-                if not cognito_user_name:
-                    raise UnauthorizedError("Could not find cognito username")
-                user = data.get_user_from_cognito_username(cognito_user_name)
-            except LoopException as e:
-                raise LoopException.as_chalice_exception(e)
-        kwargs["user"] = user
+        kwargs["user"] = (
+            get_admin_user()
+            if LOOP_AUTH_DISABLED
+            else _get_user_from_authorization()
+        )
         return func(*args, **kwargs)
 
     return _get_current_user
@@ -769,5 +775,95 @@ def get_admin_ratings(user: UserObject = None):
         ratings = data.get_ratings()
         app.log.info(f"Successfully returned all ratings (admin).")
         return ratings
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route(
+    '/web/admin/ratings/{rating_id}',
+    methods=['DELETE'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
+@app.route('/admin/ratings/{rating_id}', methods=['DELETE'], cors=True)
+@get_current_user
+@access_admin
+def admin_delete_rating(rating_id: int, user: UserObject = None):
+    """
+    Admin delete a user rating.
+    ---
+    put:
+        operationId: adminDeleteRating
+        summary: Delete a rating entry in the db.
+        description: Delete a rating entry in the db.
+        security:
+            - Qi API Key: []
+        consumes:
+            -   application/json
+        parameters:
+            -   in: path
+                name: rating_id
+                type: string
+                required: true
+                description: Rating id of rating to delete.
+        responses:
+            200:
+                description: OK
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        admin_utils.delete_rating(rating_id)
+        app.log.info(f"Successfully deleted rating entry {rating_id}.")
+        return Response(status_code=200, body='')
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route(
+    '/web/admin/user/{email}',
+    methods=['DELETE'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
+@app.route('/admin/user/{email}', methods=['DELETE'], cors=True)
+@get_current_user
+@access_admin
+def admin_delete_user(email: str, user: UserObject = None):
+    """
+    Admin delete a user.
+    ---
+    put:
+        operationId: adminDeleteUser
+        summary: Delete a user from db/cognito.
+        description: Delete a user from db/cognito.
+        security:
+            - Qi API Key: []
+        consumes:
+            -   application/json
+        parameters:
+            -   in: path
+                name: email
+                type: string
+                required: true
+                description: Email of user to delete.
+        responses:
+            200:
+                description: OK
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        try:
+            user_credentials = UserCredentials(email=email)
+        except PydanticValidationError as e:
+            raise BadRequestError(
+                "; ".join([error["msg"] for error in e.errors()])
+            )
+        return admin_utils.delete_user(user_credentials)
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)

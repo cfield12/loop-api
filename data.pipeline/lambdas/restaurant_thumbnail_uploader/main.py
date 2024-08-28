@@ -16,8 +16,8 @@ def lambda_handler(event, context):
                 thumbnail_uploader.upload_thumbnail(upload_event)
             except Exception as e:
                 logger.error(
-                    'Restaurant thumbnail upload event failed for event'
-                    f': {event} ({e})'
+                    'Restaurant thumbnail upload event failed for message'
+                    f': {message} ({e})'
                 )
                 raise e
     except Exception as e:
