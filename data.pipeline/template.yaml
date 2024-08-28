@@ -90,6 +90,31 @@ Resources:
       - {Key: Environment, Value: !Ref Environment}
       - {Key: Project,     Value: !Ref Project}
 
+  DeleteUserDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join ['-', [!Ref Project, sqs, delete-user-dlq, !Ref Environment]]
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, sqs, delete-user-dlq, !Ref Environment]]}
+      - {Key: Queue,       Value: DeleteUserDlq}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
+  DeleteUserQueue:
+    Type: AWS::SQS::Queue
+    DependsOn: DeleteUserDlq
+    Properties:
+      QueueName: !Join ['-', [!Ref Project, sqs, delete-user, !Ref Environment]]
+      VisibilityTimeout:     30
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeleteUserDlq.Arn
+        maxReceiveCount:     5
+      Tags:
+      - {Key: Name,        Value: !Join ['-', [!Ref Project, sqs, delete-user, !Ref Environment]]}
+      - {Key: Queue,       Value: DeleteUserQueue}
+      - {Key: Environment, Value: !Ref Environment}
+      - {Key: Project,     Value: !Ref Project}
+
 # Lambdas
 # ----------------------------------------------------------------------------------------------------------------------
   UserCreator:
@@ -145,6 +170,37 @@ Resources:
       Tags:
         Function:       ThumbnailUploader
         Name:           !Join ['-', [!Ref Project, lambda, thumbnail-uploader, !Ref Environment]]
+        Environment:    !Ref Environment
+        Project:        !Ref Project
+
+  DeleteUserLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Role:             !GetAtt LambdaRole.Arn
+      Policies:         AWSLambdaVPCAccessExecutionRole
+      FunctionName:     !Join ['-', [!Ref Project, lambda, delete-user, !Ref Environment]]
+      Description:      Deletes user and all their data from RDS.
+      ReservedConcurrentExecutions: 10
+      CodeUri:          lambdas/user_deleter
+      Runtime:      python3.8
+      Handler:      main.lambda_handler
+      AutoPublishAlias: !Ref Environment
+      MemorySize: 512
+      Timeout: 10
+      Environment:
+        Variables:
+          ENVIRONMENT:       !Ref Environment
+          LOGLEVEL:          INFO
+          PROJECT:           !Ref Project
+      Events:
+        Queue:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt DeleteUserQueue.Arn
+            BatchSize: 2
+      Tags:
+        Function:       DeleteUserLambda
+        Name:           !Join ['-', [!Ref Project, lambda, delete-user, !Ref Environment]]
         Environment:    !Ref Environment
         Project:        !Ref Project
 
@@ -262,6 +318,17 @@ Resources:
             - sqs:GetQueueUrl
             Effect: Allow
             Resource: !GetAtt RestaurantThumbnailGenerator.Arn
+      - PolicyName: delete-user-queue
+        PolicyDocument:
+          Statement:
+          - Action:
+            - sqs:SendMessage
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            - sqs:GetQueueUrl
+            Effect: Allow
+            Resource: !GetAtt DeleteUserQueue.Arn
 
 Outputs:
   UserCreatorArn:
