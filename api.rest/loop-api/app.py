@@ -83,36 +83,36 @@ COGNITO_AUTHORIZER = get_required_cognito_authorizer()
 
 
 def _get_user_from_authorization() -> UserObject:
+    auth_token = app.current_request.headers.get('Authorization')
+    if not auth_token:
+        raise UnauthorizedError("Authorization header is expected")
     try:
-        auth_token = app.current_request.headers.get('Authorization')
-        if not auth_token:
-            raise UnauthorizedError("Authorization header is expected")
-        try:
-            cognito_user = jwt.decode(
-                auth_token, options={'verify_signature': False}
-            )
-        except jwt.DecodeError as e:
-            raise UnauthorizedError(f'Jwt decode error: {e}')
-        except Exception as e:
-            raise UnauthorizedError(f'Unexpected error: {e}')
-        if not cognito_user:
-            raise UnauthorizedError("Could not find cognito user")
-        cognito_user_name = cognito_user.get('sub')
-        if not cognito_user_name:
-            raise UnauthorizedError("Could not find cognito username")
-        return data.get_user_from_cognito_username(cognito_user_name)
-    except LoopException as e:
-        raise LoopException.as_chalice_exception(e)
+        cognito_user = jwt.decode(
+            auth_token, options={'verify_signature': False}
+        )
+    except jwt.DecodeError as e:
+        raise UnauthorizedError(f'Jwt decode error: {e}')
+    except Exception as e:
+        raise UnauthorizedError(f'Unexpected error: {e}')
+    if not cognito_user:
+        raise UnauthorizedError("Could not find cognito user")
+    cognito_user_name = cognito_user.get('sub')
+    if not cognito_user_name:
+        raise UnauthorizedError("Could not find cognito username")
+    return data.get_user_from_cognito_username(cognito_user_name)
 
 
 def get_current_user(func):
     @wraps(func)
     def _get_current_user(*args, **kwargs):
-        kwargs["user"] = (
-            get_admin_user()
-            if LOOP_AUTH_DISABLED
-            else _get_user_from_authorization()
-        )
+        try:
+            kwargs["user"] = (
+                get_admin_user()
+                if LOOP_AUTH_DISABLED
+                else _get_user_from_authorization()
+            )
+        except LoopException as e:
+            raise LoopException.as_chalice_exception(e)
         return func(*args, **kwargs)
 
     return _get_current_user
@@ -121,12 +121,15 @@ def get_current_user(func):
 def access_admin(func):
     @wraps(func)
     def _access_admin(*args, **kwargs):
-        if 'user' not in kwargs:
-            raise NoCurrentUserError(
-                'Must get the current user before checking for admin rights.'
-            )
-        if LOOP_ADMIN_GROUP not in kwargs['user'].groups:
-            raise UnauthorizedError('Requires admin access.')
+        try:
+            if 'user' not in kwargs:
+                raise NoCurrentUserError(
+                    'Must get the current user before checking for admin rights.'
+                )
+            if LOOP_ADMIN_GROUP not in kwargs['user'].groups:
+                raise UnauthorizedError('Requires admin access.')
+        except LoopException as e:
+            raise LoopException.as_chalice_exception(e)
         func_payload = func(*args, **kwargs)
         return func_payload
 
