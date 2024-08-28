@@ -26,7 +26,8 @@
           "cognito-idp:ConfirmSignUp",
           "cognito-idp:ResendConfirmationCode",
           "cognito-idp:ForgotPassword",
-          "cognito-idp:ConfirmForgotPassword"
+          "cognito-idp:ConfirmForgotPassword",
+          "cognito-idp:AdminListGroupsForUser"
         ],
         "Resource": [
           "*"

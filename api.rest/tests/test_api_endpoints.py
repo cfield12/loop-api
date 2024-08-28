@@ -205,7 +205,7 @@ class TestDeleteAndUpdateRating(unittest.TestCase):
                     UserObject(
                         id=1,
                         cognito_user_name='86125274-40a1-70ec-da28-f779360f7c07',
-                        groups=None,
+                        groups=['loop_admin'],
                     ),
                 ),
             )
@@ -716,6 +716,47 @@ class TestGetRestaurant(unittest.TestCase):
                 ],
             },
         )
+
+
+class TestAdminEndpoints(unittest.TestCase):
+    @patch(mock_url_write_db)
+    def setUp(self, write_db):
+        write_db.side_effect = mocked_init_write_db
+
+        global app
+        app = importlib.import_module("loop-api.app")
+        setup_rds()
+
+    def tearDown(self):
+        unbind_rds()
+
+    @patch('loop.data.get_ratings')
+    def test_get_admin_ratings(self, mock_ratings):
+        mock_ratings.return_value = []
+        with Client(app.app) as client:
+            response = client.http.get('/admin/ratings')
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(mock_ratings.called)
+
+    @patch('loop.admin_utils.delete_rating')
+    def test_delete_admin_rating(self, mock_delete_rating):
+        with Client(app.app) as client:
+            response = client.http.delete('/admin/ratings/1')
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(mock_delete_rating.called)
+
+    @patch('loop.admin_utils.delete_user')
+    def test_delete_admin_user(self, mock_delete_user):
+        mock_delete_user.return_value = 'Success'
+        with Client(app.app) as client:
+            response = client.http.delete('/admin/user/some_email@hotmail.com')
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(mock_delete_user.called)
+
+    def test_delete_admin_user_bad_email_error(self):
+        with Client(app.app) as client:
+            response = client.http.delete('/admin/user/HELLO')
+            self.assertEqual(response.status_code, 400)
 
 
 if __name__ == "__main__":
