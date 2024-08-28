@@ -12,7 +12,7 @@ class TestUtils(unittest.TestCase):
             UserObject(
                 id=1,
                 cognito_user_name='86125274-40a1-70ec-da28-f779360f7c07',
-                groups=None,
+                groups=['loop_admin'],
             ),
         )
 
