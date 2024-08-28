@@ -35,7 +35,7 @@ class TestAdminUtils(unittest.TestCase):
         self.assertEqual(
             mock_queue_client.mock_calls,
             [
-                call('loop-sqs-delete_user-test'),
+                call('loop-sqs-delete-user-test'),
                 call().send_message({'email': 'some_email@hotmail.com'}),
             ],
         )
