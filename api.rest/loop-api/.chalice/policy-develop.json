@@ -47,7 +47,7 @@
     },
     {
       "Action": [
-        "cognito-idp:AdminDeleteUser "
+        "cognito-idp:AdminDeleteUser"
       ],
       "Resource": [
         "*"
