@@ -37,15 +37,19 @@ def validate_email_address(email: str):
     return email
 
 
-def validate_int_thresholds(number: int) -> int:
-    if not MIN_RATING <= number <= MAX_RATING:
-        raise ValueError('Ratings must be from 1 to 5')
-    return number
-
-
 def validate_message_length(message: str):
     if not message:
         return None
     if isinstance(message, str) and len(message) > MAX_MESSAGE_LENGTH:
         raise ValueError('Message must maximum 200 characters.')
     return message
+
+
+def validate_int(number: int, max_count=None, min_count=None):
+    if max_count and number > max_count:
+        raise ValueError(f'Number cannot exceed the maximum ({max_count})')
+    if min_count and number < min_count:
+        raise ValueError(
+            f'Count cannot be lower than the minimum ({min_count})'
+        )
+    return number

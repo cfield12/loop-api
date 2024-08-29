@@ -70,3 +70,6 @@ class RatingsPageResults:
 
     def to_dict(self) -> Dict:
         return deepcopy(asdict(self))
+
+
+NULL_RATING_PAGE_RESULT = RatingsPageResults(page_data=list(), total_pages=0)

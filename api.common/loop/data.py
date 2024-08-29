@@ -17,6 +17,7 @@ from loop.constants import (
     logger,
 )
 from loop.data_classes import (
+    NULL_RATING_PAGE_RESULT,
     Location,
     Rating,
     RatingsPageResults,
@@ -373,6 +374,8 @@ def get_ratings_paginated(
     ratings = _get_ratings(paginated_ratings.users, paginated_ratings.place_id)
     # Paginate
     count = ratings.count()
+    if count == 0:
+        return NULL_RATING_PAGE_RESULT
     pages = math.ceil(count / RATINGS_PAGE_COUNT)
     if paginated_ratings.page_count > pages:
         raise exceptions.BadRequestError(

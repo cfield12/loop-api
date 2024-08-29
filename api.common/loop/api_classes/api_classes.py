@@ -4,10 +4,11 @@ from typing import Dict, List, Optional, Union
 from loop.api_classes.validators import (
     validate_code,
     validate_email_address,
-    validate_int_thresholds,
+    validate_int,
     validate_message_length,
     validate_str_uuid,
 )
+from loop.constants import MAX_RATING, MIN_PAGE_COUNT, MIN_RATING
 from pydantic import BaseModel, model_validator, validator
 
 
@@ -21,7 +22,7 @@ class CreateRating(BaseModel):
     @validator("price", "vibe", "food")
     @classmethod
     def validate_rating(cls, rating: int):
-        return validate_int_thresholds(rating)
+        return validate_int(rating, max_count=MAX_RATING, min_count=MIN_RATING)
 
     @validator("message")
     @classmethod
@@ -39,7 +40,11 @@ class UpdateRating(BaseModel):
     @validator("price", "vibe", "food")
     @classmethod
     def validate_rating(cls, rating: int):
-        return validate_int_thresholds(rating) if rating else None
+        return (
+            validate_int(rating, max_count=MAX_RATING, min_count=MIN_RATING)
+            if rating
+            else None
+        )
 
     @validator("message")
     @classmethod
@@ -110,3 +115,8 @@ class PaginatedRatings(BaseModel):
     page_count: int
     users: Optional[List[int]] = None
     place_id: Optional[str] = None
+
+    @validator("page_count")
+    @classmethod
+    def validate_page_count(cls, page_count: int):
+        return validate_int(page_count, min_count=MIN_PAGE_COUNT)

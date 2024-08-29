@@ -284,6 +284,12 @@ class LoopTestGetRatings(unittest.TestCase):
         )
         self.assertEqual(paginated_ratings, expected_ratings)
 
+    def test_get_ratings_paginated(self):
+        paginate = PaginatedRatings(page_count=1, place_id='unknown place id')
+        paginated_ratings = data.get_ratings_paginated(paginate)
+        expected_ratings = RatingsPageResults(page_data=[], total_pages=0)
+        self.assertEqual(paginated_ratings, expected_ratings)
+
     def test_get_ratings_paginated_page_error(self):
         paginate = PaginatedRatings(page_count=2)
         self.assertRaises(
