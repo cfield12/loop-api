@@ -104,3 +104,9 @@ class VerifyUser(UserCredentials):
 
 class ForgotPassword(VerifyUser):
     password: str
+
+
+class PaginatedRatings(BaseModel):
+    page_count: int
+    users: Optional[List[int]] = None
+    place_id: Optional[str] = None

@@ -1,6 +1,6 @@
 from copy import deepcopy
 from dataclasses import asdict, dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from loop.api_classes import Coordinates
 from loop.enums import FriendStatusType
@@ -61,3 +61,12 @@ class UploadThumbnailEvent:
 class FriendStatus:
     id: int
     status: FriendStatusType
+
+
+@dataclass
+class RatingsPageResults:
+    page_data: Dict[str, Union[str, int]]
+    total_pages: int
+
+    def to_dict(self) -> Dict:
+        return deepcopy(asdict(self))

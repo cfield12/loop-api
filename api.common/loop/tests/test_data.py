@@ -2,8 +2,8 @@ import unittest
 from unittest.mock import call, patch
 
 from loop import data, exceptions
-from loop.api_classes import Coordinates, UpdateRating
-from loop.data_classes import Location, Rating, UserObject
+from loop.api_classes import Coordinates, PaginatedRatings, UpdateRating
+from loop.data_classes import Location, Rating, RatingsPageResults, UserObject
 from loop.friends import get_user_friends
 from loop.test_setup.common import setup_rds, unbind_rds
 from loop.utils import get_admin_user
@@ -221,6 +221,74 @@ class LoopTestGetRatings(unittest.TestCase):
             },
         ]
         self.assertEqual(ratings, expected_ratings)
+
+    def test_get_ratings_paginated(self):
+        paginate = PaginatedRatings(page_count=1)
+        paginated_ratings = data.get_ratings_paginated(paginate)
+        expected_ratings = RatingsPageResults(
+            page_data=[
+                {
+                    'id': 1,
+                    'first_name': 'Admin',
+                    'last_name': 'User',
+                    'place_id': 'test_google_id_1',
+                    'latitude': 1.5,
+                    'longitude': -0.7,
+                    'food': 3,
+                    'price': 4,
+                    'vibe': 5,
+                    'message': None,
+                    'time_created': '2000-01-01 00:00:00',
+                },
+                {
+                    'id': 2,
+                    'first_name': 'Admin',
+                    'last_name': 'User',
+                    'place_id': 'test_google_id_3',
+                    'latitude': 1.9,
+                    'longitude': -0.8,
+                    'food': 5,
+                    'price': 5,
+                    'vibe': 5,
+                    'message': None,
+                    'time_created': '2000-01-01 00:00:00',
+                },
+                {
+                    'id': 3,
+                    'first_name': 'Test',
+                    'last_name': 'User',
+                    'place_id': 'test_google_id_1',
+                    'latitude': 1.5,
+                    'longitude': -0.7,
+                    'food': 3,
+                    'price': 4,
+                    'vibe': 4,
+                    'message': 'Food was incredible.',
+                    'time_created': '2000-01-01 00:00:00',
+                },
+                {
+                    'id': 4,
+                    'first_name': 'Test',
+                    'last_name': 'User',
+                    'place_id': 'test_google_id_2',
+                    'latitude': 1.2,
+                    'longitude': -0.9,
+                    'food': 5,
+                    'price': 4,
+                    'vibe': 5,
+                    'message': 'Place had a great atmosphere.',
+                    'time_created': '2000-01-01 00:00:00',
+                },
+            ],
+            total_pages=1,
+        )
+        self.assertEqual(paginated_ratings, expected_ratings)
+
+    def test_get_ratings_paginated_page_error(self):
+        paginate = PaginatedRatings(page_count=2)
+        self.assertRaises(
+            exceptions.BadRequestError, data.get_ratings_paginated, paginate
+        )
 
 
 class LoopTestUserFromCognito(unittest.TestCase):

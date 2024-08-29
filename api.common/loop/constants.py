@@ -46,3 +46,5 @@ LOOP_ADMIN_GROUP = 'loop_admin'
 ADMIN = 'admin'
 
 DELETE_USER_QUEUE = f'{PROJECT}-sqs-delete-user-{ENVIRONMENT}'
+
+RATINGS_PAGE_COUNT = 20

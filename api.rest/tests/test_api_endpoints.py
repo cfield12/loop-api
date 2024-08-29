@@ -7,7 +7,12 @@ from chalice.test import Client
 from loop import data
 from loop.api_classes import Coordinates, UpdateRating
 from loop.constants import RDS_WRITE
-from loop.data_classes import Location, UploadThumbnailEvent, UserObject
+from loop.data_classes import (
+    Location,
+    RatingsPageResults,
+    UploadThumbnailEvent,
+    UserObject,
+)
 from loop.test_setup.common import setup_rds, unbind_rds
 
 mock_url_write_db = 'loop.data.init_write_db'
@@ -111,65 +116,68 @@ class TestGetRatings(unittest.TestCase):
         # Happy path test
         with Client(app.app) as client:
             response = client.http.get(
-                f'/admin/ratings',
+                f'/admin/ratings?page_count=1',
             )
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json_body,
-                [
-                    {
-                        'id': 1,
-                        'first_name': 'Admin',
-                        'last_name': 'User',
-                        'place_id': 'test_google_id_1',
-                        'latitude': 1.5,
-                        'longitude': -0.7,
-                        'food': 3,
-                        'price': 4,
-                        'vibe': 5,
-                        'message': None,
-                        'time_created': '2000-01-01 00:00:00',
-                    },
-                    {
-                        'id': 2,
-                        'first_name': 'Admin',
-                        'last_name': 'User',
-                        'place_id': 'test_google_id_3',
-                        'latitude': 1.9,
-                        'longitude': -0.8,
-                        'food': 5,
-                        'price': 5,
-                        'vibe': 5,
-                        'message': None,
-                        'time_created': '2000-01-01 00:00:00',
-                    },
-                    {
-                        'id': 3,
-                        'first_name': 'Test',
-                        'last_name': 'User',
-                        'place_id': 'test_google_id_1',
-                        'latitude': 1.5,
-                        'longitude': -0.7,
-                        'food': 3,
-                        'price': 4,
-                        'vibe': 4,
-                        'message': 'Food was incredible.',
-                        'time_created': '2000-01-01 00:00:00',
-                    },
-                    {
-                        'id': 4,
-                        'first_name': 'Test',
-                        'last_name': 'User',
-                        'place_id': 'test_google_id_2',
-                        'latitude': 1.2,
-                        'longitude': -0.9,
-                        'food': 5,
-                        'price': 4,
-                        'vibe': 5,
-                        'message': 'Place had a great atmosphere.',
-                        'time_created': '2000-01-01 00:00:00',
-                    },
-                ],
+                {
+                    'page_data': [
+                        {
+                            'id': 1,
+                            'first_name': 'Admin',
+                            'last_name': 'User',
+                            'place_id': 'test_google_id_1',
+                            'latitude': 1.5,
+                            'longitude': -0.7,
+                            'food': 3,
+                            'price': 4,
+                            'vibe': 5,
+                            'message': None,
+                            'time_created': '2000-01-01 00:00:00',
+                        },
+                        {
+                            'id': 2,
+                            'first_name': 'Admin',
+                            'last_name': 'User',
+                            'place_id': 'test_google_id_3',
+                            'latitude': 1.9,
+                            'longitude': -0.8,
+                            'food': 5,
+                            'price': 5,
+                            'vibe': 5,
+                            'message': None,
+                            'time_created': '2000-01-01 00:00:00',
+                        },
+                        {
+                            'id': 3,
+                            'first_name': 'Test',
+                            'last_name': 'User',
+                            'place_id': 'test_google_id_1',
+                            'latitude': 1.5,
+                            'longitude': -0.7,
+                            'food': 3,
+                            'price': 4,
+                            'vibe': 4,
+                            'message': 'Food was incredible.',
+                            'time_created': '2000-01-01 00:00:00',
+                        },
+                        {
+                            'id': 4,
+                            'first_name': 'Test',
+                            'last_name': 'User',
+                            'place_id': 'test_google_id_2',
+                            'latitude': 1.2,
+                            'longitude': -0.9,
+                            'food': 5,
+                            'price': 4,
+                            'vibe': 5,
+                            'message': 'Place had a great atmosphere.',
+                            'time_created': '2000-01-01 00:00:00',
+                        },
+                    ],
+                    'total_pages': 1,
+                },
             )
 
 
@@ -730,13 +738,20 @@ class TestAdminEndpoints(unittest.TestCase):
     def tearDown(self):
         unbind_rds()
 
-    @patch('loop.data.get_ratings')
+    @patch('loop.data.get_ratings_paginated')
     def test_get_admin_ratings(self, mock_ratings):
-        mock_ratings.return_value = []
+        mock_ratings.return_value = RatingsPageResults(
+            page_data=[], total_pages=1
+        )
         with Client(app.app) as client:
-            response = client.http.get('/admin/ratings')
+            response = client.http.get('/admin/ratings?page_count=1')
             self.assertEqual(response.status_code, 200)
             self.assertTrue(mock_ratings.called)
+
+    def test_get_admin_ratings_param_error(self):
+        with Client(app.app) as client:
+            response = client.http.get('/admin/ratings')
+            self.assertEqual(response.status_code, 400)
 
     @patch('loop.admin_utils.delete_rating')
     def test_delete_admin_rating(self, mock_delete_rating):

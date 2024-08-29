@@ -11,6 +11,7 @@ from loop.api_classes import (
     Coordinates,
     CreateRating,
     FriendValidator,
+    PaginatedRatings,
     UpdateRating,
     UserCredentials,
 )
@@ -19,6 +20,7 @@ from loop.constants import COGNITO_SECRET_NAME, LOOP_ADMIN_GROUP
 from loop.data_classes import (
     Location,
     Rating,
+    RatingsPageResults,
     UploadThumbnailEvent,
     UserObject,
 )
@@ -757,14 +759,20 @@ def get_restaurant(place_id=str(), user: UserObject = None):
 @access_admin
 def get_admin_ratings(user: UserObject = None):
     """
-    Get ratings (admin).
+    Get paginated ratings (admin).
     ---
     get:
         operationId: getAdminRatings
-        summary: Get all ratings (admin).
-        description: Get all ratings (admin).
+        summary: Get paginated ratings (admin).
+        description: Get paginated ratings (admin).
         security:
             - API Key: []
+        parameters:
+            -   in: query
+                name: page_count
+                type: integer
+                required: false
+                description: Page count.
         responses:
             200:
                 description: OK
@@ -776,9 +784,21 @@ def get_admin_ratings(user: UserObject = None):
                     type: object
     """
     try:
-        ratings = data.get_ratings()
-        app.log.info(f"Successfully returned all ratings (admin).")
-        return ratings
+        query_params = app.current_request.query_params or {}
+        try:
+            validated_params = PaginatedRatings(**query_params)
+        except PydanticValidationError as e:
+            raise BadRequestError(
+                "; ".join([error["msg"] for error in e.errors()])
+            )
+        results: RatingsPageResults = data.get_ratings_paginated(
+            validated_params
+        )
+        app.log.info(
+            f"Successfully returned page {validated_params.page_count} "
+            "ratings (admin)."
+        )
+        return results.to_dict()
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
 

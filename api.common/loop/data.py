@@ -1,20 +1,28 @@
+import math
 import os
 from datetime import datetime
 from time import sleep
 from typing import Dict, List, Optional, Union
 
 from loop import exceptions, secrets
-from loop.api_classes import UpdateRating
+from loop.api_classes import PaginatedRatings, UpdateRating
 from loop.constants import (
     ENVIRONMENT,
     LOOP_TIME_FORMAT,
     MAX_DB_INIT_RETRIES,
     PROJECT,
+    RATINGS_PAGE_COUNT,
     RDS_WRITE,
     RETRY_DB_DELAY_SECONDS,
     logger,
 )
-from loop.data_classes import Location, Rating, UserCreateObject, UserObject
+from loop.data_classes import (
+    Location,
+    Rating,
+    RatingsPageResults,
+    UserCreateObject,
+    UserObject,
+)
 from loop.db_entities import define_entities
 from loop.google_client import find_location
 from pony.orm import Database
@@ -309,13 +317,11 @@ def get_all_users(db_instance_type=RDS_WRITE) -> Query:
     return select(user for user in DB_TYPE[db_instance_type].User)
 
 
-@DB_SESSION_RETRYABLE
-def get_ratings(
-    users: Optional[List[int]] = None,
-    place_id: Optional[str] = None,
+def _get_ratings(
+    users: Optional[List[int]],
+    place_id: Optional[str],
     db_instance_type=RDS_WRITE,
-) -> Dict:
-    reviews = list()
+) -> Query:
     ratings = select(rating for rating in DB_TYPE[db_instance_type].Rating)
     if users:
         ratings = ratings.filter(lambda rating: rating.user.id in users)
@@ -323,7 +329,12 @@ def get_ratings(
         ratings = ratings.filter(
             lambda rating: rating.location.google_id == place_id
         )
-    for r in ratings.order_by(lambda rating: desc(rating.last_updated)):
+    return ratings.order_by(lambda rating: desc(rating.last_updated))
+
+
+def _get_serialized_ratings(ratings_query: Query) -> Dict:
+    reviews = list()
+    for r in ratings_query:
         reviews.append(
             {
                 'id': r.id,
@@ -340,6 +351,40 @@ def get_ratings(
             }
         )
     return reviews
+
+
+@DB_SESSION_RETRYABLE
+def get_ratings(
+    users: Optional[List[int]] = None, place_id: Optional[str] = None
+) -> Dict:
+    reviews = list()
+    ratings = _get_ratings(users, place_id)
+    return _get_serialized_ratings(ratings)
+
+
+@DB_SESSION_RETRYABLE
+def get_ratings_paginated(
+    paginated_ratings: PaginatedRatings,
+) -> RatingsPageResults:
+    if not isinstance(paginated_ratings, PaginatedRatings):
+        raise TypeError(
+            'paginated_ratings must be an instance of PaginatedRatings.'
+        )
+    ratings = _get_ratings(paginated_ratings.users, paginated_ratings.place_id)
+    # Paginate
+    count = ratings.count()
+    pages = math.ceil(count / RATINGS_PAGE_COUNT)
+    if paginated_ratings.page_count > pages:
+        raise exceptions.BadRequestError(
+            f'Page does not exist for query. (total pages = {pages}).'
+        )
+    # Get page data
+    page_results = ratings.page(
+        paginated_ratings.page_count, RATINGS_PAGE_COUNT
+    )
+    return RatingsPageResults(
+        page_data=_get_serialized_ratings(page_results), total_pages=pages
+    )
 
 
 @DB_SESSION_RETRYABLE
