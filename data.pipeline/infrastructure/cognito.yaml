@@ -103,6 +103,29 @@ Resources:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_ADMIN_USER_PASSWORD_AUTH
 
+  AdminUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      AllowedOAuthFlowsUserPoolClient: true
+      CallbackURLs:
+        - https://example.com/callback
+      AllowedOAuthFlows:
+        - implicit
+      AllowedOAuthScopes:
+        - phone
+        - email
+        - openid
+      SupportedIdentityProviders:
+        - COGNITO
+      ClientName: !Sub ${Project}-api-client-admin-${Environment}
+      ExplicitAuthFlows:
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
