@@ -525,6 +525,35 @@ class TestListFriends(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
 
 
+class TestGetFriendRequests(unittest.TestCase):
+    @patch(mock_url_write_db)
+    def setUp(self, write_db):
+        write_db.side_effect = mocked_init_write_db
+
+        global app
+        app = importlib.import_module("loop-api.app")
+        setup_rds()
+
+    def tearDown(self):
+        unbind_rds()
+
+    @patch('loop-api.app.get_pending_requests')
+    def test_get_outbound_pending_friends(self, mock_get_user_friend_requests):
+        # Happy path test
+        mock_get_user_friend_requests.return_value = list()
+        with Client(app.app) as client:
+            response = client.http.get(f'/pending_friends/outbound')
+            self.assertEqual(response.status_code, 200)
+
+    @patch('loop-api.app.get_pending_requests')
+    def test_get_inbound_pending_friends(self, mock_get_user_friend_requests):
+        # Happy path test
+        mock_get_user_friend_requests.return_value = list()
+        with Client(app.app) as client:
+            response = client.http.get(f'/pending_friends/inbound')
+            self.assertEqual(response.status_code, 200)
+
+
 class TestSearchUsers(unittest.TestCase):
     @patch(mock_url_write_db)
     def setUp(self, write_db):

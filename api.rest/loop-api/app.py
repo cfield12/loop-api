@@ -32,6 +32,7 @@ from loop.exceptions import (
 )
 from loop.friends import (
     FriendWorker,
+    get_pending_requests,
     get_ratings_for_place_and_friends,
     get_user_friend_ids,
     get_user_friends,
@@ -739,6 +740,84 @@ def get_restaurant(place_id=str(), user: UserObject = None):
         if reviews:
             location['reviews'] = reviews
         return location
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route(
+    '/web/pending_friends/outbound',
+    methods=['GET'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
+@app.route('/pending_friends/outbound', methods=['GET'], cors=True)
+@get_current_user
+def get_outbound_pending_friends(user: UserObject = None):
+    """
+    List outbound pending friends.
+    ---
+    get:
+        operationId: getOutboundPendingFriends
+        summary: List outbound pendings friends.
+        description: List a user's outbound pending friends.
+        security:
+            - API Key: []
+        responses:
+            200:
+                description: OK
+                schema:
+                    type: object
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        outbound_requests = get_pending_requests(user, inbound=False)
+        app.log.info(
+            "Successfully returned user's outbound friend requests"
+            f" for user {user.id}"
+        )
+        return outbound_requests
+    except LoopException as e:
+        raise LoopException.as_chalice_exception(e)
+
+
+@app.route(
+    '/web/pending_friends/inbound',
+    methods=['GET'],
+    cors=True,
+    authorizer=COGNITO_AUTHORIZER,
+)
+@app.route('/pending_friends/inbound', methods=['GET'], cors=True)
+@get_current_user
+def get_inbound_pending_friends(user: UserObject = None):
+    """
+    List inbound pending friends.
+    ---
+    get:
+        operationId: getInboundPendingFriends
+        summary: List inbound pendings friends.
+        description: List a user's inbound pending friends.
+        security:
+            - API Key: []
+        responses:
+            200:
+                description: OK
+                schema:
+                    type: object
+            default:
+                description: Unexpected error
+                schema:
+                    type: object
+    """
+    try:
+        inbound_requests = get_pending_requests(user, inbound=True)
+        app.log.info(
+            "Successfully returned user's inbound friend requests"
+            f" for user {user.id}"
+        )
+        return inbound_requests
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
 
