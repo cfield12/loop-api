@@ -17,6 +17,7 @@ from loop.exceptions import (
     UnknownFriendStatusTypeError,
 )
 from pony.orm import Database, commit, select
+from pony.orm.core import Query
 from rapidfuzz import fuzz, process
 from rapidfuzz.utils import default_process
 
@@ -130,18 +131,9 @@ class FriendWorker:
         )
 
 
-@DB_SESSION_RETRYABLE
-def get_user_friends(user: UserObject) -> List:
-    if not isinstance(user, UserObject):
-        raise TypeError('user should be of type UserObject')
+def _get_friends_from_query(query: Query, user: UserObject) -> List:
     friends = []
-    friends_query = select(
-        (friend.friend_1, friend.friend_2)
-        for friend in DB_TYPE[RDS_WRITE].Friend
-        if ((friend.friend_1.id == user.id) or (friend.friend_2.id == user.id))
-        and friend.status.description == FriendStatusType.FRIENDS.value
-    )
-    for user_1, user_2 in friends_query:
+    for user_1, user_2 in query:
         if user_1.id == user.id:
             friend = user_2
         else:
@@ -155,6 +147,19 @@ def get_user_friends(user: UserObject) -> List:
         }
         friends.append(friend_dict)
     return friends
+
+
+@DB_SESSION_RETRYABLE
+def get_user_friends(user: UserObject) -> List:
+    if not isinstance(user, UserObject):
+        raise TypeError('user should be of type UserObject')
+    friends_query = select(
+        (friend.friend_1, friend.friend_2)
+        for friend in DB_TYPE[RDS_WRITE].Friend
+        if ((friend.friend_1.id == user.id) or (friend.friend_2.id == user.id))
+        and friend.status.description == FriendStatusType.FRIENDS.value
+    )
+    return _get_friends_from_query(friends_query, user)
 
 
 def get_user_friend_ids(user: UserObject, include_own_id=True) -> List[int]:
@@ -223,3 +228,26 @@ def get_ratings_for_place_and_friends(place_id: str, user: UserObject) -> List:
         raise TypeError('user should be of type UserObject')
     users_friends: List[int] = get_user_friend_ids(user)
     return get_ratings(users_friends, place_id=place_id)
+
+
+@DB_SESSION_RETRYABLE
+def get_pending_requests(user: UserObject, inbound=True):
+    if not isinstance(user, UserObject):
+        raise TypeError('user should be of type UserObject')
+    friends_query = select(
+        friend
+        for friend in DB_TYPE[RDS_WRITE].Friend
+        if friend.status.description == FriendStatusType.PENDING.value
+    )
+    if inbound:
+        friends_query = friends_query.filter(
+            lambda friend: friend.friend_2.id == user.id
+        )
+    else:
+        friends_query = friends_query.filter(
+            lambda friend: friend.friend_1.id == user.id
+        )
+    friends_query = select(
+        (friend.friend_1, friend.friend_2) for friend in friends_query
+    )
+    return _get_friends_from_query(friends_query, user)

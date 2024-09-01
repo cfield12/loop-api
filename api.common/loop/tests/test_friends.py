@@ -11,6 +11,7 @@ from loop.exceptions import (
 )
 from loop.friends import (
     FriendWorker,
+    get_pending_requests,
     get_ratings_for_place_and_friends,
     get_user_friend_ids,
     get_user_friends,
@@ -244,6 +245,46 @@ class TestFriends(unittest.TestCase):
         self.assertRaises(
             TypeError, get_ratings_for_place_and_friends, 'GOOGLE_ID', 'User 1'
         )
+
+    def test_get_outbound_pending_requests(self):
+        outbound_requests = get_pending_requests(USER_2, inbound=False)
+        self.assertEqual(
+            outbound_requests,
+            [
+                {
+                    'id': 4,
+                    'user_name': '67ce7049-109f-420f-861b-3f1e7d6824b5',
+                    'email': 'test_person_email_2',
+                    'first_name': 'Random',
+                    'last_name': 'Persons-Mate',
+                }
+            ],
+        )
+
+    def test_get_inbound_pending_requests(self):
+        inbound_requests = get_pending_requests(USER_4, inbound=True)
+        self.assertEqual(
+            inbound_requests,
+            [
+                {
+                    'id': 3,
+                    'user_name': '60c1f02b-f758-4458-8c41-3b5c9fa20ae0',
+                    'email': 'test_person_email',
+                    'first_name': 'Random',
+                    'last_name': 'Person',
+                },
+                {
+                    'id': 2,
+                    'user_name': '86125274-40a1-70ec-da28-f779360f7c07',
+                    'email': 'admin_test_email',
+                    'first_name': 'Admin',
+                    'last_name': 'User',
+                },
+            ],
+        )
+
+    def test_get_pending_requests_error(self):
+        self.assertRaises(TypeError, get_pending_requests, 'admin_user')
 
 
 if __name__ == '__main__':
