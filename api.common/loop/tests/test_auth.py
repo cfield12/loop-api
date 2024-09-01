@@ -10,7 +10,12 @@ from loop.api_classes import (
     VerifyUser,
 )
 from loop.auth import CognitoAuth
-from loop.exceptions import BadRequestError, ConflictError, UnknownCognitoError
+from loop.exceptions import (
+    BadRequestError,
+    ConflictError,
+    UnauthorizedError,
+    UnknownCognitoError,
+)
 
 COGNITO_CLIENT = boto3.client('cognito-idp')
 
@@ -162,21 +167,15 @@ class TestCognitoAuth(unittest.TestCase):
         self.mock_boto.return_value.admin_initiate_auth.return_value = {
             'AuthenticationResult': {}
         }
-        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
-            'Groups': []
-        }
         response = self.cognito_auth.login_user(TEST_LOGIN_CREDS)
-        self.assertEqual(response, {'is_admin': False})
+        self.assertEqual(response, {})
 
     def test_login_admin(self):
         self.mock_boto.return_value.admin_initiate_auth.return_value = {
             'AuthenticationResult': {}
         }
-        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
-            'Groups': [{'GroupName': 'admin'}]
-        }
         response = self.cognito_auth.login_user(TEST_LOGIN_CREDS)
-        self.assertEqual(response, {'is_admin': True})
+        self.assertEqual(response, {})
 
     def test_login_type_error(self):
         self.assertRaises(
@@ -469,6 +468,155 @@ class TestCognitoAuth(unittest.TestCase):
             ValueError,
             self.cognito_auth.admin_delete_user,
             TEST_USER_CREDENTIALS,
+        )
+
+
+class TestCognitoAuthAdmin(unittest.TestCase):
+    @patch('loop.auth.get_secret')
+    @patch.object(boto3, 'client')
+    def setUp(self, mock_boto, mock_secret):
+        mock_secret.return_value = {
+            'user_pool_id': 'test_user_pool_id',
+            'client_id': 'test_client_id',
+        }
+        self.cognito_auth = CognitoAuth(is_admin=True)
+        self.mock_boto = mock_boto
+        self.mock_boto.return_value.exceptions.UserNotFoundException = (
+            COGNITO_CLIENT.exceptions.UserNotFoundException
+        )
+        self.mock_boto.return_value.exceptions.NotAuthorizedException = (
+            COGNITO_CLIENT.exceptions.NotAuthorizedException
+        )
+        self.mock_boto.return_value.exceptions.UserNotConfirmedException = (
+            COGNITO_CLIENT.exceptions.UserNotConfirmedException
+        )
+        self.mock_boto.return_value.exceptions.UsernameExistsException = (
+            COGNITO_CLIENT.exceptions.UsernameExistsException
+        )
+        self.mock_boto.return_value.exceptions.InvalidPasswordException = (
+            COGNITO_CLIENT.exceptions.InvalidPasswordException
+        )
+        self.mock_boto.return_value.exceptions.NotAuthorizedException = (
+            COGNITO_CLIENT.exceptions.NotAuthorizedException
+        )
+        self.mock_boto.return_value.exceptions.InvalidParameterException = (
+            COGNITO_CLIENT.exceptions.InvalidParameterException
+        )
+        self.mock_boto.return_value.exceptions.CodeMismatchException = (
+            COGNITO_CLIENT.exceptions.CodeMismatchException
+        )
+
+    def tearDown(self):
+        self.cognito_auth = None
+
+    def test_login_fail(self):
+        self.mock_boto.return_value.admin_initiate_auth.return_value = {
+            'AuthenticationResult': {}
+        }
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': []
+        }
+        self.assertRaises(
+            UnauthorizedError, self.cognito_auth.login_user, TEST_LOGIN_CREDS
+        )
+
+    def test_login(self):
+        self.mock_boto.return_value.admin_initiate_auth.return_value = {
+            'AuthenticationResult': {}
+        }
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': [{'GroupName': 'admin'}]
+        }
+        response = self.cognito_auth.login_user(TEST_LOGIN_CREDS)
+        self.assertEqual(response, {})
+
+    def test_sign_up_fail(self):
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': []
+        }
+        self.assertRaises(
+            UnauthorizedError,
+            self.cognito_auth.sign_up_user,
+            TEST_SIGNUP_CREDENTIALS,
+        )
+
+    def test_sign_up(self):
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': [{'GroupName': 'admin'}]
+        }
+        self.cognito_auth.sign_up_user(TEST_SIGNUP_CREDENTIALS)
+        self.assertTrue(self.mock_boto.return_value.sign_up.called)
+
+    def test_confirm_user_fail(self):
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': []
+        }
+        self.assertRaises(
+            UnauthorizedError,
+            self.cognito_auth.confirm_user,
+            TEST_VERIFY_USER,
+        )
+
+    def test_confirm_user(self):
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': [{'GroupName': 'admin'}]
+        }
+        self.cognito_auth.confirm_user(TEST_VERIFY_USER)
+        self.assertTrue(self.mock_boto.return_value.confirm_sign_up.called)
+
+    def test_resend_code_fail(self):
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': []
+        }
+        self.assertRaises(
+            UnauthorizedError,
+            self.cognito_auth.resend_code,
+            TEST_USER_CREDENTIALS,
+        )
+
+    def test_resend_code(self):
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': [{'GroupName': 'admin'}]
+        }
+        self.cognito_auth.resend_code(TEST_USER_CREDENTIALS)
+        self.assertTrue(
+            self.mock_boto.return_value.resend_confirmation_code.called
+        )
+
+    def test_initiate_forgot_password_fail(self):
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': []
+        }
+        self.assertRaises(
+            UnauthorizedError,
+            self.cognito_auth.initiate_forgot_password,
+            TEST_USER_CREDENTIALS,
+        )
+
+    def test_initiate_forgot_password(self):
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': [{'GroupName': 'admin'}]
+        }
+        self.cognito_auth.initiate_forgot_password(TEST_USER_CREDENTIALS)
+        self.assertTrue(self.mock_boto.return_value.forgot_password.called)
+
+    def test_confirm_forgot_password_fail(self):
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': []
+        }
+        self.assertRaises(
+            UnauthorizedError,
+            self.cognito_auth.confirm_forgot_password,
+            TEST_FORGOT_PASSWORD,
+        )
+
+    def test_confirm_forgot_password(self):
+        self.mock_boto.return_value.admin_list_groups_for_user.return_value = {
+            'Groups': [{'GroupName': 'admin'}]
+        }
+        self.cognito_auth.confirm_forgot_password(TEST_FORGOT_PASSWORD)
+        self.assertTrue(
+            self.mock_boto.return_value.confirm_forgot_password.called
         )
 
 

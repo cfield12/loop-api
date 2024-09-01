@@ -14,12 +14,17 @@ from loop.constants import (
     COGNITO_SECRET_NAME,
     MINIMUM_PASSWORD_LENGTH,
 )
-from loop.exceptions import BadRequestError, ConflictError, UnknownCognitoError
+from loop.exceptions import (
+    BadRequestError,
+    ConflictError,
+    UnauthorizedError,
+    UnknownCognitoError,
+)
 from loop.secrets import get_secret
 
 
 class CognitoAuth:
-    def __init__(self):
+    def __init__(self, is_admin=False):
         self._auth_client = boto3.client('cognito-idp')
         cognito_secret = get_secret(COGNITO_SECRET_NAME)
         if (
@@ -31,6 +36,7 @@ class CognitoAuth:
             )
         self._user_pool_id = cognito_secret['user_pool_id']
         self._client_id = cognito_secret['client_id']
+        self.is_admin = is_admin
 
     def _get_user_groups(self, username: str) -> List[Dict]:
         try:
@@ -48,8 +54,8 @@ class CognitoAuth:
             )
         return user_groups['Groups']
 
-    def _check_is_admin(self, login_credentials: LoginCredentials) -> bool:
-        user_groups = self._get_user_groups(login_credentials.email)
+    def _check_is_admin(self, username: str) -> bool:
+        user_groups = self._get_user_groups(username)
         if ADMIN in [group['GroupName'] for group in user_groups]:
             return True
         else:
@@ -84,14 +90,14 @@ class CognitoAuth:
             raise TypeError(
                 'login_credentials must be an instance of LoginCredentials'
             )
+        if self.is_admin and not self._check_is_admin(login_credentials.email):
+            raise UnauthorizedError('Requires admin access.')
         auth_response = self._initiate_auth(login_credentials)
         if "AuthenticationResult" not in auth_response:
             raise UnknownCognitoError(
                 f'Unknown cognito error - response: {auth_response}'
             )
         auth_response = auth_response["AuthenticationResult"]
-        is_admin: bool = self._check_is_admin(login_credentials)
-        auth_response["is_admin"] = is_admin
         return auth_response
 
     def _sign_up(self, sign_up_creds: SignUpCredentials) -> Dict:
@@ -127,11 +133,17 @@ class CognitoAuth:
             raise TypeError(
                 'sign_up_credentials must be an instance of SignUpCredentials'
             )
+        if self.is_admin and not self._check_is_admin(
+            sign_up_credentials.email
+        ):
+            raise UnauthorizedError('Requires admin access.')
         return self._sign_up(sign_up_credentials)
 
     def confirm_user(self, verify_object: VerifyUser) -> Dict:
         if not isinstance(verify_object, VerifyUser):
             raise TypeError('verify_object must be an instance of VerifyUser.')
+        if self.is_admin and not self._check_is_admin(verify_object.email):
+            raise UnauthorizedError('Requires admin access.')
         try:
             return self._auth_client.confirm_sign_up(
                 ClientId=self._client_id,
@@ -153,6 +165,8 @@ class CognitoAuth:
             raise TypeError(
                 'user_credentials must be an instance of UserCredentials.'
             )
+        if self.is_admin and not self._check_is_admin(user_credentials.email):
+            raise UnauthorizedError('Requires admin access.')
         try:
             return self._auth_client.resend_confirmation_code(
                 ClientId=self._client_id,
@@ -172,6 +186,8 @@ class CognitoAuth:
             raise TypeError(
                 'user_credentials must be an instance of UserCredentials.'
             )
+        if self.is_admin and not self._check_is_admin(user_credentials.email):
+            raise UnauthorizedError('Requires admin access.')
         try:
             return self._auth_client.forgot_password(
                 ClientId=self._client_id,
@@ -192,6 +208,10 @@ class CognitoAuth:
                 'forgot_password_credentials must be an instance of '
                 'ForgotPassword.'
             )
+        if self.is_admin and not self._check_is_admin(
+            forgot_password_credentials.email
+        ):
+            raise UnauthorizedError('Requires admin access.')
         try:
             return self._auth_client.confirm_forgot_password(
                 ClientId=self._client_id,
