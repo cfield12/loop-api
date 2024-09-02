@@ -10,7 +10,7 @@ from loop.data import (
     update_object_last_updated_time,
 )
 from loop.data_classes import FriendStatus, UserObject
-from loop.enums import FriendStatusType
+from loop.enums import FriendRequestType, FriendStatusType
 from loop.exceptions import (
     BadRequestError,
     DbNotInitError,
@@ -231,7 +231,9 @@ def get_ratings_for_place_and_friends(place_id: str, user: UserObject) -> List:
 
 
 @DB_SESSION_RETRYABLE
-def get_pending_requests(user: UserObject, inbound=True):
+def get_pending_requests(
+    user: UserObject, request_type: FriendRequestType
+) -> List:
     if not isinstance(user, UserObject):
         raise TypeError('user should be of type UserObject')
     friends_query = select(
@@ -239,14 +241,16 @@ def get_pending_requests(user: UserObject, inbound=True):
         for friend in DB_TYPE[RDS_WRITE].Friend
         if friend.status.description == FriendStatusType.PENDING.value
     )
-    if inbound:
+    if request_type == FriendRequestType.INBOUND:
         friends_query = friends_query.filter(
             lambda friend: friend.friend_2.id == user.id
         )
-    else:
+    elif request_type == FriendRequestType.OUTBOUND:
         friends_query = friends_query.filter(
             lambda friend: friend.friend_1.id == user.id
         )
+    else:
+        raise TypeError('request_type should be of type FriendRequestType.')
     friends_query = select(
         (friend.friend_1, friend.friend_2) for friend in friends_query
     )

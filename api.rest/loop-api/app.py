@@ -24,6 +24,7 @@ from loop.data_classes import (
     UploadThumbnailEvent,
     UserObject,
 )
+from loop.enums import FriendRequestType
 from loop.exceptions import (
     BadRequestError,
     LoopException,
@@ -773,7 +774,9 @@ def get_outbound_pending_friends(user: UserObject = None):
                     type: object
     """
     try:
-        outbound_requests = get_pending_requests(user, inbound=False)
+        outbound_requests = get_pending_requests(
+            user, FriendRequestType.OUTBOUND
+        )
         app.log.info(
             "Successfully returned user's outbound friend requests"
             f" for user {user.id}"
@@ -812,7 +815,9 @@ def get_inbound_pending_friends(user: UserObject = None):
                     type: object
     """
     try:
-        inbound_requests = get_pending_requests(user, inbound=True)
+        inbound_requests = get_pending_requests(
+            user, FriendRequestType.INBOUND
+        )
         app.log.info(
             "Successfully returned user's inbound friend requests"
             f" for user {user.id}"

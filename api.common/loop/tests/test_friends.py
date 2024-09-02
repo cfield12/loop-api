@@ -3,7 +3,7 @@ from unittest.mock import Mock, call, patch
 
 from loop.data import DB_SESSION_RETRYABLE, DB_TYPE, RDS_WRITE
 from loop.data_classes import FriendStatus, UserObject
-from loop.enums import FriendStatusType
+from loop.enums import FriendRequestType, FriendStatusType
 from loop.exceptions import (
     BadRequestError,
     DbNotInitError,
@@ -247,7 +247,9 @@ class TestFriends(unittest.TestCase):
         )
 
     def test_get_outbound_pending_requests(self):
-        outbound_requests = get_pending_requests(USER_2, inbound=False)
+        outbound_requests = get_pending_requests(
+            USER_2, FriendRequestType.OUTBOUND
+        )
         self.assertEqual(
             outbound_requests,
             [
@@ -262,7 +264,9 @@ class TestFriends(unittest.TestCase):
         )
 
     def test_get_inbound_pending_requests(self):
-        inbound_requests = get_pending_requests(USER_4, inbound=True)
+        inbound_requests = get_pending_requests(
+            USER_4, FriendRequestType.INBOUND
+        )
         self.assertEqual(
             inbound_requests,
             [
@@ -283,8 +287,13 @@ class TestFriends(unittest.TestCase):
             ],
         )
 
-    def test_get_pending_requests_error(self):
-        self.assertRaises(TypeError, get_pending_requests, 'admin_user')
+    def test_get_pending_requests_type_error_1(self):
+        """Incorrect user type"""
+        self.assertRaises(TypeError, get_pending_requests, USER_4)
+
+    def test_get_pending_requests_type_error_2(self):
+        """Incorrect request type"""
+        self.assertRaises(TypeError, get_pending_requests, 'outbound')
 
 
 if __name__ == '__main__':
