@@ -147,9 +147,8 @@ def access_admin(func):
 
 
 @app.route(
-    '/web/ratings', methods=['GET'], cors=True, authorizer=COGNITO_AUTHORIZER
+    '/ratings', methods=['GET'], cors=True, authorizer=COGNITO_AUTHORIZER
 )
-@app.route('/ratings', methods=['GET'], cors=True)
 @get_current_user
 def get_user_ratings(user: UserObject = None):
     """
@@ -180,12 +179,11 @@ def get_user_ratings(user: UserObject = None):
 
 
 @app.route(
-    '/web/friends_ratings',
+    '/friends_ratings',
     methods=['GET'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/friends_ratings', methods=['GET'], cors=True)
 @get_current_user
 def get_all_ratings(user: UserObject = None):
     """
@@ -217,9 +215,8 @@ def get_all_ratings(user: UserObject = None):
 
 
 @app.route(
-    '/web/ratings', methods=['POST'], cors=True, authorizer=COGNITO_AUTHORIZER
+    '/ratings', methods=['POST'], cors=True, authorizer=COGNITO_AUTHORIZER
 )
-@app.route('/ratings', methods=['POST'], cors=True)
 @get_current_user
 def create_rating(user: UserObject = None):
     """
@@ -274,12 +271,11 @@ def create_rating(user: UserObject = None):
 
 
 @app.route(
-    '/web/ratings/{rating_id}',
+    '/ratings/{rating_id}',
     methods=['PUT'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/ratings/{rating_id}', methods=['PUT'], cors=True)
 @get_current_user
 def update_rating(rating_id: int, user: UserObject = None):
     """
@@ -331,12 +327,11 @@ def update_rating(rating_id: int, user: UserObject = None):
 
 
 @app.route(
-    '/web/ratings/{rating_id}',
+    '/ratings/{rating_id}',
     methods=['DELETE'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/ratings/{rating_id}', methods=['DELETE'], cors=True)
 @get_current_user
 def delete_rating(rating_id: int, user: UserObject = None):
     """
@@ -376,12 +371,11 @@ def delete_rating(rating_id: int, user: UserObject = None):
 
 
 @app.route(
-    '/web/friends/{user_name}',
+    '/friends/{user_name}',
     methods=['POST'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/friends/{user_name}', methods=['POST'], cors=True)
 @get_current_user
 def add_friend(user_name=str(), user: UserObject = None):
     """
@@ -431,12 +425,11 @@ def add_friend(user_name=str(), user: UserObject = None):
 
 
 @app.route(
-    '/web/friends/{user_name}',
+    '/friends/{user_name}',
     methods=['PUT'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/friends/{user_name}', methods=['PUT'], cors=True)
 @get_current_user
 def accept_friend(user_name=str(), user: UserObject = None):
     """
@@ -486,12 +479,11 @@ def accept_friend(user_name=str(), user: UserObject = None):
 
 
 @app.route(
-    '/web/friends/{user_name}',
+    '/friends/{user_name}',
     methods=['DELETE'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/friends/{user_name}', methods=['DELETE'], cors=True)
 @get_current_user
 def delete_friend(user_name=str(), user: UserObject = None):
     """
@@ -541,9 +533,8 @@ def delete_friend(user_name=str(), user: UserObject = None):
 
 
 @app.route(
-    '/web/friends', methods=['GET'], cors=True, authorizer=COGNITO_AUTHORIZER
+    '/friends', methods=['GET'], cors=True, authorizer=COGNITO_AUTHORIZER
 )
-@app.route('/friends', methods=['GET'], cors=True)
 @get_current_user
 def list_friends(user: UserObject = None):
     """
@@ -576,12 +567,11 @@ def list_friends(user: UserObject = None):
 
 
 @app.route(
-    '/web/search_users/{search_term}',
+    '/search_users/{search_term}',
     methods=['GET'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/search_users/{search_term}', methods=['GET'], cors=True)
 @get_current_user
 def search_users(search_term=str(), user: UserObject = None):
     """
@@ -619,12 +609,11 @@ def search_users(search_term=str(), user: UserObject = None):
 
 
 @app.route(
-    '/web/restaurant_search/{search_term}',
+    '/restaurant_search/{search_term}',
     methods=['GET'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/restaurant_search/{search_term}', methods=['GET'], cors=True)
 @get_current_user
 def search_restaurant(search_term=str(), user: UserObject = None):
     """
@@ -684,12 +673,11 @@ def search_restaurant(search_term=str(), user: UserObject = None):
 
 
 @app.route(
-    '/web/restaurant/{place_id}',
+    '/restaurant/{place_id}',
     methods=['GET'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/restaurant/{place_id}', methods=['GET'], cors=True)
 @get_current_user
 def get_restaurant(place_id=str(), user: UserObject = None):
     """
@@ -747,12 +735,11 @@ def get_restaurant(place_id=str(), user: UserObject = None):
 
 
 @app.route(
-    '/web/pending_friends/outbound',
+    '/pending_friends/outbound',
     methods=['GET'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/pending_friends/outbound', methods=['GET'], cors=True)
 @get_current_user
 def get_outbound_pending_friends(user: UserObject = None):
     """
@@ -788,12 +775,11 @@ def get_outbound_pending_friends(user: UserObject = None):
 
 
 @app.route(
-    '/web/pending_friends/inbound',
+    '/pending_friends/inbound',
     methods=['GET'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/pending_friends/inbound', methods=['GET'], cors=True)
 @get_current_user
 def get_inbound_pending_friends(user: UserObject = None):
     """
@@ -834,12 +820,8 @@ def get_inbound_pending_friends(user: UserObject = None):
 
 
 @app.route(
-    '/web/admin/ratings',
-    methods=['GET'],
-    cors=True,
-    authorizer=COGNITO_AUTHORIZER,
+    '/admin/ratings', methods=['GET'], cors=True, authorizer=COGNITO_AUTHORIZER
 )
-@app.route('/admin/ratings', methods=['GET'], cors=True)
 @get_current_user
 @access_admin
 def get_admin_ratings(user: UserObject = None):
@@ -889,12 +871,11 @@ def get_admin_ratings(user: UserObject = None):
 
 
 @app.route(
-    '/web/admin/ratings/{rating_id}',
+    '/admin/ratings/{rating_id}',
     methods=['DELETE'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/admin/ratings/{rating_id}', methods=['DELETE'], cors=True)
 @get_current_user
 @access_admin
 def admin_delete_rating(rating_id: int, user: UserObject = None):
@@ -932,12 +913,11 @@ def admin_delete_rating(rating_id: int, user: UserObject = None):
 
 
 @app.route(
-    '/web/admin/user/{email}',
+    '/admin/user/{email}',
     methods=['DELETE'],
     cors=True,
     authorizer=COGNITO_AUTHORIZER,
 )
-@app.route('/admin/user/{email}', methods=['DELETE'], cors=True)
 @get_current_user
 @access_admin
 def admin_delete_user(email: str, user: UserObject = None):

@@ -17,7 +17,11 @@ app = Chalice(app_name=APP_NAME)
 app.log.setLevel(logging.INFO)
 
 
-@app.route('/web/auth/login', methods=['POST'], cors=True)
+# -----------------------------------------------------------------------------
+# AUTH ENDPOINTS
+# -----------------------------------------------------------------------------
+
+
 @app.route('/auth/login', methods=['POST'], cors=True)
 def login():
     """
@@ -60,7 +64,6 @@ def login():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/auth/signup', methods=['POST'], cors=True)
 @app.route('/auth/signup', methods=['POST'], cors=True)
 def sign_up():
     """
@@ -103,7 +106,6 @@ def sign_up():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/auth/confirm_signup', methods=['POST'], cors=True)
 @app.route('/auth/confirm_signup', methods=['POST'], cors=True)
 def confirm_sign_up():
     """
@@ -146,7 +148,6 @@ def confirm_sign_up():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/auth/resend_code', methods=['POST'], cors=True)
 @app.route('/auth/resend_code', methods=['POST'], cors=True)
 def resend_code():
     """
@@ -189,7 +190,6 @@ def resend_code():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/auth/forgot_password', methods=['POST'], cors=True)
 @app.route('/auth/forgot_password', methods=['POST'], cors=True)
 def forgot_password():
     """
@@ -232,7 +232,6 @@ def forgot_password():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/auth/confirm_forgot_password', methods=['POST'], cors=True)
 @app.route('/auth/confirm_forgot_password', methods=['POST'], cors=True)
 def confirm_forgot_password():
     """
@@ -276,7 +275,11 @@ def confirm_forgot_password():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/admin_auth/login', methods=['POST'], cors=True)
+# -----------------------------------------------------------------------------
+# ADMIN AUTH ENDPOINTS
+# -----------------------------------------------------------------------------
+
+
 @app.route('/admin_auth/login', methods=['POST'], cors=True)
 def admin_login():
     """
@@ -319,7 +322,6 @@ def admin_login():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/admin_auth/signup', methods=['POST'], cors=True)
 @app.route('/admin_auth/signup', methods=['POST'], cors=True)
 def admin_sign_up():
     """
@@ -362,7 +364,6 @@ def admin_sign_up():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/admin_auth/confirm_signup', methods=['POST'], cors=True)
 @app.route('/admin_auth/confirm_signup', methods=['POST'], cors=True)
 def admin_confirm_sign_up():
     """
@@ -405,7 +406,6 @@ def admin_confirm_sign_up():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/admin_auth/resend_code', methods=['POST'], cors=True)
 @app.route('/admin_auth/resend_code', methods=['POST'], cors=True)
 def admin_resend_code():
     """
@@ -448,7 +448,6 @@ def admin_resend_code():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route('/web/admin_auth/forgot_password', methods=['POST'], cors=True)
 @app.route('/admin_auth/forgot_password', methods=['POST'], cors=True)
 def admin_forgot_password():
     """
@@ -491,9 +490,6 @@ def admin_forgot_password():
         raise LoopException.as_chalice_exception(e)
 
 
-@app.route(
-    '/web/admin_auth/confirm_forgot_password', methods=['POST'], cors=True
-)
 @app.route('/admin_auth/confirm_forgot_password', methods=['POST'], cors=True)
 def admin_confirm_forgot_password():
     """
