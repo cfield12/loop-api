@@ -206,8 +206,7 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
             user_object, FriendRequestType.BOTH
         )
     ]
-    names = list()
-    search_users = list()
+    search_users = dict()
     for user_id, username, first_name, last_name in users:
         name = f'{first_name} {last_name}'
         friend_status = (
@@ -219,20 +218,18 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
                 else FriendStatusType.NOT_FRIENDS.value
             )
         )
-        search_users.append(
-            {
-                'id': user_id,
-                'user_name': username,
-                'name': name,
-                'friend_status': friend_status,
-            }
-        )
-        names.append(name)
+        search_users[name] = {
+            'id': user_id,
+            'user_name': username,
+            'name': name,
+            'friend_status': friend_status,
+        }
+    names = [name for name in search_users]
     response = process.extract(
         search_term, names, scorer=fuzz.WRatio, processor=default_process
     )
     matches = [item[0] for item in response if item[1] > MIN_FUZZ_SCORE]
-    return [item for item in search_users if item["name"] in matches]
+    return [search_users[name] for name in matches]
 
 
 @DB_SESSION_RETRYABLE
