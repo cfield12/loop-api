@@ -262,8 +262,8 @@ def search_for_users(
     return {
         'user_data': users[
             (page_count - 1)
-            * RATINGS_PAGE_COUNT : page_count  # noqa
-            * RATINGS_PAGE_COUNT  # noqa
+            * RATINGS_PAGE_COUNT : page_count
+            * RATINGS_PAGE_COUNT
         ],
         'total_pages': pages,
     }
