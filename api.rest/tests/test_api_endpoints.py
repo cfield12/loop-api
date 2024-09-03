@@ -8,6 +8,7 @@ from loop import data
 from loop.api_classes import Coordinates, UpdateRating
 from loop.constants import RDS_WRITE
 from loop.data_classes import (
+    NULL_USER_SEARCH_PAGE_RESULT,
     Location,
     RatingsPageResults,
     UploadThumbnailEvent,
@@ -569,7 +570,7 @@ class TestSearchUsers(unittest.TestCase):
     @patch('loop-api.app.search_for_users')
     def test_search_users(self, mock_search_for_users):
         # Happy path test
-        mock_search_for_users.return_value = list()
+        mock_search_for_users.return_value = NULL_USER_SEARCH_PAGE_RESULT
         with Client(app.app) as client:
             response = client.http.get('/search_users?term=User&page_count=1')
             self.assertEqual(response.status_code, 200)

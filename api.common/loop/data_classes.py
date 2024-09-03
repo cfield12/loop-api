@@ -73,3 +73,17 @@ class RatingsPageResults:
 
 
 NULL_RATING_PAGE_RESULT = RatingsPageResults(page_data=list(), total_pages=0)
+
+
+@dataclass
+class PaginatedUserSearch:
+    user_data: Dict
+    total_pages: int
+
+    def to_dict(self) -> Dict:
+        return deepcopy(asdict(self))
+
+
+NULL_USER_SEARCH_PAGE_RESULT = RatingsPageResults(
+    page_data=list(), total_pages=0
+)

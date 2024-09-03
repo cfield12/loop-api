@@ -20,6 +20,7 @@ from loop.auth import CognitoAuth
 from loop.constants import COGNITO_SECRET_NAME, LOOP_ADMIN_GROUP
 from loop.data_classes import (
     Location,
+    PaginatedUserSearch,
     Rating,
     RatingsPageResults,
     UploadThumbnailEvent,
@@ -605,9 +606,12 @@ def search_users(user: UserObject = None):
             raise BadRequestError(
                 "; ".join([error["msg"] for error in e.errors()])
             )
-        users = search_for_users(user, search_user_obj)
-        app.log.info(f"Successfully searched for users for user {user.id}")
-        return users
+        users: PaginatedUserSearch = search_for_users(user, search_user_obj)
+        app.log.info(
+            f"Successfully searched for users with search term "
+            f"{search_user_obj.term} for user {user.id}"
+        )
+        return users.to_dict()
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
 
