@@ -1,7 +1,14 @@
+import math
 import os
 from typing import Dict, List
 
-from loop.constants import MIN_FUZZ_SCORE, RDS_WRITE, logger
+from loop.api_classes import SearchUsers
+from loop.constants import (
+    MIN_FUZZ_SCORE,
+    RATINGS_PAGE_COUNT,
+    RDS_WRITE,
+    logger,
+)
 from loop.data import (
     DB_SESSION_RETRYABLE,
     DB_TYPE,
@@ -177,14 +184,19 @@ def get_user_friend_ids(user: UserObject, include_own_id=True) -> List[int]:
 
 
 @DB_SESSION_RETRYABLE
-def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
+def search_for_users(
+    user_object: UserObject, search_users: SearchUsers
+) -> List[Dict]:
     '''
     In this function we search users using RapidFuzz string matching.
     '''
+    if not isinstance(search_users, SearchUsers):
+        raise TypeError('search_users should be an instance of SearchUsers')
+    search_term = search_users.term
+    page_count = search_users.page_count
+
     if not isinstance(user_object, UserObject):
         raise TypeError('user should be of type UserObject')
-    if not isinstance(search_term, str):
-        raise TypeError('search_term should be of type str')
     search_term = search_term.strip()
     users = get_all_users()
     users = users.filter(lambda user: user.id != user_object.id)
@@ -204,7 +216,7 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
             user_object, FriendRequestType.BOTH
         )
     ]
-    search_users = dict()
+    search_users = list()
     for user_id, username, first_name, last_name in users:
         name = f'{first_name} {last_name}'
         friend_status = (
@@ -216,20 +228,45 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
                 else FriendStatusType.NOT_FRIENDS.value
             )
         )
-        search_users[name] = {
-            'id': user_id,
-            'user_name': username,
-            'name': name,
-            'friend_status': friend_status,
+        search_users.append(
+            {
+                'id': user_id,
+                'user_name': username,
+                'name': name,
+                'friend_status': friend_status,
+            }
+        )
+    if search_term:
+        names = list(set([user.get('name') for user in search_users]))
+        response = process.extract(
+            search_term, names, scorer=fuzz.WRatio, processor=default_process
+        )
+        matches = [item[0] for item in response if item[1] > MIN_FUZZ_SCORE]
+        users = sorted(
+            [user for user in search_users if user['name'] in matches],
+            key=lambda x: matches.index(x['name']),
+        )
+    else:
+        users = search_users
+    count = len(users)
+    if count == 0:
+        return {
+            'user_data': list(),
+            'total_pages': 0,
         }
-    names = [name for name in search_users]
-    if not search_term:
-        return [search_users[user] for user in search_users]
-    response = process.extract(
-        search_term, names, scorer=fuzz.WRatio, processor=default_process
-    )
-    matches = [item[0] for item in response if item[1] > MIN_FUZZ_SCORE]
-    return [search_users[name] for name in matches]
+    pages = math.ceil(count / RATINGS_PAGE_COUNT)
+    if page_count > pages:
+        raise BadRequestError(
+            f'Page does not exist for query. (total pages = {pages}).'
+        )
+    return {
+        'user_data': users[
+            (page_count - 1)
+            * RATINGS_PAGE_COUNT : page_count
+            * RATINGS_PAGE_COUNT
+        ],
+        'total_pages': pages,
+    }
 
 
 @DB_SESSION_RETRYABLE

@@ -122,8 +122,14 @@ class PaginatedRatings(BaseModel):
         return validate_int(page_count, min_count=MIN_PAGE_COUNT)
 
 
-class SearchTerm(BaseModel):
+class SearchUsers(BaseModel):
     term: Optional[str] = str()
+    page_count: int
 
     class Config:
         extra = Extra.forbid
+
+    @validator("page_count")
+    @classmethod
+    def validate_page_count(cls, page_count: int):
+        return validate_int(page_count, min_count=MIN_PAGE_COUNT)

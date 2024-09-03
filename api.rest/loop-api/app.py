@@ -12,7 +12,7 @@ from loop.api_classes import (
     CreateRating,
     FriendValidator,
     PaginatedRatings,
-    SearchTerm,
+    SearchUsers,
     UpdateRating,
     UserCredentials,
 )
@@ -600,12 +600,12 @@ def search_users(user: UserObject = None):
     try:
         query_params = app.current_request.query_params or {}
         try:
-            search_term = SearchTerm(**query_params)
+            search_user_obj = SearchUsers(**query_params)
         except PydanticValidationError as e:
             raise BadRequestError(
                 "; ".join([error["msg"] for error in e.errors()])
             )
-        users = search_for_users(user, search_term.term)
+        users = search_for_users(user, search_user_obj)
         app.log.info(f"Successfully searched for users for user {user.id}")
         return users
     except LoopException as e:

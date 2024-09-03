@@ -5,7 +5,7 @@ from .api_classes import (
     FriendValidator,
     LoginCredentials,
     PaginatedRatings,
-    SearchTerm,
+    SearchUsers,
     SignUpCredentials,
     UpdateRating,
     UserCredentials,
