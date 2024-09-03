@@ -12,9 +12,11 @@ class FriendStatusType(Enum):
     FRIENDS = 'Friends'
     PENDING = 'Pending'
     BLOCKED = 'Blocked'
+    NOT_FRIENDS = 'Not friends'
     UNKNOWN = 'Unknown'
 
 
 class FriendRequestType(Enum):
     INBOUND = 'inbound'
     OUTBOUND = 'outbound'
+    BOTH = 'both'

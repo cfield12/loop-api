@@ -185,6 +185,9 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
         raise TypeError('user should be of type UserObject')
     if not isinstance(search_term, str):
         raise TypeError('search_term should be of type str')
+    search_term = search_term.strip()
+    if not search_term:
+        return list()
     users = get_all_users()
     users = users.filter(lambda user: user.id != user_object.id)
     users = select(
@@ -197,6 +200,12 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
         for user in users
     )
     users_friends = get_user_friend_ids(user_object, include_own_id=False)
+    pending_friends = [
+        request['id']
+        for request in get_pending_requests(
+            user_object, FriendRequestType.BOTH
+        )
+    ]
     names = list()
     search_users = list()
     for user_id, username, first_name, last_name in users:
@@ -204,7 +213,11 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
         friend_status = (
             FriendStatusType.FRIENDS.value
             if user_id in users_friends
-            else FriendStatusType.UNKNOWN.value
+            else (
+                FriendStatusType.PENDING.value
+                if user_id in pending_friends
+                else FriendStatusType.NOT_FRIENDS.value
+            )
         )
         search_users.append(
             {
@@ -248,6 +261,11 @@ def get_pending_requests(
     elif request_type == FriendRequestType.OUTBOUND:
         friends_query = friends_query.filter(
             lambda friend: friend.friend_1.id == user.id
+        )
+    elif request_type == FriendRequestType.BOTH:
+        friends_query = friends_query.filter(
+            lambda friend: friend.friend_1.id == user.id
+            or friend.friend_2.id == user.id
         )
     else:
         raise TypeError('request_type should be of type FriendRequestType.')

@@ -610,6 +610,7 @@ def search_users(search_term=str(), user: UserObject = None):
                     type: object
     """
     try:
+        search_term = requests.utils.unquote(search_term)
         users = search_for_users(user, search_term)
         app.log.info(f"Successfully searched for users for user {user.id}")
         return users

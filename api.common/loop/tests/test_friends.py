@@ -191,7 +191,7 @@ class TestFriends(unittest.TestCase):
                 'id': 4,
                 'user_name': '67ce7049-109f-420f-861b-3f1e7d6824b5',
                 'name': 'Random Persons-Mate',
-                'friend_status': 'Unknown',
+                'friend_status': 'Pending',
             },
         ]
         search_term = 'random'
@@ -270,6 +270,35 @@ class TestFriends(unittest.TestCase):
         self.assertEqual(
             inbound_requests,
             [
+                {
+                    'id': 3,
+                    'user_name': '60c1f02b-f758-4458-8c41-3b5c9fa20ae0',
+                    'email': 'test_person_email',
+                    'first_name': 'Random',
+                    'last_name': 'Person',
+                },
+                {
+                    'id': 2,
+                    'user_name': '86125274-40a1-70ec-da28-f779360f7c07',
+                    'email': 'admin_test_email',
+                    'first_name': 'Admin',
+                    'last_name': 'User',
+                },
+            ],
+        )
+
+    def test_get_both_pending_requests(self):
+        both_requests = get_pending_requests(USER_4, FriendRequestType.BOTH)
+        self.assertEqual(
+            both_requests,
+            [
+                {
+                    'id': 1,
+                    'user_name': 'test_cognito_user_name',
+                    'email': 'test_email',
+                    'first_name': 'Test',
+                    'last_name': 'User',
+                },
                 {
                     'id': 3,
                     'user_name': '60c1f02b-f758-4458-8c41-3b5c9fa20ae0',
