@@ -9,7 +9,7 @@ from loop.api_classes.validators import (
     validate_str_uuid,
 )
 from loop.constants import MAX_RATING, MIN_PAGE_COUNT, MIN_RATING
-from pydantic import BaseModel, model_validator, validator
+from pydantic import BaseModel, Extra, model_validator, validator
 
 
 class CreateRating(BaseModel):
@@ -120,3 +120,10 @@ class PaginatedRatings(BaseModel):
     @classmethod
     def validate_page_count(cls, page_count: int):
         return validate_int(page_count, min_count=MIN_PAGE_COUNT)
+
+
+class SearchTerm(BaseModel):
+    term: Optional[str] = str()
+
+    class Config:
+        extra = Extra.forbid

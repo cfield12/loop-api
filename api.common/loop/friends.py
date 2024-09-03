@@ -186,8 +186,6 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
     if not isinstance(search_term, str):
         raise TypeError('search_term should be of type str')
     search_term = search_term.strip()
-    if not search_term:
-        return list()
     users = get_all_users()
     users = users.filter(lambda user: user.id != user_object.id)
     users = select(
@@ -225,6 +223,8 @@ def search_for_users(user_object: UserObject, search_term: str) -> List[Dict]:
             'friend_status': friend_status,
         }
     names = [name for name in search_users]
+    if not search_term:
+        return [search_users[user] for user in search_users]
     response = process.extract(
         search_term, names, scorer=fuzz.WRatio, processor=default_process
     )

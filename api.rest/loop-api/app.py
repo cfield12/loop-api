@@ -12,6 +12,7 @@ from loop.api_classes import (
     CreateRating,
     FriendValidator,
     PaginatedRatings,
+    SearchTerm,
     UpdateRating,
     UserCredentials,
 )
@@ -567,13 +568,10 @@ def list_friends(user: UserObject = None):
 
 
 @app.route(
-    '/search_users/{search_term}',
-    methods=['GET'],
-    cors=True,
-    authorizer=COGNITO_AUTHORIZER,
+    '/search_users', methods=['GET'], cors=True, authorizer=COGNITO_AUTHORIZER
 )
 @get_current_user
-def search_users(search_term=str(), user: UserObject = None):
+def search_users(user: UserObject = None):
     """
     List friends.
     ---
@@ -584,8 +582,8 @@ def search_users(search_term=str(), user: UserObject = None):
         security:
             - API Key: []
         parameters:
-            -   in: path
-                name: search_term
+            -   in: query
+                name: term
                 type: string
                 required: true
                 description: Search term to search users for.
@@ -600,8 +598,14 @@ def search_users(search_term=str(), user: UserObject = None):
                     type: object
     """
     try:
-        search_term = requests.utils.unquote(search_term)
-        users = search_for_users(user, search_term)
+        query_params = app.current_request.query_params or {}
+        try:
+            search_term = SearchTerm(**query_params)
+        except PydanticValidationError as e:
+            raise BadRequestError(
+                "; ".join([error["msg"] for error in e.errors()])
+            )
+        users = search_for_users(user, search_term.term)
         app.log.info(f"Successfully searched for users for user {user.id}")
         return users
     except LoopException as e:

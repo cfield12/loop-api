@@ -571,7 +571,7 @@ class TestSearchUsers(unittest.TestCase):
         # Happy path test
         mock_search_for_users.return_value = list()
         with Client(app.app) as client:
-            response = client.http.get('/search_users/hello')
+            response = client.http.get('/search_users?term=hello')
             self.assertEqual(response.status_code, 200)
 
 

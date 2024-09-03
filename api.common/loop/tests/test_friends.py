@@ -198,6 +198,31 @@ class TestFriends(unittest.TestCase):
         users = search_for_users(USER_2, search_term)
         self.assertEqual(users, expected_users)
 
+    def test_search_for_all_users(self):
+        expected_users = [
+            {
+                'id': 1,
+                'user_name': 'test_cognito_user_name',
+                'name': 'Test User',
+                'friend_status': 'Not friends',
+            },
+            {
+                'id': 3,
+                'user_name': '60c1f02b-f758-4458-8c41-3b5c9fa20ae0',
+                'name': 'Random Person',
+                'friend_status': 'Friends',
+            },
+            {
+                'id': 4,
+                'user_name': '67ce7049-109f-420f-861b-3f1e7d6824b5',
+                'name': 'Random Persons-Mate',
+                'friend_status': 'Pending',
+            },
+        ]
+        search_term = ''
+        users = search_for_users(USER_2, search_term)
+        self.assertEqual(users, expected_users)
+
     def test_search_for_users_unknown_name(self):
         search_term = 'Pippa'
         users = search_for_users(USER_2, search_term)
