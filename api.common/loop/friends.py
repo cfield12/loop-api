@@ -35,27 +35,24 @@ from rapidfuzz.utils import default_process
 
 
 class FriendWorker:
-    def __init__(self, requestor: UserObject, target: UserObject) -> None:
+    def __init__(self, requestor: UserObject) -> None:
         if not isinstance(DB_TYPE[RDS_WRITE], Database):
             raise DbNotInitError(
                 'DB must be initialised to use FriendWorker class.'
             )
-        if not isinstance(requestor, UserObject) or not isinstance(
-            target, UserObject
-        ):
+        if not isinstance(requestor, UserObject):
             raise TypeError(
-                'Users supplied here must be instances of UserObject.'
+                'Requestor user supplied here must be instance of UserObject.'
             )
         self.db = DB_TYPE[RDS_WRITE]
         self.requestor = requestor
-        self.target = target
 
-    def _get_friend_db_object(self):
+    def _get_friend_db_object(self, target_user: UserObject):
         return self.db.Friend.get(
             friend_1=self.requestor.id,
-            friend_2=self.target.id,
+            friend_2=target_user.id,
         ) or self.db.Friend.get(
-            friend_1=self.target.id,
+            friend_1=target_user.id,
             friend_2=self.requestor.id,
         )
 
@@ -76,35 +73,39 @@ class FriendWorker:
             )
         return FriendStatus(id=friend_status_obj.id, status=friend_status_type)
 
-    def _create_friend_entry(self) -> None:
+    def _create_friend_entry(self, target_user: UserObject) -> None:
         pending_status = self._get_friend_status(FriendStatusType.PENDING)
         self.db.Friend(
             friend_1=self.requestor.id,
-            friend_2=self.target.id,
+            friend_2=target_user.id,
             status=pending_status.id,
         )
 
     @DB_SESSION_RETRYABLE
-    def create_friend_entry(self) -> None:
-        if self._get_friend_db_object():
+    def create_friend_entry(self, target_user: UserObject) -> None:
+        if not isinstance(target_user, UserObject):
+            raise TypeError('target_user is an instance of UserObject')
+        if self._get_friend_db_object(target_user):
             raise BadRequestError(
                 f'Friend entry already exists for users {self.requestor.id} '
-                f'and {self.target.id}.'
+                f'and {target_user.id}.'
             )
-        self._create_friend_entry()
+        self._create_friend_entry(target_user)
         commit()
         logger.info(
             'Successfully created friend entry in rds between users '
-            f'{self.requestor.id} and {self.target.id}.'
+            f'{self.requestor.id} and {target_user.id}.'
         )
 
     @DB_SESSION_RETRYABLE
-    def accept_friend_request(self) -> None:
-        friend_object = self._get_friend_db_object()
+    def accept_friend_request(self, target_user: UserObject) -> None:
+        if not isinstance(target_user, UserObject):
+            raise TypeError('target_user is an instance of UserObject')
+        friend_object = self._get_friend_db_object(target_user)
         if not friend_object:
             raise BadRequestError(
                 'Friend entry does not exist for users '
-                f'{self.requestor.id} and {self.target.id}.'
+                f'{self.requestor.id} and {target_user.id}.'
             )
         friend_status = self._get_friend_status(FriendStatusType.FRIENDS)
         if friend_object.status.id == friend_status.id:
@@ -119,26 +120,28 @@ class FriendWorker:
         commit()
         logger.info(
             'Successfully accepted friend request between users '
-            f'{self.requestor.id} (requestor) and {self.target.id} '
+            f'{self.requestor.id} (requestor) and {target_user.id} '
             '(target).'
         )
 
     @DB_SESSION_RETRYABLE
-    def delete_friend(self) -> None:
+    def delete_friend(self, target_user: UserObject) -> None:
         '''
         The target user is the friend to be deleted.
         '''
-        friend_object = self._get_friend_db_object()
+        if not isinstance(target_user, UserObject):
+            raise TypeError('target_user is an instance of UserObject')
+        friend_object = self._get_friend_db_object(target_user)
         if not friend_object:
             raise BadRequestError(
                 f'Friend entry does not exist for users '
-                f'{self.requestor.id} and {self.target.id}.'
+                f'{self.requestor.id} and {target_user.id}.'
             )
         friend_object.delete()
         commit()
         logger.info(
             'Successfully deleted friendship between users '
-            f'{self.requestor.id} (requestor) and {self.target.id}'
+            f'{self.requestor.id} (requestor) and {target_user.id}'
             ' (target).'
         )
 

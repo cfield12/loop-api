@@ -419,8 +419,8 @@ def add_friend(user_name=str(), user: UserObject = None):
         target_user: UserObject = data.get_user_from_cognito_username(
             validated_params.cognito_user_name_target
         )
-        friend_worker = FriendWorker(user, target_user)
-        friend_worker.create_friend_entry()
+        friend_worker = FriendWorker(user)
+        friend_worker.create_friend_entry(target_user)
         return Response(status_code=200, body='')
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
@@ -473,8 +473,8 @@ def accept_friend(user_name=str(), user: UserObject = None):
         target_user: UserObject = data.get_user_from_cognito_username(
             validated_params.cognito_user_name_target
         )
-        friend_worker = FriendWorker(user, target_user)
-        friend_worker.accept_friend_request()
+        friend_worker = FriendWorker(user)
+        friend_worker.accept_friend_request(target_user)
         return Response(status_code=200, body='')
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
@@ -527,8 +527,8 @@ def delete_friend(user_name=str(), user: UserObject = None):
         target_user: UserObject = data.get_user_from_cognito_username(
             validated_params.cognito_user_name_target
         )
-        friend_worker = FriendWorker(user, target_user)
-        friend_worker.delete_friend()
+        friend_worker = FriendWorker(user)
+        friend_worker.delete_friend(target_user)
         return Response(body=str())
     except LoopException as e:
         raise LoopException.as_chalice_exception(e)
