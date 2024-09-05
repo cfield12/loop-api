@@ -2,7 +2,7 @@ import math
 import os
 from datetime import datetime
 from time import sleep
-from typing import Dict, List, Optional, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 from loop import exceptions, secrets
 from loop.api_classes import PaginatedRatings, UpdateRating
@@ -25,6 +25,7 @@ from loop.data_classes import (
     UserObject,
 )
 from loop.db_entities import define_entities
+from loop.db_session import DBSession
 from loop.enums import DbType
 from loop.google_client import find_location
 from pony.orm import Database
@@ -86,7 +87,7 @@ def init_db(
                     )
 
 
-DB_TYPE = {DbType.WRITE: None}
+DB_TYPE = DBSession()
 
 
 def init_write_db(
