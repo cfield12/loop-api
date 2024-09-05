@@ -17,8 +17,13 @@ from loop.exceptions import BadRequestError
 from loop.queue_service import SqsClient
 from pony.orm import commit
 
+"""
+This module contains some logic for admin (only) api endpoints.
+"""
+
 
 def _get_rating(rating_id: int, db_instance_type=RDS_WRITE):
+    """Returns the rating object from the database by rating id"""
     rating = DB_TYPE[db_instance_type].Rating.get(id=rating_id)
     if not rating:
         raise BadRequestError(f'Could not find rating with id {rating_id}.')
@@ -28,6 +33,7 @@ def _get_rating(rating_id: int, db_instance_type=RDS_WRITE):
 
 @DB_SESSION_RETRYABLE
 def delete_rating(rating_id: int) -> None:
+    """Deletes the rating object with rating id from the database"""
     rating = _get_rating(rating_id)
     rating.delete()
     commit()
@@ -35,16 +41,17 @@ def delete_rating(rating_id: int) -> None:
 
 
 def delete_user(user_credentials: UserCredentials) -> Dict:
-    if not isinstance(user_credentials, UserCredentials):
-        raise TypeError(
-            'user_credentials must be an instance of UserCredentials.'
-        )
     """
-    We want to:
+    Deletes the user from everywhere by doing the following:
+
     a) Delete user from user table in RDS as well as all ratings and
         friendships associated.
     b) Delete user from Cognito.
     """
+    if not isinstance(user_credentials, UserCredentials):
+        raise TypeError(
+            'user_credentials must be an instance of UserCredentials.'
+        )
     # Send message to delete user from RDS Lambda.
 
     queue_service = SqsClient(DELETE_USER_QUEUE)
@@ -59,6 +66,7 @@ def delete_user(user_credentials: UserCredentials) -> Dict:
 
 
 def delete_user_from_rds(user_credentials: UserCredentials) -> Dict:
+    """This function deletes the user entirely from RDS."""
     if not isinstance(user_credentials, UserCredentials):
         raise TypeError(
             'user_credentials must be an instance of UserCredentials.'

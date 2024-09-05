@@ -1,6 +1,10 @@
 import logging
 import os
 
+"""
+This file houses all constants used throughout the loop packages's modules.
+"""
+
 PROJECT = os.environ.get('PROJECT', 'loop')
 ENVIRONMENT = os.environ.get('ENVIRONMENT', 'develop')
 LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
@@ -52,3 +56,5 @@ RATINGS_PAGE_COUNT = 20
 MIN_PAGE_COUNT = 1
 
 SEARCH_USER_PAGE_COUNT = 20
+
+UPDATE_RATING_FIELDS = ['price', 'vibe', 'food', 'message']

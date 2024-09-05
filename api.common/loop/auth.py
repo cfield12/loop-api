@@ -22,6 +22,21 @@ from loop.exceptions import (
 )
 from loop.secrets import get_secret
 
+"""
+
+This module contains the logic supporting AWS Cognito for the following auth
+actions:
+
+- Initiating Auth (logging in)
+- User sign up
+- Confirming the sign up (with code sent to email)
+- Resending of the code
+- Forgot password
+- Change password (following forgot password)
+- Delete user from Cognito
+
+"""
+
 
 class CognitoAuth:
     def __init__(self, is_admin=False):
@@ -39,6 +54,7 @@ class CognitoAuth:
         self.is_admin = is_admin
 
     def _get_user_groups(self, username: str) -> List[Dict]:
+        """Gets the user's groups from username."""
         try:
             user_groups = self._auth_client.admin_list_groups_for_user(
                 UserPoolId=self._user_pool_id, Username=username
@@ -55,6 +71,7 @@ class CognitoAuth:
         return user_groups['Groups']
 
     def _check_is_admin(self, username: str) -> bool:
+        """Checks whether or not the user is in the admin group."""
         user_groups = self._get_user_groups(username)
         if ADMIN in [group['GroupName'] for group in user_groups]:
             return True
@@ -62,6 +79,7 @@ class CognitoAuth:
             return False
 
     def _initiate_auth(self, login_credentials: LoginCredentials) -> Dict:
+        """Initiates the login"""
         try:
             return self._auth_client.admin_initiate_auth(
                 UserPoolId=self._user_pool_id,
@@ -86,6 +104,11 @@ class CognitoAuth:
             raise e
 
     def login_user(self, login_credentials: LoginCredentials) -> Dict:
+        """
+        Logs in the user. We either:
+        - return a 200 with the tokens required for authorisation for the app
+        - returns a 4XX error
+        """
         if not isinstance(login_credentials, LoginCredentials):
             raise TypeError(
                 'login_credentials must be an instance of LoginCredentials'
@@ -101,6 +124,7 @@ class CognitoAuth:
         return auth_response
 
     def _sign_up(self, sign_up_creds: SignUpCredentials) -> Dict:
+        """Initiates the sign up"""
         try:
             return self._auth_client.sign_up(
                 ClientId=self._client_id,
@@ -129,6 +153,10 @@ class CognitoAuth:
             raise e
 
     def sign_up_user(self, sign_up_credentials: SignUpCredentials) -> Dict:
+        """
+        Signs up a user - the user is sent an email with a verification code
+        with which they can confirm themselves
+        """
         if not isinstance(sign_up_credentials, SignUpCredentials):
             raise TypeError(
                 'sign_up_credentials must be an instance of SignUpCredentials'
@@ -140,6 +168,7 @@ class CognitoAuth:
         return self._sign_up(sign_up_credentials)
 
     def confirm_user(self, verify_object: VerifyUser) -> Dict:
+        """Confirms a user - the user is added to the Cognito User Pool"""
         if not isinstance(verify_object, VerifyUser):
             raise TypeError('verify_object must be an instance of VerifyUser.')
         if self.is_admin and not self._check_is_admin(verify_object.email):
@@ -161,6 +190,7 @@ class CognitoAuth:
             raise e
 
     def resend_code(self, user_credentials: UserCredentials) -> Dict:
+        """Resends verification code"""
         if not isinstance(user_credentials, UserCredentials):
             raise TypeError(
                 'user_credentials must be an instance of UserCredentials.'
@@ -182,6 +212,9 @@ class CognitoAuth:
     def initiate_forgot_password(
         self, user_credentials: UserCredentials
     ) -> Dict:
+        """
+        Begins the forgot password process - sends verification code to email
+        """
         if not isinstance(user_credentials, UserCredentials):
             raise TypeError(
                 'user_credentials must be an instance of UserCredentials.'
@@ -203,6 +236,9 @@ class CognitoAuth:
     def confirm_forgot_password(
         self, forgot_password_credentials: ForgotPassword
     ) -> Dict:
+        """
+        Confirms the forget password with new password and verification code
+        """
         if not isinstance(forgot_password_credentials, ForgotPassword):
             raise TypeError(
                 'forgot_password_credentials must be an instance of '
@@ -227,6 +263,7 @@ class CognitoAuth:
             raise e
 
     def admin_delete_user(self, user_credentials: UserCredentials) -> Dict:
+        """Deletes a user from the user pool"""
         if not isinstance(user_credentials, UserCredentials):
             raise TypeError(
                 'user_credentials must be an instance of UserCredentials.'

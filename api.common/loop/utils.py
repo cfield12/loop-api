@@ -10,6 +10,11 @@ from loop.constants import (
 )
 from loop.data_classes import UserObject
 
+"""
+This module provides some generic functions for use across the loop back-end
+repository.
+"""
+
 
 def get_admin_user():
     return UserObject(

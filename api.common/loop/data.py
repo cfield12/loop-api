@@ -14,6 +14,7 @@ from loop.constants import (
     RATINGS_PAGE_COUNT,
     RDS_WRITE,
     RETRY_DB_DELAY_SECONDS,
+    UPDATE_RATING_FIELDS,
     logger,
 )
 from loop.data_classes import (
@@ -48,8 +49,14 @@ DB_SESSION_RETRYABLE = db_session(
     ),
 )
 
+"""This file contains database initialisation/management logic"""
 
-def init_db(db_dict=None, check_tables=False, create_tables=False):
+
+def init_db(
+    db_dict: Optional[Dict[str, Union[str, int]]] = None,
+    check_tables: bool = False,
+    create_tables: bool = False,
+) -> None:
     for retry_count in range(MAX_DB_INIT_RETRIES + 1):
         try:
             db = Database()
@@ -82,7 +89,9 @@ def init_db(db_dict=None, check_tables=False, create_tables=False):
 DB_TYPE = {RDS_WRITE: None}
 
 
-def init_write_db(check_tables=False, create_tables=False):
+def init_write_db(
+    check_tables: bool = False, create_tables: bool = False
+) -> None:
     instance = os.environ.get(
         'RDS_SECRET_NAME',
         f'{PROJECT}-secret-rds-connection-{ENVIRONMENT}',
@@ -113,6 +122,7 @@ def disconnect_db():
 def get_user_ratings(
     user: UserObject, db_instance_type=RDS_WRITE
 ) -> List[Dict[str, int]]:
+    """This function gets all a user's ratings for the user."""
     if not isinstance(user, UserObject):
         raise TypeError('User must be an instance of UserObject.')
     ratings = []
@@ -159,6 +169,9 @@ def get_user_ratings(
 def get_user_from_cognito_username(
     cognito_user_name: str, db_instance_type=RDS_WRITE
 ) -> UserObject:
+    """
+    This function gets the user from the database using their cognito username.
+    """
     user = DB_TYPE[db_instance_type].User.get(
         cognito_user_name=cognito_user_name
     )
@@ -173,6 +186,9 @@ def get_user_from_cognito_username(
 
 @DB_SESSION_RETRYABLE
 def get_user_from_email(email: str, db_instance_type=RDS_WRITE) -> UserObject:
+    """
+    This function gets the user from the database using their email.
+    """
     user = DB_TYPE[db_instance_type].User.get(email=email)
     if not user:
         raise exceptions.BadRequestError('User not found')
@@ -185,6 +201,9 @@ def get_user_from_email(email: str, db_instance_type=RDS_WRITE) -> UserObject:
 
 @DB_SESSION_RETRYABLE
 def create_user(user: UserCreateObject, db_instance_type=RDS_WRITE) -> None:
+    """
+    This function creates a user entry in the database.
+    """
     if not isinstance(user, UserCreateObject):
         raise TypeError('user must be an instance of UserCreateObject')
     DB_TYPE[db_instance_type].User(
@@ -200,6 +219,9 @@ def create_user(user: UserCreateObject, db_instance_type=RDS_WRITE) -> None:
 
 @DB_SESSION_RETRYABLE
 def create_rating(rating: Rating, db_instance_type=RDS_WRITE) -> None:
+    """
+    This function creates a rating entry in the database.
+    """
     if not isinstance(rating, Rating):
         raise TypeError('rating must be an instance of Rating')
     DB_TYPE[db_instance_type].Rating(
@@ -216,6 +238,10 @@ def create_rating(rating: Rating, db_instance_type=RDS_WRITE) -> None:
 
 
 def _get_rating(rating_id: int, user: UserObject, db_instance_type=RDS_WRITE):
+    """
+    This function gets the rating database object for a specific rating ID and
+    user.
+    """
     if not isinstance(rating_id, int):
         raise TypeError('rating_id must be an int.')
     if not isinstance(user, UserObject):
@@ -235,18 +261,20 @@ def update_rating(
     user: UserObject,
     db_instance_type=RDS_WRITE,
 ) -> None:
+    """
+    This function updates the rating database object with new values for food,
+    vibe, price and message IF they are present in the UpdateRating instance.
+    """
     if not isinstance(update_rating, UpdateRating):
         raise TypeError('update_rating must be an instance of UpdateRating')
     rating = _get_rating(update_rating.id, user)
-    if update_rating.price:
-        rating.price = update_rating.price
-    if update_rating.vibe:
-        rating.vibe = update_rating.vibe
-    if update_rating.food:
-        rating.food = update_rating.food
-    if update_rating.message:
-        rating.message = update_rating.message
-
+    for field in UPDATE_RATING_FIELDS:
+        (
+            setattr(rating, field, getattr(update_rating, field))
+            if getattr(update_rating, field)
+            else None
+        )
+    update_object_last_updated_time(rating)
     commit()
     logger.info(
         f'Successfully updated rating in rds: {update_rating.__dict__}'
@@ -260,6 +288,9 @@ def delete_rating(
     user: UserObject,
     db_instance_type=RDS_WRITE,
 ) -> None:
+    """
+    This function deletes a rating from the database for a user.
+    """
     if not isinstance(rating_id, int) and (
         isinstance(rating_id, str) and not rating_id.isdigit()
     ):
@@ -273,6 +304,9 @@ def delete_rating(
 
 @DB_SESSION_RETRYABLE
 def create_location_entry(location: Location, db_instance_type=RDS_WRITE):
+    """
+    This function creates a Location entry in the database.
+    """
     if not isinstance(location, Location):
         raise TypeError('user must be an instance of Location')
     location_entry = DB_TYPE[db_instance_type].Location(
@@ -291,6 +325,13 @@ def create_location_entry(location: Location, db_instance_type=RDS_WRITE):
 def get_or_create_location_id(
     google_id: str, db_instance_type=RDS_WRITE
 ) -> int:
+    """
+    This function gets the location id for a certain google_id according to
+    the Location table.
+
+    It will create a location entry if one does not exist for this google_id
+    already.
+    """
     if not isinstance(google_id, str):
         raise TypeError('google_id must be of type string')
     location = DB_TYPE[db_instance_type].Location.get(google_id=google_id)
@@ -302,6 +343,9 @@ def get_or_create_location_id(
 
 @DB_SESSION_RETRYABLE
 def update_object_last_updated_time(db_object) -> None:
+    """
+    This function updates a database object's last updated field.
+    """
     try:
         db_object.last_updated
     except AttributeError as e:
@@ -315,6 +359,9 @@ def update_object_last_updated_time(db_object) -> None:
 
 @DB_SESSION_RETRYABLE
 def get_all_users(db_instance_type=RDS_WRITE) -> Query:
+    """
+    This function returns the Pony query of all users.
+    """
     return select(user for user in DB_TYPE[db_instance_type].User)
 
 
@@ -323,6 +370,11 @@ def _get_ratings(
     place_id: Optional[str],
     db_instance_type=RDS_WRITE,
 ) -> Query:
+    """
+    This function returns ratings which are optionally filtered on:
+    - A list of user ids
+    - A place id (google_id)
+    """
     ratings = select(rating for rating in DB_TYPE[db_instance_type].Rating)
     if users:
         ratings = ratings.filter(lambda rating: rating.user.id in users)
@@ -334,6 +386,9 @@ def _get_ratings(
 
 
 def _get_serialized_ratings(ratings_query: Query) -> Dict:
+    """
+    This function creates readable output (dict) from a Pony ratings query.
+    """
     reviews = list()
     for r in ratings_query:
         reviews.append(
@@ -358,8 +413,13 @@ def _get_serialized_ratings(ratings_query: Query) -> Dict:
 def get_ratings(
     users: Optional[List[int]] = None, place_id: Optional[str] = None
 ) -> Dict:
+    """
+    This function returns ratings which optional filters on.
+    - A list of user ids
+    - A place id (google_id)
+    """
     reviews = list()
-    ratings = _get_ratings(users, place_id)
+    ratings: Query = _get_ratings(users, place_id)
     return _get_serialized_ratings(ratings)
 
 
@@ -367,6 +427,12 @@ def get_ratings(
 def get_ratings_paginated(
     paginated_ratings: PaginatedRatings,
 ) -> RatingsPageResults:
+    """
+    Gets paginated ratings. PaginatedRatings object consists of users and
+    place_id.
+    - A list of user ids
+    - A place id (google_id)
+    """
     if not isinstance(paginated_ratings, PaginatedRatings):
         raise TypeError(
             'paginated_ratings must be an instance of PaginatedRatings.'
@@ -392,6 +458,7 @@ def get_ratings_paginated(
 
 @DB_SESSION_RETRYABLE
 def delete_user_ratings(user: UserObject, db_instance_type=RDS_WRITE) -> None:
+    """This function deletes all user's ratings"""
     if not isinstance(user, UserObject):
         raise TypeError('user must be an instance of UserObject.')
     ratings = select(
@@ -408,6 +475,7 @@ def delete_user_ratings(user: UserObject, db_instance_type=RDS_WRITE) -> None:
 def delete_user_friendships(
     user: UserObject, db_instance_type=RDS_WRITE
 ) -> None:
+    """This function deletes all user's friendships"""
     if not isinstance(user, UserObject):
         raise TypeError('user must be an instance of UserObject.')
     frienships = select(
@@ -422,6 +490,7 @@ def delete_user_friendships(
 
 @DB_SESSION_RETRYABLE
 def delete_user_entry(user: UserObject, db_instance_type=RDS_WRITE) -> None:
+    """This function deletes user entry from rds"""
     if not isinstance(user, UserObject):
         raise TypeError('user must be an instance of UserObject.')
     user = DB_TYPE[db_instance_type].User.get(id=user.id)

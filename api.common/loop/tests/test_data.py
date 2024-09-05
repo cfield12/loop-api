@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime
 from unittest.mock import call, patch
 
 from loop import data, exceptions
@@ -534,6 +535,7 @@ class TestCreateUserRatings(unittest.TestCase):
             1, UserObject(id=2, cognito_user_name='user_name')
         )
         self.assertEqual(rating.message, 'hello')
+        self.assertNotEqual(rating.last_updated, datetime(2000, 1, 1))
 
     @data.DB_SESSION_RETRYABLE
     def test_update_ratings(self):

@@ -33,6 +33,24 @@ from pony.orm.core import Query
 from rapidfuzz import fuzz, process
 from rapidfuzz.utils import default_process
 
+"""
+This module deals with the interaction between friends/users. This includes:
+
+FriendWorker:
+- Create friend entry in rds (adding friend)
+- Accepting friend request (changing entry from PENDING to FRIENDS)
+- Deleting a friend
+
+UserSearch:
+- Searching for users with/without search term (using fuzzy search)
+
+- Getting pending requests of a user
+- Getting a user's friends
+
+- Getting ratings for places and friends
+- Getting pending requests inbound, outbound and both for a user
+"""
+
 
 class FriendWorker:
     def __init__(self, requestor: UserObject) -> None:

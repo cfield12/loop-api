@@ -1,5 +1,9 @@
 import chalice
 
+"""
+This module contains all loop api exceptions as well as other custom exceptions
+"""
+
 
 class LoopException(Exception):
     STATUS_CODE = 500

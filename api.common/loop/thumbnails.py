@@ -12,6 +12,13 @@ from loop.google_client import PhotoDownloader
 from loop.queue_service import SqsClient
 from loop.s3_service import S3Service
 
+"""
+This module provides the logic surrounding restaurant thumbnails: This
+includes:
+- Uploading thumbnail to S3
+- Checking the thumbnail exists
+"""
+
 
 class RestaurantThumbnails:
     def __init__(self):
@@ -20,9 +27,6 @@ class RestaurantThumbnails:
     def check_item_exists(self, place_id: str) -> bool:
         key = place_id + JPEG_SUFFIX
         return self.s3_service.item_exists(key)
-
-    def get_object(self, place_id: str) -> None:
-        pass
 
 
 class ThumbnailUploader(RestaurantThumbnails):

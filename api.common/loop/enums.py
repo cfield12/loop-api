@@ -1,5 +1,7 @@
 from enum import Enum
 
+"""This module contains all loop Enums"""
+
 
 class UUIDVersion(Enum):
     ONE = 1
@@ -20,3 +22,7 @@ class FriendRequestType(Enum):
     INBOUND = 'inbound'
     OUTBOUND = 'outbound'
     BOTH = 'both'
+
+
+class DbType(Enum):
+    WRITE = 'write'

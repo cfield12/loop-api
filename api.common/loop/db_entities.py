@@ -9,8 +9,10 @@ from pony.orm import (
     composite_key,
 )
 
+"""This module defines the database objects"""
 
-def define_entities(db: Database):
+
+def define_entities(db: Database) -> None:
     class User(db.Entity):
         """
         List of all users.

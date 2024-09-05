@@ -5,6 +5,8 @@ from typing import Dict, Optional, Union
 from loop.api_classes import Coordinates
 from loop.enums import FriendStatusType
 
+"""This file contains all dataclasses"""
+
 
 @dataclass
 class UserObject:
