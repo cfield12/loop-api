@@ -1,5 +1,5 @@
 from loop.constants import logger
-from loop.data import init_write_db
+from loop.data import disconnect_db, init_write_db
 from src import UserCreator
 
 # Initialise database outside lambda handler
@@ -16,6 +16,8 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(f'User creator event failed for event: {event} ({e})')
         raise e
+    finally:
+        disconnect_db()
 
 
 if __name__ == '__main__':

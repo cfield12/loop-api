@@ -12,7 +12,6 @@ from loop.constants import (
     MAX_DB_INIT_RETRIES,
     PROJECT,
     RATINGS_PAGE_COUNT,
-    RDS_WRITE,
     RETRY_DB_DELAY_SECONDS,
     UPDATE_RATING_FIELDS,
     logger,
@@ -26,6 +25,7 @@ from loop.data_classes import (
     UserObject,
 )
 from loop.db_entities import define_entities
+from loop.enums import DbType
 from loop.google_client import find_location
 from pony.orm import Database
 from pony.orm import InternalError as PonyOrmDbInternalError
@@ -86,7 +86,7 @@ def init_db(
                     )
 
 
-DB_TYPE = {RDS_WRITE: None}
+DB_TYPE = {DbType.WRITE: None}
 
 
 def init_write_db(
@@ -98,7 +98,7 @@ def init_write_db(
     )
     db_dict = secrets.get_db_dict(instance)
     write_db = init_db(db_dict, check_tables, create_tables)
-    DB_TYPE[RDS_WRITE] = write_db
+    DB_TYPE[DbType.WRITE] = write_db
 
 
 def disconnect_db():
@@ -120,7 +120,7 @@ def disconnect_db():
 
 @DB_SESSION_RETRYABLE
 def get_user_ratings(
-    user: UserObject, db_instance_type=RDS_WRITE
+    user: UserObject, db_instance_type: DbType = DbType.WRITE
 ) -> List[Dict[str, int]]:
     """This function gets all a user's ratings for the user."""
     if not isinstance(user, UserObject):
@@ -167,7 +167,7 @@ def get_user_ratings(
 
 @DB_SESSION_RETRYABLE
 def get_user_from_cognito_username(
-    cognito_user_name: str, db_instance_type=RDS_WRITE
+    cognito_user_name: str, db_instance_type: DbType = DbType.WRITE
 ) -> UserObject:
     """
     This function gets the user from the database using their cognito username.
@@ -185,7 +185,9 @@ def get_user_from_cognito_username(
 
 
 @DB_SESSION_RETRYABLE
-def get_user_from_email(email: str, db_instance_type=RDS_WRITE) -> UserObject:
+def get_user_from_email(
+    email: str, db_instance_type: DbType = DbType.WRITE
+) -> UserObject:
     """
     This function gets the user from the database using their email.
     """
@@ -200,7 +202,9 @@ def get_user_from_email(email: str, db_instance_type=RDS_WRITE) -> UserObject:
 
 
 @DB_SESSION_RETRYABLE
-def create_user(user: UserCreateObject, db_instance_type=RDS_WRITE) -> None:
+def create_user(
+    user: UserCreateObject, db_instance_type: DbType = DbType.WRITE
+) -> None:
     """
     This function creates a user entry in the database.
     """
@@ -218,7 +222,9 @@ def create_user(user: UserCreateObject, db_instance_type=RDS_WRITE) -> None:
 
 
 @DB_SESSION_RETRYABLE
-def create_rating(rating: Rating, db_instance_type=RDS_WRITE) -> None:
+def create_rating(
+    rating: Rating, db_instance_type: DbType = DbType.WRITE
+) -> None:
     """
     This function creates a rating entry in the database.
     """
@@ -237,7 +243,9 @@ def create_rating(rating: Rating, db_instance_type=RDS_WRITE) -> None:
     return
 
 
-def _get_rating(rating_id: int, user: UserObject, db_instance_type=RDS_WRITE):
+def _get_rating(
+    rating_id: int, user: UserObject, db_instance_type: DbType = DbType.WRITE
+):
     """
     This function gets the rating database object for a specific rating ID and
     user.
@@ -259,7 +267,7 @@ def _get_rating(rating_id: int, user: UserObject, db_instance_type=RDS_WRITE):
 def update_rating(
     update_rating: UpdateRating,
     user: UserObject,
-    db_instance_type=RDS_WRITE,
+    db_instance_type: DbType = DbType.WRITE,
 ) -> None:
     """
     This function updates the rating database object with new values for food,
@@ -286,7 +294,7 @@ def update_rating(
 def delete_rating(
     rating_id: int,
     user: UserObject,
-    db_instance_type=RDS_WRITE,
+    db_instance_type: DbType = DbType.WRITE,
 ) -> None:
     """
     This function deletes a rating from the database for a user.
@@ -303,7 +311,9 @@ def delete_rating(
 
 
 @DB_SESSION_RETRYABLE
-def create_location_entry(location: Location, db_instance_type=RDS_WRITE):
+def create_location_entry(
+    location: Location, db_instance_type: DbType = DbType.WRITE
+):
     """
     This function creates a Location entry in the database.
     """
@@ -323,7 +333,7 @@ def create_location_entry(location: Location, db_instance_type=RDS_WRITE):
 
 @DB_SESSION_RETRYABLE
 def get_or_create_location_id(
-    google_id: str, db_instance_type=RDS_WRITE
+    google_id: str, db_instance_type: DbType = DbType.WRITE
 ) -> int:
     """
     This function gets the location id for a certain google_id according to
@@ -358,7 +368,7 @@ def update_object_last_updated_time(db_object) -> None:
 
 
 @DB_SESSION_RETRYABLE
-def get_all_users(db_instance_type=RDS_WRITE) -> Query:
+def get_all_users(db_instance_type: DbType = DbType.WRITE) -> Query:
     """
     This function returns the Pony query of all users.
     """
@@ -368,7 +378,7 @@ def get_all_users(db_instance_type=RDS_WRITE) -> Query:
 def _get_ratings(
     users: Optional[List[int]],
     place_id: Optional[str],
-    db_instance_type=RDS_WRITE,
+    db_instance_type: DbType = DbType.WRITE,
 ) -> Query:
     """
     This function returns ratings which are optionally filtered on:
@@ -457,7 +467,9 @@ def get_ratings_paginated(
 
 
 @DB_SESSION_RETRYABLE
-def delete_user_ratings(user: UserObject, db_instance_type=RDS_WRITE) -> None:
+def delete_user_ratings(
+    user: UserObject, db_instance_type: DbType = DbType.WRITE
+) -> None:
     """This function deletes all user's ratings"""
     if not isinstance(user, UserObject):
         raise TypeError('user must be an instance of UserObject.')
@@ -473,7 +485,7 @@ def delete_user_ratings(user: UserObject, db_instance_type=RDS_WRITE) -> None:
 
 @DB_SESSION_RETRYABLE
 def delete_user_friendships(
-    user: UserObject, db_instance_type=RDS_WRITE
+    user: UserObject, db_instance_type: DbType = DbType.WRITE
 ) -> None:
     """This function deletes all user's friendships"""
     if not isinstance(user, UserObject):
@@ -489,7 +501,9 @@ def delete_user_friendships(
 
 
 @DB_SESSION_RETRYABLE
-def delete_user_entry(user: UserObject, db_instance_type=RDS_WRITE) -> None:
+def delete_user_entry(
+    user: UserObject, db_instance_type: DbType = DbType.WRITE
+) -> None:
     """This function deletes user entry from rds"""
     if not isinstance(user, UserObject):
         raise TypeError('user must be an instance of UserObject.')

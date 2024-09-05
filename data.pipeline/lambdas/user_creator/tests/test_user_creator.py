@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import Mock, call, patch
 
-from loop.constants import RDS_WRITE
 from loop.data import DB_TYPE
+from loop.enums import DbType
 from loop.exceptions import CreateUserValidationError
 from loop.test_setup import setup_rds, unbind_rds
 from pony.orm import Database
@@ -50,11 +50,11 @@ class TestCreateUser(unittest.TestCase):
         )
 
     def test_create_user(self):
-        DB_TYPE[RDS_WRITE] = Mock()
+        DB_TYPE[DbType.WRITE] = Mock()
         event = test_event.copy()
         self.user_creator.create_user(event)
         self.assertEqual(
-            DB_TYPE[RDS_WRITE].mock_calls[0],
+            DB_TYPE[DbType.WRITE].mock_calls[0],
             call.User(
                 cognito_user_name='26f29234-c0e1-704f-3b56-2eade7808df9',
                 email='charlie.field98@gmail.com',
@@ -62,7 +62,7 @@ class TestCreateUser(unittest.TestCase):
                 last_name='Field',
             ),
         )
-        DB_TYPE[RDS_WRITE] = None
+        DB_TYPE[DbType.WRITE] = None
 
 
 if __name__ == '__main__':

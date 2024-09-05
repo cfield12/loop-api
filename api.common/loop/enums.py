@@ -1,5 +1,7 @@
 from enum import Enum
 
+from loop.constants import RDS_WRITE
+
 """This module contains all loop Enums"""
 
 
@@ -25,4 +27,4 @@ class FriendRequestType(Enum):
 
 
 class DbType(Enum):
-    WRITE = 'write'
+    WRITE = RDS_WRITE

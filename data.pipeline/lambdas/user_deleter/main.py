@@ -3,7 +3,7 @@ import json
 from loop.admin_utils import delete_user_from_rds
 from loop.api_classes import UserCredentials
 from loop.constants import logger
-from loop.data import init_write_db
+from loop.data import disconnect_db, init_write_db
 from loop.utils import sqs_batch
 
 init_write_db()
@@ -22,6 +22,8 @@ def lambda_handler(event, context):
                 )
     except Exception as e:
         raise e
+    finally:
+        disconnect_db()
 
 
 if __name__ == '__main__':

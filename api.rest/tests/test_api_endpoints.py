@@ -6,7 +6,6 @@ from unittest.mock import call, patch
 from chalice.test import Client
 from loop import data
 from loop.api_classes import Coordinates, UpdateRating
-from loop.constants import RDS_WRITE
 from loop.data_classes import (
     NULL_USER_SEARCH_PAGE_RESULT,
     Location,
@@ -14,6 +13,7 @@ from loop.data_classes import (
     UploadThumbnailEvent,
     UserObject,
 )
+from loop.enums import DbType
 from loop.test_setup.common import setup_rds, unbind_rds
 
 mock_url_write_db = 'loop.data.init_write_db'
@@ -23,7 +23,7 @@ def mocked_init_write_db(check_tables=False, create_tables=False):
     if not check_tables and not create_tables:
         return
     db_dict = {'provider': 'sqlite', 'filename': ':memory:'}
-    data.DB_TYPE[RDS_WRITE] = data.init_db(
+    data.DB_TYPE[DbType.WRITE] = data.init_db(
         db_dict, check_tables=True, create_tables=True
     )
     return

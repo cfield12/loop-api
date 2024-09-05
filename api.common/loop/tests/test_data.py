@@ -5,6 +5,7 @@ from unittest.mock import call, patch
 from loop import data, exceptions
 from loop.api_classes import Coordinates, PaginatedRatings, UpdateRating
 from loop.data_classes import Location, Rating, RatingsPageResults, UserObject
+from loop.enums import DbType
 from loop.friends import get_user_friends
 from loop.test_setup.common import setup_rds, unbind_rds
 from loop.utils import get_admin_user
@@ -396,7 +397,7 @@ class LoopTestInitDB(unittest.TestCase):
     def test_init_db_already_init_1(self, mock_bind_db, mock_db_secret):
         mock_db_secret.return_value = TEST_DB_SECRET
         data.init_write_db()
-        self.assertEqual(data.DB_TYPE['write'], None)
+        self.assertEqual(data.DB_TYPE[DbType.WRITE], None)
 
     @patch('loop.secrets.get_db_dict')
     @patch(
@@ -406,11 +407,11 @@ class LoopTestInitDB(unittest.TestCase):
     def test_init_db_already_init_2(self, mock_bind_db, mock_db_secret):
         mock_db_secret.return_value = TEST_DB_SECRET
         data.init_write_db()
-        self.assertEqual(data.DB_TYPE['write'], None)
+        self.assertEqual(data.DB_TYPE[DbType.WRITE], None)
 
     @patch.object(Database, 'disconnect')
     def test_disconnect_db_1(self, mock_disconnect_db):
-        data.DB_TYPE['write'] = Database()
+        data.DB_TYPE[DbType.WRITE] = Database()
         data.disconnect_db()
         self.assertTrue(mock_disconnect_db.called)
 
@@ -419,13 +420,13 @@ class LoopTestInitDB(unittest.TestCase):
         side_effect=Exception("Disconnect error"),
     )
     def test_disconnect_db_2(self, mock_disconnect_db):
-        data.DB_TYPE['write'] = Database()
+        data.DB_TYPE[DbType.WRITE] = Database()
         self.assertRaises(
             exceptions.DbDisconnectFailedError, data.disconnect_db
         )
 
     def test_disconnect_db_3(self):
-        data.DB_TYPE['write'] = 'TEST_ERROR'
+        data.DB_TYPE[DbType.WRITE] = 'TEST_ERROR'
         self.assertRaises(
             exceptions.DbDisconnectFailedError, data.disconnect_db
         )
@@ -640,7 +641,7 @@ class TestUpdateObject(unittest.TestCase):
 
     @data.DB_SESSION_RETRYABLE
     def test_updating_last_updated_time_error(self):
-        pending_status = data.DB_TYPE[data.RDS_WRITE].Friend_status.get(
+        pending_status = data.DB_TYPE[data.DbType.WRITE].Friend_status.get(
             description='Pending'
         )
         self.assertRaises(

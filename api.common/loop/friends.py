@@ -3,12 +3,7 @@ import os
 from typing import Dict, List, Union
 
 from loop.api_classes import SearchUsers
-from loop.constants import (
-    MIN_FUZZ_SCORE,
-    RDS_WRITE,
-    SEARCH_USER_PAGE_COUNT,
-    logger,
-)
+from loop.constants import MIN_FUZZ_SCORE, SEARCH_USER_PAGE_COUNT, logger
 from loop.data import (
     DB_SESSION_RETRYABLE,
     DB_TYPE,
@@ -22,7 +17,7 @@ from loop.data_classes import (
     PaginatedUserSearch,
     UserObject,
 )
-from loop.enums import FriendRequestType, FriendStatusType
+from loop.enums import DbType, FriendRequestType, FriendStatusType
 from loop.exceptions import (
     BadRequestError,
     DbNotInitError,
@@ -54,7 +49,7 @@ UserSearch:
 
 class FriendWorker:
     def __init__(self, requestor: UserObject) -> None:
-        if not isinstance(DB_TYPE[RDS_WRITE], Database):
+        if not isinstance(DB_TYPE[DbType.WRITE], Database):
             raise DbNotInitError(
                 'DB must be initialised to use FriendWorker class.'
             )
@@ -62,7 +57,7 @@ class FriendWorker:
             raise TypeError(
                 'Requestor user supplied here must be instance of UserObject.'
             )
-        self.db = DB_TYPE[RDS_WRITE]
+        self.db = DB_TYPE[DbType.WRITE]
         self.requestor = requestor
 
     def _get_friend_db_object(self, target_user: UserObject):
@@ -183,12 +178,14 @@ def _get_friends_from_query(query: Query, user: UserObject) -> List:
 
 
 @DB_SESSION_RETRYABLE
-def get_user_friends(user: UserObject) -> List:
+def get_user_friends(
+    user: UserObject, db_instance_type: DbType = DbType.WRITE
+) -> List:
     if not isinstance(user, UserObject):
         raise TypeError('user should be of type UserObject')
     friends_query = select(
         (friend.friend_1, friend.friend_2)
-        for friend in DB_TYPE[RDS_WRITE].Friend
+        for friend in DB_TYPE[db_instance_type].Friend
         if ((friend.friend_1.id == user.id) or (friend.friend_2.id == user.id))
         and friend.status.description == FriendStatusType.FRIENDS.value
     )
@@ -325,13 +322,15 @@ def get_ratings_for_place_and_friends(place_id: str, user: UserObject) -> List:
 
 @DB_SESSION_RETRYABLE
 def get_pending_requests(
-    user: UserObject, request_type: FriendRequestType
+    user: UserObject,
+    request_type: FriendRequestType,
+    db_instance_type: DbType = DbType.WRITE,
 ) -> List:
     if not isinstance(user, UserObject):
         raise TypeError('user should be of type UserObject')
     friends_query = select(
         friend
-        for friend in DB_TYPE[RDS_WRITE].Friend
+        for friend in DB_TYPE[DbType.WRITE].Friend
         if friend.status.description == FriendStatusType.PENDING.value
     )
     if request_type == FriendRequestType.INBOUND:

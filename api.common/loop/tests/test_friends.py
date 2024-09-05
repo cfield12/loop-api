@@ -2,9 +2,9 @@ import unittest
 from unittest.mock import Mock, call, patch
 
 from loop.api_classes import SearchUsers
-from loop.data import DB_SESSION_RETRYABLE, DB_TYPE, RDS_WRITE
+from loop.data import DB_SESSION_RETRYABLE, DB_TYPE
 from loop.data_classes import FriendStatus, PaginatedUserSearch, UserObject
-from loop.enums import FriendRequestType, FriendStatusType
+from loop.enums import DbType, FriendRequestType, FriendStatusType
 from loop.exceptions import (
     BadRequestError,
     DbNotInitError,
@@ -40,7 +40,7 @@ USER_4 = UserObject(
 
 class TestInitFriendWorker(unittest.TestCase):
     def test_init_friend_worker_db_not_init_error(self):
-        DB_TYPE[RDS_WRITE] = None
+        DB_TYPE[DbType.WRITE] = None
         self.assertRaises(DbNotInitError, FriendWorker, USER_2)
 
 

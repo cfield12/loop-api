@@ -6,13 +6,13 @@ from loop.constants import DELETE_USER_QUEUE, logger
 from loop.data import (
     DB_SESSION_RETRYABLE,
     DB_TYPE,
-    RDS_WRITE,
     delete_user_entry,
     delete_user_friendships,
     delete_user_ratings,
     get_user_from_email,
 )
 from loop.data_classes import UserObject
+from loop.enums import DbType
 from loop.exceptions import BadRequestError
 from loop.queue_service import SqsClient
 from pony.orm import commit
@@ -22,7 +22,7 @@ This module contains some logic for admin (only) api endpoints.
 """
 
 
-def _get_rating(rating_id: int, db_instance_type=RDS_WRITE):
+def _get_rating(rating_id: int, db_instance_type: DbType = DbType.WRITE):
     """Returns the rating object from the database by rating id"""
     rating = DB_TYPE[db_instance_type].Rating.get(id=rating_id)
     if not rating:

@@ -2,7 +2,7 @@ from datetime import datetime
 
 import mock
 from loop import data
-from loop.constants import DB_INSTANCE_TYPES
+from loop.enums import DbType
 from pony.orm import db_session
 from pony.orm.core import BindingError
 
@@ -27,7 +27,7 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
         return
 
     with db_session:
-        for db_instance_type in DB_INSTANCE_TYPES:
+        for db_instance_type in DbType:
             admin_group = data.DB_TYPE[db_instance_type].Group(
                 description='loop_admin'
             )
@@ -166,6 +166,6 @@ def setup_rds(mock_get_db_dict: mock.MagicMock):
 
 
 def unbind_rds():
-    for db_instance_type in DB_INSTANCE_TYPES:
+    for db_instance_type in DbType:
         data.DB_TYPE[db_instance_type].provider = None
         data.DB_TYPE[db_instance_type].schema = None
