@@ -109,10 +109,6 @@ def disconnect_db():
                 db.disconnect()
             elif db is None:
                 continue
-            else:
-                raise exceptions.DbDisconnectFailedError(
-                    f'Unknown db type: {type(db)}.'
-                )
         except Exception as error:
             raise exceptions.DbDisconnectFailedError(
                 f'Failed to disconnect {instance_type} database ({error}).'

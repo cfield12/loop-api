@@ -1,6 +1,7 @@
 from typing import Iterator, Optional, Tuple
 
 from loop.enums import DbType
+from loop.exceptions import DbDisconnectFailedError
 from pony.orm import Database
 
 """
@@ -11,7 +12,7 @@ instances, with the ability to extend to additional types in the future
 
 Key Features:
 - **Dynamic Attribute Management**: The class attributes representing database
- instances (e.g., `_write_db`) are dynamically initialized based on the
+ instances (e.g., `_write_db`) are dynamically initialised based on the
  `_db_instances` list.
 - **Indexing Support**: The class allows accessing and setting database
  instances using custom indexing with a `DbType` enum (e.g., `DbType.WRITE`).
@@ -47,20 +48,25 @@ class DBSession:
         """
         if db_type_item == DbType.WRITE:
             return self._write_db
-        raise TypeError('Must index DBSession with DbType instance.')
+        raise ValueError('Must index DBSession with DbType.')
 
     def __setitem__(
         self, db_type_item: DbType, db: Optional[Database]
     ) -> None:
         """
         Allowing setting the _write_db attribute using an index.
+
+        Here we are only allowing the setting of a class attribute with a
+        Pony Database instance or None.
         """
+        if not isinstance(db, Database) and db is not None:
+            raise DbDisconnectFailedError(
+                'db must be of type Database or None.'
+            )
         if db_type_item == DbType.WRITE:
             self._write_db = db
         else:
-            raise TypeError(
-                'Must set DBSession attribute with DbType instance.'
-            )
+            raise TypeError('Must set DBSession attribute with key DbType.')
 
     def __iter__(self) -> Iterator[str]:
         """

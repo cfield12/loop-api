@@ -425,12 +425,6 @@ class LoopTestInitDB(unittest.TestCase):
             exceptions.DbDisconnectFailedError, data.disconnect_db
         )
 
-    def test_disconnect_db_3(self):
-        data.DB_TYPE[DbType.WRITE] = 'TEST_ERROR'
-        self.assertRaises(
-            exceptions.DbDisconnectFailedError, data.disconnect_db
-        )
-
 
 class TestCreateUserRatings(unittest.TestCase):
     """
