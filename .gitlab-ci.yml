@@ -189,7 +189,7 @@ test-data-pipeline:
     - changes:
       - docker/**/*
       - api.common/**/*
-      - api.rest/**/*
+      - data.pipeline/**/*
       - .gitlab-ci.yml
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
       when: always
