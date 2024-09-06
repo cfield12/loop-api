@@ -50,7 +50,8 @@ class TestCreateUser(unittest.TestCase):
         )
 
     def test_create_user(self):
-        DB_TYPE[DbType.WRITE] = Mock()
+        DB_TYPE[DbType.WRITE] = Mock(spec=Database)
+        DB_TYPE[DbType.WRITE].User = Mock()
         event = test_event.copy()
         self.user_creator.create_user(event)
         self.assertEqual(
