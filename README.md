@@ -1,5 +1,5 @@
 ## Name
-Loop
+Loop - launching October 2024
 
 ![image](https://github.com/user-attachments/assets/50e7bd5b-9f7c-4cfb-83c5-4678f9690925)
 
