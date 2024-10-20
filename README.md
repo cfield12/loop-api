@@ -1,4 +1,6 @@
-## Loop - launching October 2024
+## Loop (Beta version)
+https://loopworld.me/
+
 The idea of loop is to have a private space where you share restaurant experiences with friends. On the home page the main features consist of a map with locations/pins, a search box (both Google Maps integrated) and reviews. There is also a friends page where you can search, add and accept other users to be friends. The locations and reviews that you see on the home page map will be the reviews/locations of you and your friends.
 
 
